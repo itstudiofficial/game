@@ -92,7 +92,7 @@ const Footer: React.FC = () => {
           <p>&copy; 2024 ADS PREDIA MICRO-TASKING LTD. REG #8472910</p>
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
               Systems Operational
             </div>
             <div className="flex items-center gap-2 hover:text-white cursor-pointer transition-colors">

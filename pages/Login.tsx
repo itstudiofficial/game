@@ -54,7 +54,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {/* Header Section */}
           <div className="bg-indigo-600 p-8 text-white text-center relative overflow-hidden">
             <div className="relative z-10">
-              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-in fade-in zoom-in duration-500">
+              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <i className={`fa-solid ${isRegistering ? 'fa-user-plus' : 'fa-lock'} text-3xl transition-transform duration-300`} aria-hidden="true"></i>
               </div>
               <h1 className="text-2xl font-bold transition-all duration-300">
@@ -94,7 +94,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
             {/* Email Field (Only for Signup) */}
             {isRegistering && (
-              <div className="animate-in slide-in-from-top-2 fade-in duration-300">
+              <div>
                 <label htmlFor="email" className="block text-sm font-bold text-slate-800 mb-2">Email Address</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500">
@@ -164,7 +164,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
             {/* Terms for Signup */}
             {isRegistering && (
-              <p className="text-xs text-slate-600 font-medium animate-in fade-in duration-500 leading-relaxed">
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
                 By signing up, you agree to our <a href="#" className="text-indigo-700 underline font-bold hover:text-indigo-900">Terms of Service</a> and <a href="#" className="text-indigo-700 underline font-bold hover:text-indigo-900">Privacy Policy</a>.
               </p>
             )}
@@ -185,10 +185,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   <span>{isRegistering ? 'Create Account' : 'Login to Account'}</span>
                 )}
               </div>
-              
-              {!isSubmitting && (
-                <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 group-hover:animate-shine" aria-hidden="true" />
-              )}
             </button>
           </form>
 

@@ -11,8 +11,8 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
             {/* Visual Logo Integration */}
             <div className="mb-10 flex justify-center">
               <div className="relative group">
-                <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-150 group-hover:scale-[2] transition-transform duration-700"></div>
-                <div className="relative w-28 h-28 md:w-40 md:h-40 bg-white rounded-[2.5rem] shadow-2xl flex items-center justify-center p-4 animate-float">
+                <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-150 transition-transform duration-700"></div>
+                <div className="relative w-28 h-28 md:w-40 md:h-40 bg-white rounded-[2.5rem] shadow-2xl flex items-center justify-center p-4">
                    {/* This represents the visual logo uploaded by the user */}
                    <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900 fill-current">
                      <path d="M20 80 L50 20 L80 80 M45 40 L65 40" stroke="#00A9CE" strokeWidth="8" fill="none" strokeLinecap="round"/>
@@ -22,7 +22,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
               </div>
             </div>
 
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-widest mb-8 animate-bounce">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-widest mb-8">
               <span className="flex h-2 w-2 rounded-full bg-yellow-400"></span>
               New: Spin the wheel and win up to 60 coins daily!
             </div>
@@ -39,7 +39,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
                 className="group relative w-full sm:w-auto px-10 py-5 bg-white text-indigo-600 rounded-2xl font-black text-lg hover:shadow-2xl hover:shadow-white/20 transition-all flex items-center justify-center overflow-hidden"
               >
                 <span className="relative z-10">Get Started Now</span>
-                <i className="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                <i className="fa-solid fa-arrow-right ml-2 transition-transform"></i>
               </button>
               <button 
                 onClick={() => onStart(isLoggedIn ? 'create' : 'login')}
@@ -55,7 +55,6 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
         <div className="absolute bottom-0 right-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-[100px] translate-x-1/4 translate-y-1/4"></div>
       </section>
 
-      {/* Rest of the content remains same but ensured it looks good with the new header */}
       <div className="bg-white border-b border-slate-100 py-10">
         <div className="max-w-7xl mx-auto px-4 overflow-hidden">
           <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">Trusted by Global Advertisers & 50,000+ Users</p>
@@ -123,14 +122,9 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
 
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-6">
-            <div className="max-w-xl">
-              <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Earning Opportunities</h2>
-              <p className="text-slate-500 font-medium leading-relaxed">Multiple ways to grow your coin balance every single day. Choose what you love doing.</p>
-            </div>
-            <button onClick={() => onStart('tasks')} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-indigo-600 transition-all shadow-xl">
-              View All Categories
-            </button>
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Earning Opportunities</h2>
+            <p className="text-slate-500 font-medium leading-relaxed">Multiple ways to grow your coin balance every single day. Choose what you love doing.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
