@@ -31,7 +31,6 @@ const App: React.FC = () => {
       ...user,
       ...userData,
       isLoggedIn: true,
-      // Removed bonus logic
       coins: user.coins 
     };
     setUser(updatedUser);
@@ -142,7 +141,7 @@ const App: React.FC = () => {
       ...taskData,
       creatorId: user.id,
       completedCount: 0,
-      status: 'active'
+      status: 'pending' // Tasks start as pending for review
     };
 
     const updatedUser = {
@@ -164,8 +163,24 @@ const App: React.FC = () => {
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
 
-    alert('Task live! Check progress on your dashboard.');
+    alert('Campaign submitted for review! It will be live shortly.');
     setCurrentPage('dashboard');
+  };
+
+  const deleteTask = (taskId: string) => {
+    if (!window.confirm('Are you sure you want to delete this campaign? Locked coins will not be refunded for live slots.')) return;
+    
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+    setUser(prev => ({
+      ...prev,
+      createdTasks: prev.createdTasks.filter(id => id !== taskId)
+    }));
+    alert('Campaign deleted successfully.');
+  };
+
+  const updateTask = (taskId: string, updatedData: Partial<Task>) => {
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updatedData } : t));
+    alert('Campaign updated successfully.');
   };
 
   const handleWalletAction = (type: 'deposit' | 'withdraw', amount: number, method: string) => {
@@ -205,7 +220,7 @@ const App: React.FC = () => {
         {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} />}
         {currentPage === 'dashboard' && (
           user.isLoggedIn 
-          ? <Dashboard user={user} tasks={tasks} transactions={transactions} />
+          ? <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={deleteTask} onUpdateTask={updateTask} />
           : <Login onLogin={handleLogin} />
         )}
         {currentPage === 'login' && <Login onLogin={handleLogin} />}
