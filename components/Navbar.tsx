@@ -22,7 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
   const authLinks = [
     { name: 'Dashboard', id: 'dashboard', icon: 'fa-chart-pie' },
     { name: 'Tasks', id: 'tasks', icon: 'fa-list-check' },
-    { name: 'Create', id: 'create', icon: 'fa-plus' },
+    { name: 'Advertise', id: 'create', icon: 'fa-bullhorn' }, // Changed 'Create' to 'Advertise'
     { name: 'Spin', id: 'spin', icon: 'fa-clover' },
     { name: 'Wallet', id: 'wallet', icon: 'fa-wallet' },
   ];
@@ -58,7 +58,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
               <span className="text-2xl font-black text-slate-800 tracking-tighter">Ads <span className="text-indigo-600">Predia</span></span>
             </div>
             
-            {/* Desktop Navigation */}
             <div className="hidden lg:ml-10 lg:flex lg:space-x-1">
               {currentLinks.map(link => (
                 <button
@@ -94,7 +93,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
               </div>
             ) : (
               <div className="flex items-center gap-6">
-                 {/* Balance Display */}
                  <div className="px-5 py-2.5 bg-slate-100 rounded-2xl border border-slate-200 flex items-center gap-3">
                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                    <div className="flex flex-col">
@@ -105,7 +103,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
 
                  <div className="h-8 w-px bg-slate-200"></div>
 
-                 {/* Profile Trigger */}
                  <div className="relative">
                     <button 
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -121,7 +118,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                       <i className={`fa-solid fa-chevron-down text-[10px] transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}></i>
                     </button>
 
-                    {/* Dropdown Menu */}
                     {isUserMenuOpen && (
                       <div className="absolute right-0 mt-3 w-64 bg-white rounded-[2rem] border border-slate-100 shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="space-y-1">
@@ -166,7 +162,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="lg:hidden bg-white border-t border-slate-100 p-6 space-y-4 animate-in slide-in-from-top duration-300">
           {user.isLoggedIn && (

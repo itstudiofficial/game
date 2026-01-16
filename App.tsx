@@ -26,13 +26,15 @@ const App: React.FC = () => {
     storage.setTasks(tasks);
   }, [tasks]);
 
-  const handleLogin = (username: string) => {
-    const loggedInUser = {
+  const handleLogin = (userData: { username: string; email?: string; isLoggedIn: boolean }) => {
+    const updatedUser = {
       ...user,
-      username: username,
-      isLoggedIn: true
+      ...userData,
+      isLoggedIn: true,
+      // Removed bonus logic
+      coins: user.coins 
     };
-    setUser(loggedInUser);
+    setUser(updatedUser);
     setCurrentPage('dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -42,7 +44,7 @@ const App: React.FC = () => {
       ...user,
       username: 'Guest',
       isLoggedIn: false,
-      coins: 100,
+      coins: 0,
       completedTasks: [],
       createdTasks: []
     };

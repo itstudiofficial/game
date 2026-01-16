@@ -14,9 +14,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
   const [copied, setCopied] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const COIN_RATE = 3000;
+  // 5000 Coins = 2 USD => 2500 Coins = 1 USD
+  const COIN_RATE = 2500;
   const MIN_DEPOSIT = 500;
-  const MIN_WITHDRAWAL = 1000;
+  const MIN_WITHDRAWAL = 3000; // Increased to 3000
 
   const GATEWAY_DETAILS = {
     'Easypaisa': { 

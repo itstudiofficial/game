@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 
 interface LoginProps {
-  onLogin: (username: string) => void;
+  onLogin: (userData: { username: string; email?: string; isLoggedIn: boolean }) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -12,6 +12,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateEmail = (emailStr: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
@@ -32,11 +33,16 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
     
     setIsSubmitting(true);
-    // Simulate API delay for both Login and Signup
+    
+    // In a real app, this would be a fetch call to your API
     setTimeout(() => {
-      onLogin(username);
+      onLogin({
+        username,
+        email: isRegistering ? email : undefined,
+        isLoggedIn: true
+      });
       setIsSubmitting(false);
-    }, 1500); 
+    }, 1200); 
   };
 
   const toggleMode = () => {
@@ -48,156 +54,145 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-20 flex justify-center">
+    <div className="max-w-7xl mx-auto px-4 py-20 flex justify-center bg-slate-50 min-h-[80vh]">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden transition-all duration-500">
-          {/* Header Section */}
-          <div className="bg-indigo-600 p-8 text-white text-center relative overflow-hidden">
+        <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden transition-all duration-500">
+          <div className="bg-slate-900 p-10 text-white text-center relative overflow-hidden">
             <div className="relative z-10">
-              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <i className={`fa-solid ${isRegistering ? 'fa-user-plus' : 'fa-lock'} text-3xl transition-transform duration-300`} aria-hidden="true"></i>
+              <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-500/20">
+                <i className={`fa-solid ${isRegistering ? 'fa-user-plus' : 'fa-shield-halved'} text-3xl`} aria-hidden="true"></i>
               </div>
-              <h1 className="text-2xl font-bold transition-all duration-300">
-                {isRegistering ? 'Create Account' : 'Welcome Back'}
+              <h1 className="text-3xl font-black tracking-tight leading-none mb-3">
+                {isRegistering ? 'Start Earning' : 'Secure Access'}
               </h1>
-              <p className="text-indigo-50 text-sm mt-2 font-medium">
+              <p className="text-slate-400 text-xs font-black uppercase tracking-widest opacity-80">
                 {isRegistering 
-                  ? 'Join thousands of earners today' 
-                  : 'Enter your credentials to access your account'}
+                  ? 'Join Ads Predia Ecosystem' 
+                  : 'Enter Vault Credentials'}
               </p>
             </div>
-            {/* Background Decoration */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           </div>
           
-          <form onSubmit={handleSubmit} className="p-8 space-y-5">
-            {/* Username Field */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-bold text-slate-800 mb-2">Username</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500">
-                  <i className="fa-solid fa-user" aria-hidden="true"></i>
-                </span>
-                <input 
-                  id="username"
-                  type="text" 
-                  autoComplete="username"
-                  disabled={isSubmitting}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="john_doe" 
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all disabled:opacity-50 placeholder-slate-400 text-slate-900"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Email Field (Only for Signup) */}
-            {isRegistering && (
+          <form onSubmit={handleSubmit} className="p-10 space-y-8">
+            <div className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-bold text-slate-800 mb-2">Email Address</label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500">
-                    <i className="fa-solid fa-envelope" aria-hidden="true"></i>
+                <label htmlFor="username" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Display Username</label>
+                <div className="relative group">
+                  <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                    <i className="fa-solid fa-at" aria-hidden="true"></i>
                   </span>
                   <input 
-                    id="email"
-                    type="email" 
-                    autoComplete="email"
+                    id="username"
+                    type="text" 
+                    autoComplete="username"
                     disabled={isSubmitting}
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (emailError) setEmailError('');
-                    }}
-                    aria-invalid={!!emailError}
-                    aria-describedby={emailError ? "email-error" : undefined}
-                    placeholder="john@example.com" 
-                    className={`w-full pl-11 pr-4 py-3 bg-slate-50 border ${emailError ? 'border-red-600 ring-1 ring-red-100' : 'border-slate-300'} rounded-xl focus:ring-2 ${emailError ? 'focus:ring-red-600' : 'focus:ring-indigo-600'} focus:border-transparent outline-none transition-all disabled:opacity-50 placeholder-slate-400 text-slate-900`}
-                    required={isRegistering}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="e.g. crypto_king" 
+                    className="w-full pl-14 pr-6 py-5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all disabled:opacity-50 font-bold text-slate-700 placeholder-slate-300 shadow-inner"
+                    required
                   />
                 </div>
-                {emailError && (
-                  <p id="email-error" className="text-red-700 text-xs mt-1.5 font-bold flex items-center">
-                    <i className="fa-solid fa-circle-exclamation mr-1" aria-hidden="true"></i>
-                    {emailError}
-                  </p>
-                )}
               </div>
-            )}
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-bold text-slate-800 mb-2">Password</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500">
-                  <i className="fa-solid fa-key" aria-hidden="true"></i>
-                </span>
-                <input 
-                  id="password"
-                  type="password" 
-                  autoComplete={isRegistering ? "new-password" : "current-password"}
-                  disabled={isSubmitting}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all disabled:opacity-50 placeholder-slate-400 text-slate-900"
-                  required
-                />
+              {isRegistering && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label htmlFor="email" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email Destination</label>
+                  <div className="relative group">
+                    <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                      <i className="fa-solid fa-envelope" aria-hidden="true"></i>
+                    </span>
+                    <input 
+                      id="email"
+                      type="email" 
+                      autoComplete="email"
+                      disabled={isSubmitting}
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError('');
+                      }}
+                      placeholder="user@provider.com" 
+                      className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-none rounded-2xl focus:ring-2 ${emailError ? 'focus:ring-red-500' : 'focus:ring-indigo-600'} outline-none transition-all disabled:opacity-50 font-bold text-slate-700 placeholder-slate-300 shadow-inner`}
+                      required={isRegistering}
+                    />
+                  </div>
+                  {emailError && (
+                    <p className="text-red-500 text-[10px] mt-2 font-black uppercase tracking-widest flex items-center px-1">
+                      <i className="fa-solid fa-triangle-exclamation mr-2"></i>
+                      {emailError}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="password" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Account Secret</label>
+                <div className="relative group">
+                  <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                    <i className="fa-solid fa-key" aria-hidden="true"></i>
+                  </span>
+                  <input 
+                    id="password"
+                    type={showPassword ? "text" : "password"} 
+                    autoComplete={isRegistering ? "new-password" : "current-password"}
+                    disabled={isSubmitting}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••" 
+                    className="w-full pl-14 pr-16 py-5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all disabled:opacity-50 font-bold text-slate-700 placeholder-slate-300 shadow-inner"
+                    required
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-300 hover:text-indigo-600 transition-colors"
+                  >
+                    <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Options Row for Login */}
             {!isRegistering && (
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center text-slate-700 cursor-pointer font-medium">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer group">
                   <input 
                     type="checkbox" 
-                    disabled={isSubmitting} 
-                    className="w-4 h-4 rounded text-indigo-600 mr-2 border-slate-300 focus:ring-indigo-600 disabled:opacity-50" 
+                    className="w-5 h-5 rounded-lg text-indigo-600 mr-3 border-none bg-slate-100 focus:ring-indigo-600" 
                   />
-                  Remember me
+                  Keep Active
                 </label>
-                <a href="#" className="text-indigo-700 font-bold hover:underline hover:text-indigo-800 transition-colors">Forgot Password?</a>
+                <a href="#" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Reset Secret?</a>
               </div>
             )}
 
-            {/* Terms for Signup */}
-            {isRegistering && (
-              <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                By signing up, you agree to our <a href="#" className="text-indigo-700 underline font-bold hover:text-indigo-900">Terms of Service</a> and <a href="#" className="text-indigo-700 underline font-bold hover:text-indigo-900">Privacy Policy</a>.
-              </p>
-            )}
-
-            {/* Submit Button */}
             <button 
               type="submit"
               disabled={isSubmitting}
-              className={`group relative w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center overflow-hidden ${isSubmitting ? 'bg-indigo-500 cursor-not-allowed' : ''}`}
+              className={`w-full py-6 bg-slate-900 text-white font-black rounded-[2rem] hover:bg-indigo-600 transition-all shadow-2xl shadow-slate-200 flex items-center justify-center gap-4 transform active:scale-[0.98] ${isSubmitting ? 'opacity-70' : ''}`}
             >
-              <div className="flex items-center justify-center transition-all duration-300 relative z-10">
-                {isSubmitting ? (
-                  <>
-                    <i className="fa-solid fa-circle-notch fa-spin mr-3 text-xl" aria-hidden="true"></i>
-                    <span>{isRegistering ? 'Creating Account...' : 'Verifying...'}</span>
-                  </>
-                ) : (
-                  <span>{isRegistering ? 'Create Account' : 'Login to Account'}</span>
-                )}
-              </div>
+              {isSubmitting ? (
+                <>
+                  <i className="fa-solid fa-circle-notch fa-spin text-lg"></i>
+                  <span className="text-xs uppercase tracking-[0.2em]">{isRegistering ? 'Deploying Account...' : 'Authenticating...'}</span>
+                </>
+              ) : (
+                <span className="text-xs uppercase tracking-[0.2em]">{isRegistering ? 'Sign Up Now' : 'Initialize Vault'}</span>
+              )}
             </button>
           </form>
 
-          {/* Toggle Footer */}
-          <div className="px-8 pb-8 text-center border-t border-slate-100 pt-6">
-            <p className="text-slate-700 text-sm font-medium">
-              {isRegistering ? 'Already have an account?' : "Don't have an account?"} 
+          <div className="p-10 text-center bg-slate-50 border-t border-slate-100">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              {isRegistering ? 'Member already?' : 'New to Ads Predia?'} 
               <button 
                 type="button"
                 onClick={() => !isSubmitting && toggleMode()}
-                className={`text-indigo-700 font-bold hover:underline ml-1 focus:outline-none focus:text-indigo-900 transition-colors ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className="text-indigo-600 font-black ml-2 hover:underline focus:outline-none"
               >
-                {isRegistering ? 'Login here' : 'Sign up for free'}
+                {isRegistering ? 'Go to Login' : 'Create One Free'}
               </button>
             </p>
           </div>

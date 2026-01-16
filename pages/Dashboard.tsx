@@ -12,8 +12,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'settings'>('overview');
   const userTasks = tasks.filter(t => user.createdTasks.includes(t.id));
 
-  // 3000 Coins = 1 USD
-  const COIN_RATE = 3000;
+  // 5000 Coins = 2 USD => 2500 Coins = 1 USD
+  const COIN_RATE = 2500;
   const usdValue = (user.coins / COIN_RATE).toFixed(2);
   const progressToNextDollar = ((user.coins % COIN_RATE) / COIN_RATE) * 100;
 
