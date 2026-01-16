@@ -211,7 +211,7 @@ const App: React.FC = () => {
       <Navbar currentPage={currentPage} setCurrentPage={navigateTo} user={user} onLogout={handleLogout} />
       
       <main className="flex-grow">
-        {currentPage === 'home' && <Home onStart={navigateTo} />}
+        {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
         {currentPage === 'tasks' && <Tasks tasks={tasks} onComplete={completeTask} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} navigateTo={navigateTo} />}
         {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} />}

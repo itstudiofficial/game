@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-const Home: React.FC<{ onStart: (p: string) => void }> = ({ onStart }) => {
+const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({ onStart, isLoggedIn }) => {
   return (
     <div className="space-y-24 pb-24">
       {/* Hero Section */}
@@ -16,13 +16,13 @@ const Home: React.FC<{ onStart: (p: string) => void }> = ({ onStart }) => {
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
               <button 
-                onClick={() => onStart('tasks')}
+                onClick={() => onStart(isLoggedIn ? 'tasks' : 'login')}
                 className="w-full sm:w-auto px-8 py-4 bg-white text-indigo-600 rounded-full font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl"
               >
                 Start Earning Now
               </button>
               <button 
-                onClick={() => onStart('create')}
+                onClick={() => onStart(isLoggedIn ? 'create' : 'login')}
                 className="w-full sm:w-auto px-8 py-4 bg-indigo-500 bg-opacity-30 border border-white border-opacity-30 rounded-full font-bold text-lg hover:bg-opacity-40 transition-all"
               >
                 Create a Task
