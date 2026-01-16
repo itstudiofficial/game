@@ -9,10 +9,10 @@ const Footer: React.FC = () => {
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center mb-6">
               <i className="fa-solid fa-coins text-indigo-400 text-2xl mr-2"></i>
-              <span className="text-xl font-bold text-white">CoinTasker <span className="text-indigo-400">Pro</span></span>
+              <span className="text-xl font-bold text-white">Ads <span className="text-indigo-400">Predia</span></span>
             </div>
             <p className="text-sm leading-relaxed">
-              The leading micro-freelancing platform for advertisers and workers. Grow your social presence or earn by completing simple tasks.
+              The leading micro-freelancing platform for advertisers and workers. Grow your digital presence or earn by completing simple tasks.
             </p>
           </div>
           <div>
@@ -37,17 +37,17 @@ const Footer: React.FC = () => {
             <h4 className="text-white font-semibold mb-6">Newsletter</h4>
             <p className="text-sm mb-4">Get updates on new high-paying tasks.</p>
             <div className="flex">
-              <input type="email" placeholder="Email address" className="bg-slate-800 border-none rounded-l-md px-4 py-2 w-full focus:ring-1 focus:ring-indigo-400" />
-              <button className="bg-indigo-600 text-white rounded-r-md px-4 py-2 hover:bg-indigo-700"><i className="fa-solid fa-paper-plane"></i></button>
+              <input type="email" placeholder="Email address" className="bg-slate-800 border-none rounded-l-md px-4 py-2 w-full focus:ring-1 focus:ring-indigo-400 text-white" />
+              <button className="bg-indigo-600 text-white rounded-r-md px-4 py-2 hover:bg-indigo-700 transition-colors"><i className="fa-solid fa-paper-plane"></i></button>
             </div>
           </div>
         </div>
         <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-xs">
-          <p>&copy; 2024 CoinTasker Pro. All rights reserved.</p>
+          <p>&copy; 2024 Ads Predia. All rights reserved.</p>
           <div className="flex space-x-6">
-            <a href="#" className="hover:text-white">Privacy Policy</a>
-            <a href="#" className="hover:text-white">Terms of Service</a>
-            <a href="#" className="hover:text-white">Cookie Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
           </div>
         </div>
       </div>

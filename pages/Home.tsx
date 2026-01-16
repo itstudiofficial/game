@@ -38,7 +38,7 @@ const Home: React.FC<{ onStart: (p: string) => void }> = ({ onStart }) => {
           <div>
             <h2 className="text-4xl font-bold text-slate-900 mb-6">Empowering Micro-Freelancers Globally</h2>
             <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-              CoinTasker Pro was built with a single mission: to provide a bridge between digital advertisers and global talent looking for small ways to earn.
+              Ads Predia was built with a single mission: to provide a bridge between digital advertisers and global talent looking for small ways to earn.
             </p>
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
               Whether you're a student looking for pocket money or a digital marketer needing real engagement, our platform ensures fairness, transparency, and instant results.
@@ -119,7 +119,7 @@ const Home: React.FC<{ onStart: (p: string) => void }> = ({ onStart }) => {
           <h2 className="text-4xl font-bold mb-6">Need Help?</h2>
           <p className="text-indigo-100 mb-10 text-lg">Our support team is available 24/7 to assist with your inquiries, payouts, or task disputes.</p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <a href="mailto:support@cointasker.pro" className="bg-white text-indigo-600 px-8 py-4 rounded-full font-bold hover:bg-indigo-50 transition-all flex items-center">
+            <a href="mailto:support@adspredia.com" className="bg-white text-indigo-600 px-8 py-4 rounded-full font-bold hover:bg-indigo-50 transition-all flex items-center">
               <i className="fa-solid fa-envelope mr-2"></i> Email Support
             </a>
             <button className="bg-indigo-500 bg-opacity-30 border border-white border-opacity-30 px-8 py-4 rounded-full font-bold hover:bg-opacity-40 transition-all">
