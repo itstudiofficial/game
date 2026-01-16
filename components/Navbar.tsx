@@ -176,7 +176,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
               </div>
               <div>
                 <div className="font-black text-slate-900">{user.username}</div>
-                <div className="text-xs font-black text-indigo-600">{user.coins} Coins Available</div>
+                <div className="text-xs font-black text-indigo-600">{user.coins.toLocaleString()} Coins Available</div>
               </div>
             </div>
           )}

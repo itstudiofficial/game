@@ -12,6 +12,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
   const [method, setMethod] = useState('Easypaisa');
   const [account, setAccount] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const COIN_RATE = 3000;
   const MIN_DEPOSIT = 500;
@@ -47,22 +48,27 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitInitial = (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseInt(amount);
     
     if (activeTab === 'deposit') {
       if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Minimum deposit is ${MIN_DEPOSIT} coins`);
+      if (!account) return alert('Please enter your transaction ID or proof for verification');
+      setShowConfirmModal(true); // Open modal for deposit
     } else {
       if (isNaN(val) || val < MIN_WITHDRAWAL) return alert(`Minimum withdrawal is ${MIN_WITHDRAWAL} coins`);
-      if (val > coins) return alert('Insufficient balance');
+      if (val > coins) return alert('Insufficient balance in your vault');
+      if (!account) return alert('Please enter your receiving account/wallet ID');
+      confirmAction(); // Withdrawal handles directly as it doesn't need a "destination details" re-check
     }
+  };
 
-    if (!account) return alert('Please enter your transaction proof or account detail');
-    
-    onAction(activeTab, val, method);
+  const confirmAction = () => {
+    onAction(activeTab, parseInt(amount), method);
     setAmount('');
     setAccount('');
+    setShowConfirmModal(false);
   };
 
   const currentGateway = GATEWAY_DETAILS[method as keyof typeof GATEWAY_DETAILS];
@@ -84,18 +90,18 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
                <div className="bg-white/10 px-6 py-3 rounded-2xl text-lg font-black border border-white/10 backdrop-blur-xl shadow-lg">
                   ≈ ${(coins / COIN_RATE).toFixed(2)} USD
                </div>
-               <div className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Rate: {COIN_RATE}/$</div>
+               <div className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Exchange: {COIN_RATE}/$</div>
             </div>
           </div>
           <div className="bg-black/20 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-md text-center md:text-left min-w-[200px]">
             <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">Transfer Limits</h4>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-[9px] font-bold text-indigo-200">Min Deposit:</span>
+                <span className="text-[9px] font-bold text-indigo-200 uppercase">Min Deposit</span>
                 <span className="font-black text-sm">{MIN_DEPOSIT}</span>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <span className="text-[9px] font-bold text-indigo-200">Min Withdraw:</span>
+                <span className="text-[9px] font-bold text-indigo-200 uppercase">Min Withdraw</span>
                 <span className="font-black text-sm">{MIN_WITHDRAWAL}</span>
               </div>
             </div>
@@ -116,13 +122,13 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
             onClick={() => setActiveTab('withdraw')}
             className={`flex-1 py-5 text-xs font-black rounded-2xl transition-all tracking-widest ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            WITHDRAW COINS
+            WITHDRAWAL
           </button>
         </div>
 
         <div className="p-12 pt-6">
           <div className="mb-12">
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 px-2">Select Payment Gateway</label>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 px-2">Select Gateway</label>
             <div className="grid grid-cols-3 gap-6">
               {Object.keys(GATEWAY_DETAILS).map(m => (
                 <button
@@ -142,37 +148,11 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
             </div>
           </div>
 
-          {activeTab === 'deposit' && currentGateway && (
-            <div className="mb-12 bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
-               <div className="relative z-10">
-                 <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-                       <i className="fa-solid fa-circle-info"></i>
-                    </div>
-                    <h5 className="font-black text-sm uppercase tracking-widest">Official Receiver</h5>
-                 </div>
-                 
-                 <div className="bg-white/5 rounded-2xl p-6 border border-white/10 flex items-center justify-between group">
-                    <div>
-                       <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">{currentGateway.label}</div>
-                       <div className="text-lg font-black tracking-tight font-mono">{currentGateway.address}</div>
-                    </div>
-                    <button 
-                      onClick={() => handleCopy(currentGateway.address)}
-                      className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
-                    >
-                      {copied ? 'COPIED!' : 'COPY'}
-                    </button>
-                 </div>
-               </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-10">
+          <form onSubmit={handleSubmitInitial} className="space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-4">
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                  Amount ({activeTab === 'deposit' ? `Min ${MIN_DEPOSIT}` : `Min ${MIN_WITHDRAWAL}`})
+                  Coin Amount ({activeTab === 'deposit' ? `Min ${MIN_DEPOSIT}` : `Min ${MIN_WITHDRAWAL}`})
                 </label>
                 <div className="relative group">
                    <input 
@@ -194,7 +174,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
                   type="text" 
                   value={account}
                   onChange={(e) => setAccount(e.target.value)}
-                  placeholder={activeTab === 'deposit' ? 'Paste Proof ID' : 'Enter account ID'} 
+                  placeholder={activeTab === 'deposit' ? 'Paste Transaction ID' : 'Enter your receiving ID'} 
                   className="w-full px-8 py-6 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500 font-bold text-lg shadow-inner"
                 />
               </div>
@@ -204,26 +184,94 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
               type="submit"
               className="w-full py-7 bg-slate-900 text-white font-black rounded-[2rem] hover:bg-indigo-600 transition-all shadow-2xl shadow-slate-200 flex items-center justify-center gap-4 transform active:scale-[0.98]"
             >
-              {activeTab === 'deposit' ? 'VERIFY DEPOSIT' : 'CONFIRM WITHDRAWAL'}
+              {activeTab === 'deposit' ? 'SUBMIT PROOF' : 'REQUEST WITHDRAWAL'}
               <i className="fa-solid fa-arrow-right-arrow-left"></i>
             </button>
           </form>
 
           <div className="mt-12 p-10 bg-indigo-50/50 rounded-[2.5rem] border border-indigo-100 flex gap-6 items-start">
             <div className="w-12 h-12 bg-white rounded-2xl flex-shrink-0 flex items-center justify-center text-indigo-600 shadow-sm">
-              <i className="fa-solid fa-circle-exclamation"></i>
+              <i className="fa-solid fa-shield-check"></i>
             </div>
             <div>
-              <h5 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-2">Policy Summary</h5>
+              <h5 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-2">Withdrawal & Deposit Policy</h5>
               <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                Minimum Deposit: <span className="text-indigo-600 font-bold">{MIN_DEPOSIT} Coins</span>. <br/>
-                Minimum Withdrawal: <span className="text-indigo-600 font-bold">{MIN_WITHDRAWAL} Coins</span>. <br/>
-                Manual verification takes 1-12 hours. Ensure all payment details match your submission.
+                Minimum Deposit Threshold: <span className="text-indigo-600 font-bold">{MIN_DEPOSIT} Coins</span>. <br/>
+                Minimum Withdrawal Threshold: <span className="text-indigo-600 font-bold">{MIN_WITHDRAWAL} Coins</span>. <br/>
+                Verification takes 1-12 hours during business days. Ensure all provided IDs match your actual transfer.
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[3rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-10">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 text-xl">
+                  <i className="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Final Confirmation</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Check deposit details carefully</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Destination ({method})</div>
+                   <div className="flex items-center justify-between gap-4">
+                      <div className="font-mono font-black text-slate-700 break-all">{currentGateway.address}</div>
+                      <button 
+                        onClick={() => handleCopy(currentGateway.address)}
+                        className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-colors shrink-0"
+                      >
+                        <i className={`fa-solid ${copied ? 'fa-check text-emerald-500' : 'fa-copy'}`}></i>
+                      </button>
+                   </div>
+                   <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-2">Acc Holder: {currentGateway.name}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-indigo-600 p-6 rounded-[2rem] text-white">
+                    <div className="text-[9px] font-black text-indigo-200 uppercase tracking-widest mb-1">Total Coins</div>
+                    <div className="text-2xl font-black">{parseInt(amount).toLocaleString()}</div>
+                  </div>
+                  <div className="bg-slate-900 p-6 rounded-[2rem] text-white">
+                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">USD Value</div>
+                    <div className="text-2xl font-black">${(parseInt(amount) / COIN_RATE).toFixed(2)}</div>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 flex gap-4">
+                  <i className="fa-solid fa-triangle-exclamation text-amber-600 mt-1"></i>
+                  <p className="text-[11px] text-amber-800 font-bold leading-relaxed">
+                    Make sure you have already transferred the funds to the address above before clicking confirm.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-10 flex gap-4">
+                <button 
+                  onClick={() => setShowConfirmModal(false)}
+                  className="flex-1 py-5 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-xs uppercase tracking-widest"
+                >
+                  Go Back
+                </button>
+                <button 
+                  onClick={confirmAction}
+                  className="flex-2 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100"
+                >
+                  Confirm & Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
