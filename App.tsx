@@ -17,12 +17,6 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User>(storage.getUser());
   const [tasks, setTasks] = useState<Task[]>(storage.getTasks());
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     storage.setUser(user);
@@ -197,15 +191,6 @@ const App: React.FC = () => {
     alert(`${type.toUpperCase()} request for ${amount} coins submitted via ${method}.`);
   };
 
-  if (isLoading) {
-    return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50">
-        <i className="fa-solid fa-coins text-indigo-600 text-6xl animate-bounce mb-4"></i>
-        <h2 className="text-xl font-bold text-slate-800">Loading Ads Predia...</h2>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar currentPage={currentPage} setCurrentPage={navigateTo} user={user} onLogout={handleLogout} />
@@ -214,7 +199,7 @@ const App: React.FC = () => {
         {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
         {currentPage === 'tasks' && <Tasks tasks={tasks} onComplete={completeTask} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} navigateTo={navigateTo} />}
-        {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} />}
+        {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} transactions={transactions} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} />}
         {currentPage === 'dashboard' && (
           user.isLoggedIn 

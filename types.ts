@@ -21,7 +21,8 @@ export interface User {
   completedTasks: string[];
   createdTasks: string[];
   isLoggedIn: boolean;
-  lastSpin?: string; // Date string for daily spin limit
+  lastSpinTimestamp?: number;
+  dailySpinsCount?: number;
 }
 
 export interface Transaction {

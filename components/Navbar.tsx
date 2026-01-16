@@ -47,11 +47,18 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <div 
-              className="flex-shrink-0 flex items-center cursor-pointer" 
+              className="flex-shrink-0 flex items-center cursor-pointer group" 
               onClick={() => setCurrentPage('home')}
             >
-              <i className="fa-solid fa-coins text-indigo-600 text-2xl mr-2"></i>
-              <span className="text-xl font-bold text-slate-800">Ads <span className="text-indigo-600">Predia</span></span>
+              <img 
+                src="https://raw.githubusercontent.com/google/material-design-icons/master/png/action/monetization_on/materialicons/24dp/2x/baseline_monetization_on_black_24dp.png" 
+                alt="Logo Icon"
+                className="w-8 h-8 mr-2 hidden group-hover:block transition-all"
+              />
+              <div className="w-8 h-8 mr-2 flex items-center justify-center bg-white rounded-lg shadow-sm border border-slate-100 group-hover:hidden">
+                <i className="fa-solid fa-coins text-indigo-600 text-lg"></i>
+              </div>
+              <span className="text-xl font-black text-slate-800 tracking-tighter">Ads <span className="text-indigo-600">Predia</span></span>
             </div>
             <div className="hidden lg:ml-8 lg:flex lg:space-x-4">
               {currentLinks.map(link => (
