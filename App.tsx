@@ -7,6 +7,7 @@ import Tasks from './pages/Tasks';
 import CreateTask from './pages/CreateTask';
 import Wallet from './pages/Wallet';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
 import { User, Task, Transaction, TaskType } from './types';
 import { storage } from './services/storage';
 
@@ -32,7 +33,55 @@ const App: React.FC = () => {
     storage.setTasks(tasks);
   }, [tasks]);
 
+  const handleLogin = (username: string) => {
+    const loggedInUser = {
+      ...user,
+      username: username,
+      isLoggedIn: true
+    };
+    setUser(loggedInUser);
+    setCurrentPage('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLogout = () => {
+    const guestUser = {
+      ...user,
+      username: 'Guest',
+      isLoggedIn: false
+    };
+    setUser(guestUser);
+    setCurrentPage('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateTo = (page: string) => {
+    // Check if the target is a section on the home page
+    const homeSections = ['about', 'features', 'how-it-works', 'contact', 'home'];
+    if (homeSections.includes(page)) {
+      if (currentPage !== 'home') {
+        setCurrentPage('home');
+        // Wait for render then scroll
+        setTimeout(() => {
+          const el = document.getElementById(page === 'home' ? 'root' : page);
+          el?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        const el = document.getElementById(page === 'home' ? 'root' : page);
+        el?.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const completeTask = (taskId: string) => {
+    if (!user.isLoggedIn) {
+      alert('Please login to complete tasks!');
+      setCurrentPage('login');
+      return;
+    }
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
     if (user.completedTasks.includes(taskId)) {
@@ -67,6 +116,11 @@ const App: React.FC = () => {
   };
 
   const createTask = (taskData: { title: string; type: TaskType; reward: number; totalWorkers: number; description: string }) => {
+    if (!user.isLoggedIn) {
+      alert('Please login to create tasks!');
+      setCurrentPage('login');
+      return;
+    }
     const totalCost = taskData.reward * taskData.totalWorkers;
     const newTask: Task = {
       id: Math.random().toString(36).substr(2, 9),
@@ -100,6 +154,11 @@ const App: React.FC = () => {
   };
 
   const handleWalletAction = (type: 'deposit' | 'withdraw', amount: number, method: string) => {
+    if (!user.isLoggedIn) {
+      alert('Please login to access wallet features!');
+      setCurrentPage('login');
+      return;
+    }
     const newTx: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
       userId: user.id,
@@ -130,21 +189,19 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} user={user} />
+      <Navbar currentPage={currentPage} setCurrentPage={navigateTo} user={user} onLogout={handleLogout} />
       
       <main className="flex-grow">
-        {currentPage === 'home' && <Home onStart={setCurrentPage} />}
+        {currentPage === 'home' && <Home onStart={navigateTo} />}
         {currentPage === 'tasks' && <Tasks tasks={tasks} onComplete={completeTask} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} />}
-        {currentPage === 'dashboard' && <Dashboard user={user} tasks={tasks} transactions={transactions} />}
-        {currentPage === 'login' && (
-           <div className="max-w-md mx-auto py-24 px-6 text-center">
-             <h2 className="text-3xl font-bold mb-6">Demo Mode</h2>
-             <p className="text-slate-500 mb-8">This is a demonstration app. You are currently logged in as a simulated user.</p>
-             <button onClick={() => { setUser({...user, isLoggedIn: true}); setCurrentPage('home'); }} className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold">Start Session</button>
-           </div>
+        {currentPage === 'dashboard' && (
+          user.isLoggedIn 
+          ? <Dashboard user={user} tasks={tasks} transactions={transactions} />
+          : <Login onLogin={handleLogin} />
         )}
+        {currentPage === 'login' && <Login onLogin={handleLogin} />}
       </main>
 
       <Footer />
