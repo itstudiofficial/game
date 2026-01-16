@@ -17,7 +17,7 @@ const DEFAULT_TASKS: Task[] = [
 export const storage = {
   getUser: (): User => {
     const data = localStorage.getItem(KEYS.USER);
-    if (!data) return { id: 'u1', username: 'Guest', email: '', coins: 0, completedTasks: [], createdTasks: [], isLoggedIn: false };
+    if (!data) return { id: 'UID-' + Math.random().toString(36).substr(2, 6).toUpperCase(), username: 'Guest', email: '', coins: 0, completedTasks: [], createdTasks: [], isLoggedIn: false };
     return JSON.parse(data);
   },
   setUser: (user: User) => localStorage.setItem(KEYS.USER, JSON.stringify(user)),

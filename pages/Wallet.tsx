@@ -17,7 +17,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
   // 5000 Coins = 2 USD => 2500 Coins = 1 USD
   const COIN_RATE = 2500;
   const MIN_DEPOSIT = 500;
-  const MIN_WITHDRAWAL = 3000; // Increased to 3000
+  const MIN_WITHDRAWAL = 3000;
 
   const GATEWAY_DETAILS = {
     'Easypaisa': { 
@@ -25,21 +25,24 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
       label: 'Easypaisa Number', 
       name: 'Ads Predia Official',
       icon: 'fa-mobile-screen',
-      color: 'text-emerald-500'
+      color: 'text-emerald-500',
+      step: 'Send money to this number via Easypaisa App first.'
     },
     'USDT': { 
       address: 'TWFfb9ewKRbtSz8qTitr2fJpyRPQWtKj2U', 
       label: 'TRC20 Wallet Address', 
       name: 'Tether TRC20',
       icon: 'fa-brands fa-ethereum',
-      color: 'text-indigo-500'
+      color: 'text-indigo-500',
+      step: 'Transfer USDT (TRC20) to this address from your exchange.'
     },
     'Payeer': { 
       address: 'P1061557241', 
       label: 'Payeer Account ID', 
       name: 'Global Payeer',
       icon: 'fa-wallet',
-      color: 'text-blue-500'
+      color: 'text-blue-500',
+      step: 'Send the amount to this Payeer account first.'
     }
   };
 
@@ -55,13 +58,13 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
     
     if (activeTab === 'deposit') {
       if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Minimum deposit is ${MIN_DEPOSIT} coins`);
-      if (!account) return alert('Please enter your transaction ID or proof for verification');
-      setShowConfirmModal(true); // Open modal for deposit
+      if (!account) return alert('Please complete the payment first and enter your Transaction ID!');
+      setShowConfirmModal(true);
     } else {
       if (isNaN(val) || val < MIN_WITHDRAWAL) return alert(`Minimum withdrawal is ${MIN_WITHDRAWAL} coins`);
       if (val > coins) return alert('Insufficient balance in your vault');
       if (!account) return alert('Please enter your receiving account/wallet ID');
-      confirmAction(); // Withdrawal handles directly as it doesn't need a "destination details" re-check
+      confirmAction();
     }
   };
 
@@ -108,7 +111,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
             </div>
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-80 h-80 bg-white opacity-5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
       </div>
 
       <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -128,6 +130,18 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
         </div>
 
         <div className="p-12 pt-6">
+          {activeTab === 'deposit' && (
+            <div className="mb-10 bg-red-50 border border-red-100 p-6 rounded-[2rem] animate-pulse">
+              <div className="flex items-center gap-4 text-red-600 mb-2">
+                <i className="fa-solid fa-triangle-exclamation"></i>
+                <span className="text-xs font-black uppercase tracking-widest">Mandatory Requirement</span>
+              </div>
+              <p className="text-[11px] font-bold text-red-700 leading-relaxed">
+                You MUST send the payment to our official address below BEFORE submitting this form. Submitting without payment will lead to a permanent account ban.
+              </p>
+            </div>
+          )}
+
           <div className="mb-12">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 px-2">Select Gateway</label>
             <div className="grid grid-cols-3 gap-6">
@@ -149,6 +163,25 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
             </div>
           </div>
 
+          {activeTab === 'deposit' && (
+            <div className="mb-10 p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem]">
+              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Step 1: Copy Official Address</div>
+              <div className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 mb-4 group">
+                <div className="font-mono text-sm font-black text-slate-700 break-all">{currentGateway.address}</div>
+                <button 
+                  onClick={() => handleCopy(currentGateway.address)}
+                  className="p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"
+                >
+                  <i className={`fa-solid ${copied ? 'fa-check' : 'fa-copy'}`}></i>
+                </button>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                <i className="fa-solid fa-circle-info"></i>
+                {currentGateway.step}
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmitInitial} className="space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-4">
@@ -169,13 +202,13 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
 
               <div className="space-y-4">
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                  {activeTab === 'deposit' ? 'Transaction Proof / TRX ID' : `${method} Address`}
+                  {activeTab === 'deposit' ? 'Step 2: Enter Transaction ID' : `Receive at ${method} ID`}
                 </label>
                 <input 
                   type="text" 
                   value={account}
                   onChange={(e) => setAccount(e.target.value)}
-                  placeholder={activeTab === 'deposit' ? 'Paste Transaction ID' : 'Enter your receiving ID'} 
+                  placeholder={activeTab === 'deposit' ? 'Paste Proof ID here' : 'Enter your account ID'} 
                   className="w-full px-8 py-6 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500 font-bold text-lg shadow-inner"
                 />
               </div>
@@ -185,24 +218,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
               type="submit"
               className="w-full py-7 bg-slate-900 text-white font-black rounded-[2rem] hover:bg-indigo-600 transition-all shadow-2xl shadow-slate-200 flex items-center justify-center gap-4 transform active:scale-[0.98]"
             >
-              {activeTab === 'deposit' ? 'SUBMIT PROOF' : 'REQUEST WITHDRAWAL'}
+              {activeTab === 'deposit' ? 'I HAVE PAID - SUBMIT PROOF' : 'CONFIRM WITHDRAWAL'}
               <i className="fa-solid fa-arrow-right-arrow-left"></i>
             </button>
           </form>
-
-          <div className="mt-12 p-10 bg-indigo-50/50 rounded-[2.5rem] border border-indigo-100 flex gap-6 items-start">
-            <div className="w-12 h-12 bg-white rounded-2xl flex-shrink-0 flex items-center justify-center text-indigo-600 shadow-sm">
-              <i className="fa-solid fa-shield-check"></i>
-            </div>
-            <div>
-              <h5 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-2">Withdrawal & Deposit Policy</h5>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                Minimum Deposit Threshold: <span className="text-indigo-600 font-bold">{MIN_DEPOSIT} Coins</span>. <br/>
-                Minimum Withdrawal Threshold: <span className="text-indigo-600 font-bold">{MIN_WITHDRAWAL} Coins</span>. <br/>
-                Verification takes 1-12 hours during business days. Ensure all provided IDs match your actual transfer.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -212,46 +231,32 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
           <div className="bg-white rounded-[3rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="p-10">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 text-xl">
-                  <i className="fa-solid fa-file-invoice-dollar"></i>
+                <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 text-xl">
+                  <i className="fa-solid fa-shield-heart"></i>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Final Confirmation</h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Check deposit details carefully</p>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">One Last Check</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Verification Required</p>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Destination ({method})</div>
-                   <div className="flex items-center justify-between gap-4">
-                      <div className="font-mono font-black text-slate-700 break-all">{currentGateway.address}</div>
-                      <button 
-                        onClick={() => handleCopy(currentGateway.address)}
-                        className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-colors shrink-0"
-                      >
-                        <i className={`fa-solid ${copied ? 'fa-check text-emerald-500' : 'fa-copy'}`}></i>
-                      </button>
-                   </div>
-                   <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-2">Acc Holder: {currentGateway.name}</div>
+                <div className="bg-red-50 p-6 rounded-[2rem] border border-red-100">
+                  <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Did you really pay?</h4>
+                  <p className="text-xs font-bold text-red-800 leading-relaxed">
+                    By clicking confirm, you legally testify that you have sent ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD to our {method} address.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-indigo-600 p-6 rounded-[2rem] text-white">
-                    <div className="text-[9px] font-black text-indigo-200 uppercase tracking-widest mb-1">Total Coins</div>
+                  <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Coins to add</div>
                     <div className="text-2xl font-black">{parseInt(amount).toLocaleString()}</div>
                   </div>
-                  <div className="bg-slate-900 p-6 rounded-[2rem] text-white">
-                    <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">USD Value</div>
-                    <div className="text-2xl font-black">${(parseInt(amount) / COIN_RATE).toFixed(2)}</div>
+                  <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">TRX Proof</div>
+                    <div className="text-sm font-black truncate">{account}</div>
                   </div>
-                </div>
-
-                <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 flex gap-4">
-                  <i className="fa-solid fa-triangle-exclamation text-amber-600 mt-1"></i>
-                  <p className="text-[11px] text-amber-800 font-bold leading-relaxed">
-                    Make sure you have already transferred the funds to the address above before clicking confirm.
-                  </p>
                 </div>
               </div>
 
@@ -260,13 +265,13 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
                   onClick={() => setShowConfirmModal(false)}
                   className="flex-1 py-5 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-xs uppercase tracking-widest"
                 >
-                  Go Back
+                  I Haven't Paid
                 </button>
                 <button 
                   onClick={confirmAction}
                   className="flex-2 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100"
                 >
-                  Confirm & Submit
+                  Confirm Payment
                 </button>
               </div>
             </div>

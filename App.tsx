@@ -31,7 +31,7 @@ const App: React.FC = () => {
       ...user,
       ...userData,
       isLoggedIn: true,
-      coins: user.coins 
+      coins: user.isLoggedIn ? user.coins : 0 // Strictly 0 bonus
     };
     setUser(updatedUser);
     setCurrentPage('dashboard');
@@ -53,22 +53,8 @@ const App: React.FC = () => {
   };
 
   const navigateTo = (page: string) => {
-    const homeSections = ['about', 'features', 'contact', 'home'];
-    if (homeSections.includes(page)) {
-      if (currentPage !== 'home') {
-        setCurrentPage('home');
-        setTimeout(() => {
-          const el = document.getElementById(page === 'home' ? 'root' : page);
-          el?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      } else {
-        const el = document.getElementById(page === 'home' ? 'root' : page);
-        el?.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const completeTask = (taskId: string, submissionTime?: string) => {
@@ -77,7 +63,7 @@ const App: React.FC = () => {
       return;
     }
     const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+    if (!task || task.status !== 'active') return;
     if (user.completedTasks.includes(taskId)) {
       alert('Task already completed!');
       return;
@@ -106,7 +92,7 @@ const App: React.FC = () => {
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
 
-    alert(`Success! You earned ${task.reward} coins. Proof submitted at ${newTx.date}.`);
+    alert(`Success! You earned ${task.reward} coins.`);
   };
 
   const handleSpin = (reward: number, cost: number) => {
@@ -141,7 +127,7 @@ const App: React.FC = () => {
       ...taskData,
       creatorId: user.id,
       completedCount: 0,
-      status: 'pending' // Tasks start as pending for review
+      status: 'pending' // Initial state
     };
 
     const updatedUser = {
@@ -163,23 +149,21 @@ const App: React.FC = () => {
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
 
-    alert('Campaign submitted for review! It will be live shortly.');
+    alert('Campaign created! Status: PENDING review.');
     setCurrentPage('dashboard');
   };
 
   const deleteTask = (taskId: string) => {
-    if (!window.confirm('Are you sure you want to delete this campaign? Locked coins will not be refunded for live slots.')) return;
-    
+    if (!window.confirm('Are you sure? Deleted campaigns will be permanently removed.')) return;
     setTasks(prev => prev.filter(t => t.id !== taskId));
     setUser(prev => ({
       ...prev,
       createdTasks: prev.createdTasks.filter(id => id !== taskId)
     }));
-    alert('Campaign deleted successfully.');
   };
 
-  const updateTask = (taskId: string, updatedData: Partial<Task>) => {
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updatedData } : t));
+  const updateTask = (taskId: string, data: Partial<Task>) => {
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...data } : t));
     alert('Campaign updated successfully.');
   };
 
@@ -195,26 +179,21 @@ const App: React.FC = () => {
     };
     
     if (type === 'withdraw') {
+      if (amount < 3000) return alert('Minimum withdrawal is 3000 coins');
       setUser({ ...user, coins: user.coins - amount });
-    } else {
-      setTimeout(() => {
-        setUser(prev => ({ ...prev, coins: prev.coins + amount }));
-        setTransactions(prev => prev.map(t => t.id === newTx.id ? { ...t, status: 'success' } : t));
-      }, 3000);
     }
 
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
-    alert(`${type.toUpperCase()} request for ${amount} coins submitted via ${method}.`);
+    alert(`${type.toUpperCase()} request for ${amount} coins submitted.`);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar currentPage={currentPage} setCurrentPage={navigateTo} user={user} onLogout={handleLogout} />
-      
       <main className="flex-grow">
         {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
-        {currentPage === 'tasks' && <Tasks tasks={tasks} onComplete={completeTask} />}
+        {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={completeTask} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} navigateTo={navigateTo} />}
         {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} transactions={transactions} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} />}
@@ -225,7 +204,6 @@ const App: React.FC = () => {
         )}
         {currentPage === 'login' && <Login onLogin={handleLogin} />}
       </main>
-
       <Footer />
     </div>
   );
