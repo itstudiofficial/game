@@ -8,6 +8,7 @@ import CreateTask from './pages/CreateTask';
 import Wallet from './pages/Wallet';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import SpinWheel from './pages/SpinWheel';
 import { User, Task, Transaction, TaskType } from './types';
 import { storage } from './services/storage';
 
@@ -19,12 +20,10 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulation of loading
     const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Sync with storage
   useEffect(() => {
     storage.setUser(user);
   }, [user]);
@@ -40,7 +39,7 @@ const App: React.FC = () => {
       isLoggedIn: true
     };
     setUser(loggedInUser);
-    setCurrentPage('home');
+    setCurrentPage('dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -48,7 +47,10 @@ const App: React.FC = () => {
     const guestUser = {
       ...user,
       username: 'Guest',
-      isLoggedIn: false
+      isLoggedIn: false,
+      coins: 100,
+      completedTasks: [],
+      createdTasks: []
     };
     setUser(guestUser);
     setCurrentPage('home');
@@ -56,12 +58,10 @@ const App: React.FC = () => {
   };
 
   const navigateTo = (page: string) => {
-    // Check if the target is a section on the home page
-    const homeSections = ['about', 'features', 'how-it-works', 'contact', 'home'];
+    const homeSections = ['about', 'features', 'contact', 'home'];
     if (homeSections.includes(page)) {
       if (currentPage !== 'home') {
         setCurrentPage('home');
-        // Wait for render then scroll
         setTimeout(() => {
           const el = document.getElementById(page === 'home' ? 'root' : page);
           el?.scrollIntoView({ behavior: 'smooth' });
@@ -76,16 +76,15 @@ const App: React.FC = () => {
     }
   };
 
-  const completeTask = (taskId: string) => {
+  const completeTask = (taskId: string, submissionTime?: string) => {
     if (!user.isLoggedIn) {
-      alert('Please login to complete tasks!');
       setCurrentPage('login');
       return;
     }
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
     if (user.completedTasks.includes(taskId)) {
-      alert('You have already completed this task!');
+      alert('Task already completed!');
       return;
     }
 
@@ -107,21 +106,41 @@ const App: React.FC = () => {
       amount: task.reward,
       type: 'earn',
       status: 'success',
-      date: new Date().toLocaleDateString()
+      date: submissionTime || new Date().toLocaleString()
     };
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
 
-    alert(`Success! You earned ${task.reward} coins.`);
+    alert(`Success! You earned ${task.reward} coins. Proof submitted at ${newTx.date}.`);
+  };
+
+  const handleSpin = (reward: number, cost: number) => {
+    const updatedUser = {
+      ...user,
+      coins: user.coins - cost + reward
+    };
+    setUser(updatedUser);
+
+    const newTx: Transaction = {
+      id: Math.random().toString(36).substr(2, 9),
+      userId: user.id,
+      amount: reward - cost,
+      type: 'spin',
+      status: 'success',
+      date: new Date().toLocaleString()
+    };
+    storage.addTransaction(newTx);
+    setTransactions([newTx, ...transactions]);
   };
 
   const createTask = (taskData: { title: string; type: TaskType; reward: number; totalWorkers: number; description: string }) => {
-    if (!user.isLoggedIn) {
-      alert('Please login to create tasks!');
-      setCurrentPage('login');
+    const totalCost = taskData.reward * taskData.totalWorkers;
+    if (totalCost > user.coins) {
+      alert('Insufficient balance. Please deposit coins first!');
+      setCurrentPage('wallet');
       return;
     }
-    const totalCost = taskData.reward * taskData.totalWorkers;
+
     const newTask: Task = {
       id: Math.random().toString(36).substr(2, 9),
       ...taskData,
@@ -144,21 +163,16 @@ const App: React.FC = () => {
       amount: totalCost,
       type: 'spend',
       status: 'success',
-      date: new Date().toLocaleDateString()
+      date: new Date().toLocaleString()
     };
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
 
-    alert('Task created successfully and is now live!');
+    alert('Task live! Check progress on your dashboard.');
     setCurrentPage('dashboard');
   };
 
   const handleWalletAction = (type: 'deposit' | 'withdraw', amount: number, method: string) => {
-    if (!user.isLoggedIn) {
-      alert('Please login to access wallet features!');
-      setCurrentPage('login');
-      return;
-    }
     const newTx: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
       userId: user.id,
@@ -166,16 +180,21 @@ const App: React.FC = () => {
       type: type,
       method: method,
       status: 'pending',
-      date: new Date().toLocaleDateString()
+      date: new Date().toLocaleString()
     };
     
     if (type === 'withdraw') {
       setUser({ ...user, coins: user.coins - amount });
+    } else {
+      setTimeout(() => {
+        setUser(prev => ({ ...prev, coins: prev.coins + amount }));
+        setTransactions(prev => prev.map(t => t.id === newTx.id ? { ...t, status: 'success' } : t));
+      }, 3000);
     }
 
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
-    alert(`${type === 'deposit' ? 'Deposit' : 'Withdrawal'} request of ${amount} coins submitted via ${method}. Check status in dashboard.`);
+    alert(`${type.toUpperCase()} request for ${amount} coins submitted via ${method}.`);
   };
 
   if (isLoading) {
@@ -194,7 +213,8 @@ const App: React.FC = () => {
       <main className="flex-grow">
         {currentPage === 'home' && <Home onStart={navigateTo} />}
         {currentPage === 'tasks' && <Tasks tasks={tasks} onComplete={completeTask} />}
-        {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} />}
+        {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} navigateTo={navigateTo} />}
+        {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} />}
         {currentPage === 'dashboard' && (
           user.isLoggedIn 

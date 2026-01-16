@@ -8,10 +8,10 @@ const KEYS = {
 };
 
 const DEFAULT_TASKS: Task[] = [
-  { id: '1', title: 'Subscribe to Tech Channel', type: 'Video', reward: 50, description: 'Watch at least 2 mins and subscribe.', creatorId: 'admin', totalWorkers: 100, completedCount: 45, status: 'active' },
-  { id: '2', title: 'Follow on Instagram', type: 'Social', reward: 20, description: 'Follow @cointasker_pro for updates.', creatorId: 'admin', totalWorkers: 500, completedCount: 120, status: 'active' },
-  { id: '3', title: 'Visit Landing Page', type: 'Web', reward: 15, description: 'Stay on page for 30 seconds.', creatorId: 'admin', totalWorkers: 1000, completedCount: 850, status: 'active' },
-  { id: '4', title: 'Retweet Promotion', type: 'Social', reward: 30, description: 'Retweet the pinned post.', creatorId: 'admin', totalWorkers: 200, completedCount: 10, status: 'active' }
+  { id: '1', title: 'Subscribe to Tech Channel', type: 'YouTube', reward: 50, description: 'Watch at least 2 mins and subscribe.', creatorId: 'admin', totalWorkers: 100, completedCount: 45, status: 'active' },
+  { id: '2', title: 'Install Fitness Tracker', type: 'Apps', reward: 150, description: 'Download, install and open the app for 1 minute.', creatorId: 'admin', totalWorkers: 50, completedCount: 12, status: 'active' },
+  { id: '3', title: 'Visit Finance Blog', type: 'Websites', reward: 15, description: 'Stay on page for 30 seconds.', creatorId: 'admin', totalWorkers: 1000, completedCount: 850, status: 'active' },
+  { id: '4', title: 'Like & Retweet Post', type: 'Social Media', reward: 30, description: 'Like and retweet the pinned post on our Twitter profile.', creatorId: 'admin', totalWorkers: 200, completedCount: 10, status: 'active' }
 ];
 
 export const storage = {

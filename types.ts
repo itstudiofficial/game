@@ -1,5 +1,5 @@
 
-export type TaskType = 'Social' | 'Video' | 'Web' | 'Micro';
+export type TaskType = 'YouTube' | 'Websites' | 'Apps' | 'Social Media';
 
 export interface Task {
   id: string;
@@ -21,13 +21,14 @@ export interface User {
   completedTasks: string[];
   createdTasks: string[];
   isLoggedIn: boolean;
+  lastSpin?: string; // Date string for daily spin limit
 }
 
 export interface Transaction {
   id: string;
   userId: string;
   amount: number;
-  type: 'deposit' | 'withdraw' | 'earn' | 'spend';
+  type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin';
   method?: string;
   status: 'pending' | 'success' | 'failed';
   date: string;
