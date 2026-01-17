@@ -1,13 +1,17 @@
 
 import React, { useState } from 'react';
+import { Transaction } from '../types';
 
 interface WalletProps {
   coins: number;
   onAction: (type: 'deposit' | 'withdraw', amount: number, method: string) => void;
+  transactions: Transaction[];
 }
 
-const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
+const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
+  const [view, setView] = useState<'transact' | 'history'>('transact');
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'deposit' | 'withdraw'>('all');
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('Easypaisa');
   const [account, setAccount] = useState('');
@@ -16,7 +20,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
 
   // Economic Policy: 5000 Coins = 2 USD => 2500 Coins = 1 USD
   const COIN_RATE = 2500;
-  const MIN_DEPOSIT = 5000; // Updated to 5000 as requested
+  const MIN_DEPOSIT = 5000;
   const MIN_WITHDRAWAL = 3000;
 
   const GATEWAY_DETAILS = {
@@ -73,7 +77,13 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
     setAmount('');
     setAccount('');
     setShowConfirmModal(false);
+    setView('history'); // Switch to history after action
   };
+
+  const filteredHistory = transactions.filter(tx => {
+    if (historyFilter === 'all') return tx.type === 'deposit' || tx.type === 'withdraw';
+    return tx.type === historyFilter;
+  });
 
   const currentGateway = GATEWAY_DETAILS[method as keyof typeof GATEWAY_DETAILS];
 
@@ -97,138 +107,203 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
                <div className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Rate: 5,000 Coins / $2</div>
             </div>
           </div>
-          <div className="bg-black/20 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-md text-center md:text-left min-w-[200px]">
-            <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">Transfer Limits</h4>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-[9px] font-bold text-indigo-200 uppercase">Min Deposit</span>
-                <span className="font-black text-sm">{MIN_DEPOSIT.toLocaleString()} ($2)</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-[9px] font-bold text-indigo-200 uppercase">Min Withdraw</span>
-                <span className="font-black text-sm">{MIN_WITHDRAWAL.toLocaleString()}</span>
-              </div>
-            </div>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => setView('transact')}
+              className={`px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${view === 'transact' ? 'bg-white text-indigo-600 shadow-xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
+              <i className="fa-solid fa-plus-minus mr-2"></i> Transact
+            </button>
+            <button 
+              onClick={() => setView('history')}
+              className={`px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${view === 'history' ? 'bg-white text-indigo-600 shadow-xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
+            >
+              <i className="fa-solid fa-clock-rotate-left mr-2"></i> History
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden">
-        <div className="flex p-3 bg-slate-100 m-6 rounded-[2rem] shadow-inner">
-          <button 
-            onClick={() => setActiveTab('deposit')}
-            className={`flex-1 py-5 text-xs font-black rounded-2xl transition-all tracking-widest ${activeTab === 'deposit' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            DEPOSIT FUNDS
-          </button>
-          <button 
-            onClick={() => setActiveTab('withdraw')}
-            className={`flex-1 py-5 text-xs font-black rounded-2xl transition-all tracking-widest ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            WITHDRAWAL
-          </button>
-        </div>
+      {view === 'transact' ? (
+        <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex p-3 bg-slate-100 m-6 rounded-[2rem] shadow-inner">
+            <button 
+              onClick={() => setActiveTab('deposit')}
+              className={`flex-1 py-5 text-xs font-black rounded-2xl transition-all tracking-widest ${activeTab === 'deposit' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              DEPOSIT FUNDS
+            </button>
+            <button 
+              onClick={() => setActiveTab('withdraw')}
+              className={`flex-1 py-5 text-xs font-black rounded-2xl transition-all tracking-widest ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              WITHDRAWAL
+            </button>
+          </div>
 
-        <div className="p-12 pt-6">
-          {activeTab === 'deposit' && (
-            <div className="mb-10 bg-red-50 border border-red-100 p-6 rounded-[2rem] animate-pulse">
-              <div className="flex items-center gap-4 text-red-600 mb-2">
-                <i className="fa-solid fa-triangle-exclamation"></i>
-                <span className="text-xs font-black uppercase tracking-widest">Show Payment First</span>
+          <div className="p-12 pt-6">
+            {activeTab === 'deposit' && (
+              <div className="mb-10 bg-red-50 border border-red-100 p-6 rounded-[2rem] animate-pulse">
+                <div className="flex items-center gap-4 text-red-600 mb-2">
+                  <i className="fa-solid fa-triangle-exclamation"></i>
+                  <span className="text-xs font-black uppercase tracking-widest">Show Payment First</span>
+                </div>
+                <p className="text-[11px] font-bold text-red-700 leading-relaxed">
+                  You MUST send the payment to our official address below BEFORE submitting this form. Minimum deposit is 5,000 Coins ($2.00). Submitting without payment will lead to a permanent account ban.
+                </p>
               </div>
-              <p className="text-[11px] font-bold text-red-700 leading-relaxed">
-                You MUST send the payment to our official address below BEFORE submitting this form. Minimum deposit is 5,000 Coins ($2.00). Submitting without payment will lead to a permanent account ban.
-              </p>
-            </div>
-          )}
+            )}
 
-          <div className="mb-12">
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 px-2">Select Gateway</label>
-            <div className="grid grid-cols-3 gap-6">
-              {Object.keys(GATEWAY_DETAILS).map(m => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMethod(m)}
-                  className={`p-8 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center gap-4 group ${
-                    method === m ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'
-                  }`}
-                >
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform group-hover:scale-110 ${method === m ? 'bg-white shadow-sm' : 'bg-white/50'}`}>
-                    <i className={`fa-solid ${GATEWAY_DETAILS[m as keyof typeof GATEWAY_DETAILS].icon} ${method === m ? GATEWAY_DETAILS[m as keyof typeof GATEWAY_DETAILS].color : ''}`}></i>
+            <div className="mb-12">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 px-2">Select Gateway</label>
+              <div className="grid grid-cols-3 gap-6">
+                {Object.keys(GATEWAY_DETAILS).map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMethod(m)}
+                    className={`p-8 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center gap-4 group ${
+                      method === m ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'
+                    }`}
+                  >
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform group-hover:scale-110 ${method === m ? 'bg-white shadow-sm' : 'bg-white/50'}`}>
+                      <i className={`fa-solid ${GATEWAY_DETAILS[m as keyof typeof GATEWAY_DETAILS].icon} ${method === m ? GATEWAY_DETAILS[m as keyof typeof GATEWAY_DETAILS].color : ''}`}></i>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest">{m}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {activeTab === 'deposit' && (
+              <div className="mb-10 p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem]">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Step 1: Copy Official Address</div>
+                <div className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 mb-4 group">
+                  <div className="font-mono text-sm font-black text-slate-700 break-all">{currentGateway.address}</div>
+                  <button 
+                    onClick={() => handleCopy(currentGateway.address)}
+                    className="p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"
+                  >
+                    <i className={`fa-solid ${copied ? 'fa-check' : 'fa-copy'}`}></i>
+                  </button>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                  <i className="fa-solid fa-circle-info"></i>
+                  {currentGateway.step}
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitInitial} className="space-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-4">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                    Coin Amount ({activeTab === 'deposit' ? `Min ${MIN_DEPOSIT}` : `Min ${MIN_WITHDRAWAL}`})
+                  </label>
+                  <div className="relative group">
+                    <input 
+                      type="number" 
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder={activeTab === 'deposit' ? `Min ${MIN_DEPOSIT}` : `Min ${MIN_WITHDRAWAL}`} 
+                      className="w-full px-8 py-6 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500 font-black text-2xl shadow-inner transition-all"
+                    />
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 font-black text-sm">COINS</div>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest">{m}</span>
+                  {amount && (
+                    <p className="px-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                      Value: ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+                    {activeTab === 'deposit' ? 'Step 2: Enter Transaction ID' : `Receive at ${method} ID`}
+                  </label>
+                  <input 
+                    type="text" 
+                    value={account}
+                    onChange={(e) => setAccount(e.target.value)}
+                    placeholder={activeTab === 'deposit' ? 'Paste Proof ID here' : 'Enter your account ID'} 
+                    className="w-full px-8 py-6 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500 font-bold text-lg shadow-inner"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full py-7 bg-slate-900 text-white font-black rounded-[2rem] hover:bg-indigo-600 transition-all shadow-2xl shadow-slate-200 flex items-center justify-center gap-4 transform active:scale-[0.98]"
+              >
+                {activeTab === 'deposit' ? 'I HAVE PAID - SUBMIT PROOF' : 'CONFIRM WITHDRAWAL'}
+                <i className="fa-solid fa-arrow-right-arrow-left"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="p-10 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
+            <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs">Ledger Activity</h3>
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+              {['all', 'deposit', 'withdraw'].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setHistoryFilter(f as any)}
+                  className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${historyFilter === f ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  {f}
                 </button>
               ))}
             </div>
           </div>
 
-          {activeTab === 'deposit' && (
-            <div className="mb-10 p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem]">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Step 1: Copy Official Address</div>
-              <div className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 mb-4 group">
-                <div className="font-mono text-sm font-black text-slate-700 break-all">{currentGateway.address}</div>
-                <button 
-                  onClick={() => handleCopy(currentGateway.address)}
-                  className="p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"
-                >
-                  <i className={`fa-solid ${copied ? 'fa-check' : 'fa-copy'}`}></i>
-                </button>
-              </div>
-              <div className="flex items-center gap-3 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                <i className="fa-solid fa-circle-info"></i>
-                {currentGateway.step}
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmitInitial} className="space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-4">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                  Coin Amount ({activeTab === 'deposit' ? `Min ${MIN_DEPOSIT}` : `Min ${MIN_WITHDRAWAL}`})
-                </label>
-                <div className="relative group">
-                   <input 
-                    type="number" 
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder={activeTab === 'deposit' ? `Min ${MIN_DEPOSIT}` : `Min ${MIN_WITHDRAWAL}`} 
-                    className="w-full px-8 py-6 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500 font-black text-2xl shadow-inner transition-all"
-                  />
-                  <div className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 font-black text-sm">COINS</div>
+          <div className="divide-y divide-slate-50">
+            {filteredHistory.length === 0 ? (
+              <div className="p-32 text-center">
+                <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-slate-200 shadow-inner">
+                  <i className="fa-solid fa-receipt text-3xl"></i>
                 </div>
-                {amount && (
-                  <p className="px-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                    Value: ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD
-                  </p>
-                )}
+                <p className="text-slate-400 font-black text-xs uppercase tracking-widest">No matching records</p>
               </div>
-
-              <div className="space-y-4">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                  {activeTab === 'deposit' ? 'Step 2: Enter Transaction ID' : `Receive at ${method} ID`}
-                </label>
-                <input 
-                  type="text" 
-                  value={account}
-                  onChange={(e) => setAccount(e.target.value)}
-                  placeholder={activeTab === 'deposit' ? 'Paste Proof ID here' : 'Enter your account ID'} 
-                  className="w-full px-8 py-6 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500 font-bold text-lg shadow-inner"
-                />
-              </div>
-            </div>
-
-            <button 
-              type="submit"
-              className="w-full py-7 bg-slate-900 text-white font-black rounded-[2rem] hover:bg-indigo-600 transition-all shadow-2xl shadow-slate-200 flex items-center justify-center gap-4 transform active:scale-[0.98]"
-            >
-              {activeTab === 'deposit' ? 'I HAVE PAID - SUBMIT PROOF' : 'CONFIRM WITHDRAWAL'}
-              <i className="fa-solid fa-arrow-right-arrow-left"></i>
-            </button>
-          </form>
+            ) : (
+              filteredHistory.map(tx => (
+                <div key={tx.id} className="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-6">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-sm ${
+                      tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
+                    }`}>
+                      <i className={`fa-solid ${tx.type === 'deposit' ? 'fa-arrow-down' : 'fa-arrow-up'}`}></i>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-black text-slate-900 uppercase tracking-tight text-sm capitalize">{tx.type}</span>
+                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
+                          tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                          tx.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-red-50 text-red-600 border-red-100'
+                        }`}>{tx.status}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{tx.date}</span>
+                        <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
+                        <span className="text-[10px] text-indigo-500 font-black uppercase tracking-widest">{tx.method || 'Internal'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`font-black text-xl ${tx.type === 'deposit' ? 'text-emerald-500' : 'text-slate-900'}`}>
+                      {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toLocaleString()}
+                    </div>
+                    <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                      ≈ ${(tx.amount / COIN_RATE).toFixed(2)} USD
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Confirmation Modal */}
       {showConfirmModal && (

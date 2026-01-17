@@ -327,7 +327,7 @@ const App: React.FC = () => {
         {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} navigateTo={navigateTo} />}
         {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} transactions={transactions} />}
         {currentPage === 'referrals' && <Referrals user={user} />}
-        {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} />}
+        {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} transactions={transactions} />}
         {currentPage === 'dashboard' && (
           user.isLoggedIn 
           ? <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={deleteTask} onUpdateTask={updateTask} />
