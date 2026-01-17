@@ -11,6 +11,8 @@ import Login from './pages/Login';
 import SpinWheel from './pages/SpinWheel';
 import Referrals from './pages/Referrals'; 
 import AdminPanel from './pages/AdminPanel';
+import Features from './pages/Features';
+import Contact from './pages/Contact';
 import { User, Task, Transaction, TaskType } from './types';
 import { storage } from './services/storage';
 
@@ -62,18 +64,28 @@ const App: React.FC = () => {
     const infoPages: Record<string, {title: string, content: React.ReactNode}> = {
       'terms': {
         title: 'Terms of Use',
-        content: <p>Full Terms of Use content...</p>
+        content: <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
+          <p>By using Ads Predia, you agree to comply with our global micro-tasking standards.</p>
+          <p>1. Self-referral and multiple accounts are strictly prohibited.</p>
+          <p>2. Proof of completion must be authentic and verifiable.</p>
+          <p>3. Advertisers must maintain a sufficient coin balance for escrow.</p>
+        </div>
       },
       'privacy': {
         title: 'Privacy Policy',
-        content: <p>Full Privacy Policy content...</p>
+        content: <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
+          <p>We take your digital privacy seriously.</p>
+          <p>1. We never share your email with third-party advertisers.</p>
+          <p>2. Payment gateway details are processed via secure encrypted tunnels.</p>
+          <p>3. Proof screenshots are deleted from our servers after verification.</p>
+        </div>
       }
     };
     if (infoPages[id]) setInfoModal(infoPages[id]);
   };
 
   const navigateTo = (page: string) => {
-    const mainPages = ['home', 'tasks', 'create', 'spin', 'referrals', 'wallet', 'dashboard', 'login', 'admin'];
+    const mainPages = ['home', 'tasks', 'create', 'spin', 'referrals', 'wallet', 'dashboard', 'login', 'admin', 'features', 'contact'];
     if (mainPages.includes(page)) {
       setCurrentPage(page);
     } else {
@@ -212,6 +224,8 @@ const App: React.FC = () => {
       <Navbar currentPage={currentPage} setCurrentPage={navigateTo} user={user} onLogout={handleLogout} />
       <main className="flex-grow">
         {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
+        {currentPage === 'features' && <Features />}
+        {currentPage === 'contact' && <Contact />}
         {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={completeTask} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} navigateTo={navigateTo} />}
         {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} transactions={transactions} />}
