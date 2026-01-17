@@ -9,7 +9,7 @@ interface CreateTaskProps {
     reward: number; 
     totalWorkers: number; 
     description: string;
-    link?: string; // New field for the campaign URL
+    link?: string;
   }) => void;
   userCoins: number;
   navigateTo: (page: string) => void;
@@ -164,7 +164,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                 isBalanceEnough ? 'bg-slate-900 hover:bg-indigo-600 shadow-indigo-100' : 'bg-slate-200 cursor-not-allowed shadow-none'
               }`}
             >
-              {isBalanceEnough ? 'Review & Launch Campaign' : 'Insufficient Coins to Deploy'}
+              {isBalanceEnough ? 'Launch Task Now' : 'Insufficient Coins to Deploy'}
               <i className="fa-solid fa-paper-plane"></i>
             </button>
           </form>
@@ -264,7 +264,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                   onClick={handleFinalConfirm}
                   className="flex-2 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100"
                 >
-                  Deploy Now
+                  Launch Task Now
                 </button>
               </div>
             </div>
