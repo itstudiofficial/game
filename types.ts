@@ -10,7 +10,8 @@ export interface Task {
   creatorId: string;
   totalWorkers: number;
   completedCount: number;
-  status: 'active' | 'completed' | 'pending';
+  status: 'active' | 'completed' | 'pending' | 'rejected';
+  link?: string;
 }
 
 export interface User {
@@ -21,13 +22,16 @@ export interface User {
   completedTasks: string[];
   createdTasks: string[];
   isLoggedIn: boolean;
+  isAdmin?: boolean;
   lastSpinTimestamp?: number;
   dailySpinsCount?: number;
+  status?: 'active' | 'banned';
 }
 
 export interface Transaction {
   id: string;
   userId: string;
+  username?: string;
   amount: number;
   type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin';
   method?: string;

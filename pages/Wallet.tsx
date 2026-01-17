@@ -17,6 +17,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
   const [account, setAccount] = useState('');
   const [copied, setCopied] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Economic Policy: 5000 Coins = 2 USD => 2500 Coins = 1 USD
   const COIN_RATE = 2500;
@@ -68,16 +69,23 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
       if (isNaN(val) || val < MIN_WITHDRAWAL) return alert(`Minimum withdrawal is ${MIN_WITHDRAWAL} coins`);
       if (val > coins) return alert('Insufficient balance in your vault');
       if (!account) return alert('Please enter your receiving account/wallet ID');
-      confirmAction();
+      setShowConfirmModal(true);
     }
   };
 
-  const confirmAction = () => {
-    onAction(activeTab, parseInt(amount), method);
-    setAmount('');
-    setAccount('');
-    setShowConfirmModal(false);
-    setView('history'); // Switch to history after action
+  const confirmAction = async () => {
+    setIsProcessing(true);
+    try {
+      await onAction(activeTab, parseInt(amount), method);
+      setAmount('');
+      setAccount('');
+      setShowConfirmModal(false);
+      setView('history'); 
+    } catch (err) {
+      alert('Transaction failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const filteredHistory = transactions.filter(tx => {
@@ -305,53 +313,81 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
         </div>
       )}
 
-      {/* Confirmation Modal */}
+      {/* Enhanced Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white rounded-[3rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="p-10">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 text-xl">
-                  <i className="fa-solid fa-shield-heart"></i>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl shadow-lg ${activeTab === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                  <i className={`fa-solid ${activeTab === 'deposit' ? 'fa-shield-check' : 'fa-receipt'}`}></i>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">One Last Check</h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Verification Required</p>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Final Verification</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    {activeTab === 'deposit' ? 'Deposit Review' : 'Withdrawal Review'}
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-red-50 p-6 rounded-[2rem] border border-red-100">
-                  <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Show Payment First!</h4>
-                  <p className="text-xs font-bold text-red-800 leading-relaxed">
-                    By clicking confirm, you legally testify that you have ALREADY sent ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD to our {method} address.
+                <div className={`p-6 rounded-[2rem] border ${activeTab === 'deposit' ? 'bg-red-50 border-red-100' : 'bg-indigo-50 border-indigo-100'}`}>
+                  <h4 className={`text-[10px] font-black uppercase tracking-widest mb-2 ${activeTab === 'deposit' ? 'text-red-600' : 'text-indigo-600'}`}>
+                    Important Notice
+                  </h4>
+                  <p className={`text-xs font-bold leading-relaxed ${activeTab === 'deposit' ? 'text-red-800' : 'text-indigo-800'}`}>
+                    {activeTab === 'deposit' 
+                      ? `By confirming, you testify that you have sent $${(parseInt(amount) / COIN_RATE).toFixed(2)} USD to our official ${method} account. Fake submissions result in permanent bans.`
+                      : `Please double check your ${method} ID. If the ID is incorrect, your coins may be lost forever. Processing time: 24-72 hours.`}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Coins to add</div>
-                    <div className="text-2xl font-black">{parseInt(amount).toLocaleString()}</div>
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</div>
+                    <div className="text-2xl font-black">{parseInt(amount).toLocaleString()} <span className="text-[10px] text-slate-400">Coins</span></div>
                   </div>
                   <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">TRX Proof</div>
-                    <div className="text-sm font-black truncate">{account}</div>
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Gateway</div>
+                    <div className="text-sm font-black flex items-center gap-2">
+                       <i className={`fa-solid ${currentGateway.icon} ${currentGateway.color}`}></i>
+                       {method}
+                    </div>
                   </div>
+                </div>
+
+                <div className="bg-slate-900 p-6 rounded-[2rem] text-white">
+                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2">
+                    {activeTab === 'deposit' ? 'Transaction Proof ID' : 'Receiving Account ID'}
+                  </div>
+                  <div className="text-sm font-mono font-bold break-all opacity-90">{account}</div>
                 </div>
               </div>
 
               <div className="mt-10 flex gap-4">
                 <button 
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-5 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-xs uppercase tracking-widest"
+                  disabled={isProcessing}
+                  className="flex-1 py-5 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
                 >
-                  I Haven't Paid
+                  Discard
                 </button>
                 <button 
                   onClick={confirmAction}
-                  className="flex-2 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100"
+                  disabled={isProcessing}
+                  className="flex-2 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 disabled:opacity-50 flex items-center justify-center gap-3"
                 >
-                  Confirm Payment
+                  {isProcessing ? (
+                    <>
+                      <i className="fa-solid fa-spinner fa-spin"></i>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {activeTab === 'deposit' ? 'Confirm Payment' : 'Confirm Withdrawal'}
+                      <i className="fa-solid fa-circle-check"></i>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

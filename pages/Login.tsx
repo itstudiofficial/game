@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 
 interface LoginProps {
-  onLogin: (userData: { username: string; email?: string; isLoggedIn: boolean }) => void;
+  onLogin: (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean }) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -21,6 +21,21 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setEmailError('');
+
+    // Admin Credentials Check
+    if (!isRegistering && email === 'ehtesham@adspredia.site' && password === 'admin123') {
+      setIsSubmitting(true);
+      setTimeout(() => {
+        onLogin({
+          username: 'Admin Ehtesham',
+          email: email,
+          isLoggedIn: true,
+          isAdmin: true
+        });
+        setIsSubmitting(false);
+      }, 1000);
+      return;
+    }
 
     if (isRegistering) {
       if (!username || !email || !password) {
@@ -47,9 +62,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     // Simulating API verification
     setTimeout(() => {
       onLogin({
-        username: isRegistering ? username : email.split('@')[0], // Use email prefix as temp username if logging in
+        username: isRegistering ? username : email.split('@')[0],
         email: email,
-        isLoggedIn: true
+        isLoggedIn: true,
+        isAdmin: false
       });
       setIsSubmitting(false);
     }, 1200); 
@@ -87,7 +103,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           
           <form onSubmit={handleSubmit} className="p-12 space-y-8">
             <div className="space-y-6">
-              {/* Username Field - Only shown during Registration */}
               {isRegistering && (
                 <div className="animate-in fade-in slide-in-from-top-4 duration-400">
                   <label htmlFor="username" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Username</label>
@@ -109,7 +124,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </div>
               )}
 
-              {/* Email Field - Shown in both Login and Registration */}
               <div>
                 <label htmlFor="email" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email Address</label>
                 <div className="relative group">
@@ -139,7 +153,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 )}
               </div>
 
-              {/* Password Field - Shown in both */}
               <div>
                 <label htmlFor="password" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Password</label>
                 <div className="relative group">
