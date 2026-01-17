@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Transaction } from '../types';
 
@@ -19,7 +18,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Economic Policy: 5000 Coins = 2 USD => 2500 Coins = 1 USD
   const COIN_RATE = 2500;
   const MIN_DEPOSIT = 5000;
   const MIN_WITHDRAWAL = 3000;
@@ -27,27 +25,24 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
   const GATEWAY_DETAILS = {
     'Easypaisa': { 
       address: '+92-3338182116', 
-      label: 'Easypaisa Number', 
-      name: 'Ads Predia Official',
-      icon: 'fa-mobile-screen',
-      color: 'text-emerald-500',
-      step: 'Send money to this number via Easypaisa App first.'
+      icon: 'fa-mobile-screen-button', 
+      color: 'text-emerald-500', 
+      bg: 'bg-emerald-50',
+      step: 'Initiate transfer via App first.' 
     },
     'USDT': { 
       address: 'TWFfb9ewKRbtSz8qTitr2fJpyRPQWtKj2U', 
-      label: 'TRC20 Wallet Address', 
-      name: 'Tether TRC20',
-      icon: 'fa-brands fa-ethereum',
-      color: 'text-indigo-500',
-      step: 'Transfer USDT (TRC20) to this address from your exchange.'
+      icon: 'fa-brands fa-ethereum', 
+      color: 'text-indigo-500', 
+      bg: 'bg-indigo-50',
+      step: 'Use TRC20 network only.' 
     },
     'Payeer': { 
       address: 'P1061557241', 
-      label: 'Payeer Account ID', 
-      name: 'Global Payeer',
-      icon: 'fa-wallet',
-      color: 'text-blue-500',
-      step: 'Send the amount to this Payeer account first.'
+      icon: 'fa-wallet', 
+      color: 'text-blue-500', 
+      bg: 'bg-blue-50',
+      step: 'Send to Payeer Account first.' 
     }
   };
 
@@ -60,17 +55,15 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
   const handleSubmitInitial = (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseInt(amount);
-    
     if (activeTab === 'deposit') {
-      if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Minimum deposit is ${MIN_DEPOSIT} coins ($2.00)`);
-      if (!account) return alert('Please complete the payment first and enter your Transaction ID!');
-      setShowConfirmModal(true);
+      if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Min deposit: ${MIN_DEPOSIT} coins`);
+      if (!account) return alert('Reference/Tx ID Required');
     } else {
-      if (isNaN(val) || val < MIN_WITHDRAWAL) return alert(`Minimum withdrawal is ${MIN_WITHDRAWAL} coins`);
-      if (val > coins) return alert('Insufficient balance in your vault');
-      if (!account) return alert('Please enter your receiving account/wallet ID');
-      setShowConfirmModal(true);
+      if (isNaN(val) || val < MIN_WITHDRAWAL) return alert(`Min withdrawal: ${MIN_WITHDRAWAL} coins`);
+      if (val > coins) return alert('Insufficient Vault Balance');
+      if (!account) return alert('Receiving Account Required');
     }
+    setShowConfirmModal(true);
   };
 
   const confirmAction = async () => {
@@ -82,7 +75,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
       setShowConfirmModal(false);
       setView('history'); 
     } catch (err) {
-      alert('Transaction failed. Please try again.');
+      alert('Network synchronization failed.');
     } finally {
       setIsProcessing(false);
     }
@@ -96,298 +89,291 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
   const currentGateway = GATEWAY_DETAILS[method as keyof typeof GATEWAY_DETAILS];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      {/* Wallet Summary Card */}
-      <div className="bg-indigo-600 rounded-[3rem] p-12 mb-10 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
-          <div className="flex-1">
-            <p className="text-indigo-100 font-black mb-4 opacity-80 uppercase tracking-[0.3em] text-[10px]">Financial Liquidity</p>
-            <div className="flex items-baseline gap-4">
-              <div className="text-7xl font-black tracking-tighter">
-                {coins.toLocaleString()}
+    <div className="pt-28 pb-20 min-h-screen bg-slate-50">
+      <div className="max-w-[1600px] mx-auto px-6 md:px-12 space-y-12">
+        
+        {/* Economic Header & Balance Vault */}
+        <div className="bg-slate-900 rounded-[4rem] p-12 md:p-20 text-white shadow-3xl relative overflow-hidden group">
+          <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-16">
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-white/5 rounded-full text-[9px] font-black uppercase tracking-[0.4em] text-indigo-400 border border-white/10 mb-8">
+                <i className="fa-solid fa-vault"></i>
+                Authorized Asset Hub
               </div>
-              <div className="text-xl font-bold text-indigo-200 opacity-60">COINS</div>
+              <div className="flex flex-col sm:flex-row items-center lg:items-baseline gap-6 mb-10">
+                <h2 className="text-7xl md:text-9xl font-black tracking-tighter leading-none tabular-nums">
+                  {coins.toLocaleString()}
+                </h2>
+                <span className="text-xl font-black text-slate-500 uppercase tracking-widest">Global Units</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-start">
+                 <div className="bg-white/5 px-10 py-5 rounded-[2rem] text-3xl font-black border border-white/10 backdrop-blur-3xl shadow-2xl flex items-center gap-4">
+                    <span className="text-indigo-400">$</span>
+                    {(coins / COIN_RATE).toFixed(2)}
+                    <span className="text-[10px] opacity-30 uppercase tracking-widest font-black">USD VAL</span>
+                 </div>
+                 <div className="hidden sm:block h-12 w-px bg-white/10"></div>
+                 <div className="text-left hidden sm:block">
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Exchange Protocol</p>
+                    <p className="text-xs font-black text-indigo-400">2,500 : 1.00 USD</p>
+                 </div>
+              </div>
             </div>
-            <div className="mt-8 flex items-center space-x-3">
-               <div className="bg-white/10 px-6 py-3 rounded-2xl text-lg font-black border border-white/10 backdrop-blur-xl shadow-lg">
-                  ≈ ${(coins / COIN_RATE).toFixed(2)} USD
-               </div>
-               <div className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Rate: 5,000 Coins / $2</div>
+
+            <div className="w-full lg:w-auto flex bg-white/5 p-2 rounded-[2.5rem] border border-white/10 backdrop-blur-md shadow-inner">
+              <button 
+                onClick={() => setView('transact')}
+                className={`flex-1 lg:flex-none lg:px-16 py-6 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${view === 'transact' ? 'bg-white text-slate-900 shadow-2xl' : 'text-slate-500 hover:text-white'}`}
+              >
+                Sync Operations
+              </button>
+              <button 
+                onClick={() => setView('history')}
+                className={`flex-1 lg:flex-none lg:px-16 py-6 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${view === 'history' ? 'bg-white text-slate-900 shadow-2xl' : 'text-slate-500 hover:text-white'}`}
+              >
+                Audit Ledger
+              </button>
             </div>
           </div>
-          <div className="flex flex-col gap-3">
-            <button 
-              onClick={() => setView('transact')}
-              className={`px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${view === 'transact' ? 'bg-white text-indigo-600 shadow-xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
-            >
-              <i className="fa-solid fa-plus-minus mr-2"></i> Transact
-            </button>
-            <button 
-              onClick={() => setView('history')}
-              className={`px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${view === 'history' ? 'bg-white text-indigo-600 shadow-xl' : 'bg-white/10 text-white hover:bg-white/20'}`}
-            >
-              <i className="fa-solid fa-clock-rotate-left mr-2"></i> History
-            </button>
-          </div>
+
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none translate-x-1/4 -translate-y-1/4"></div>
+          <i className="fa-solid fa-coins absolute -right-20 -bottom-20 text-[35rem] text-white/5 pointer-events-none -rotate-12 group-hover:scale-110 transition-transform duration-[2000ms]"></i>
         </div>
+
+        {view === 'transact' ? (
+          <div className="animate-in fade-in slide-in-from-bottom-12 duration-700">
+            <div className="bg-white rounded-[4rem] shadow-sm border border-slate-100 overflow-hidden">
+              <div className="flex p-3 bg-slate-50 m-8 md:m-16 rounded-[3rem] border border-slate-200/50 shadow-inner">
+                <button 
+                  onClick={() => setActiveTab('deposit')}
+                  className={`flex-1 py-6 text-[11px] font-black rounded-[2.5rem] transition-all duration-500 uppercase tracking-[0.2em] ${activeTab === 'deposit' ? 'bg-white text-indigo-600 shadow-2xl ring-1 ring-slate-100' : 'text-slate-400 hover:text-slate-800'}`}
+                >
+                  <i className="fa-solid fa-plus-circle mr-3"></i> Add Liquidity
+                </button>
+                <button 
+                  onClick={() => setActiveTab('withdraw')}
+                  className={`flex-1 py-6 text-[11px] font-black rounded-[2.5rem] transition-all duration-500 uppercase tracking-[0.2em] ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-2xl ring-1 ring-slate-100' : 'text-slate-400 hover:text-slate-800'}`}
+                >
+                  <i className="fa-solid fa-arrow-right-from-bracket mr-3"></i> Asset Outflow
+                </button>
+              </div>
+
+              <div className="px-8 md:px-24 pb-24 space-y-20">
+                {/* Protocol Selection */}
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-12 text-center">Network Protocol Selection</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                    {Object.keys(GATEWAY_DETAILS).map(m => {
+                      const gateway = GATEWAY_DETAILS[m as keyof typeof GATEWAY_DETAILS];
+                      const isActive = method === m;
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setMethod(m)}
+                          className={`group p-10 rounded-[3rem] border-2 transition-all duration-500 flex flex-col items-center gap-8 ${
+                            isActive ? 'border-indigo-600 bg-indigo-50/40 shadow-3xl shadow-indigo-100/50' : 'border-slate-50 bg-slate-50 hover:border-slate-200 text-slate-400'
+                          }`}
+                        >
+                          <div className={`w-20 h-20 rounded-3xl flex items-center justify-center text-3xl transition-all duration-500 ${isActive ? 'bg-white shadow-2xl scale-110' : 'bg-white/80'}`}>
+                            <i className={`fa-solid ${gateway.icon} ${isActive ? gateway.color : 'text-slate-300'}`}></i>
+                          </div>
+                          <span className={`text-[13px] font-black uppercase tracking-[0.2em] ${isActive ? 'text-indigo-900' : 'text-slate-500'}`}>{m}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Secure Gateway Instructions */}
+                <div className="bg-slate-900 p-12 md:p-16 rounded-[4rem] text-white relative overflow-hidden group shadow-2xl shadow-slate-200">
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
+                    <div className="space-y-6">
+                      <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em]">Target Node Address</p>
+                      <div className="flex items-center gap-8">
+                        <span className="text-2xl md:text-4xl font-black text-white font-mono tracking-tight break-all">
+                          {currentGateway.address}
+                        </span>
+                        <button 
+                          onClick={() => handleCopy(currentGateway.address)} 
+                          className="w-16 h-16 bg-white text-indigo-600 rounded-3xl shadow-2xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all active:scale-90"
+                        >
+                          <i className={`fa-solid ${copied ? 'fa-check-double' : 'fa-copy'} text-xl`}></i>
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-4 pt-4">
+                         <span className="flex h-3 w-3 relative">
+                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                           <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                         </span>
+                         <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{currentGateway.step}</p>
+                      </div>
+                    </div>
+                    <i className={`fa-solid ${currentGateway.icon} text-[15rem] absolute -right-16 -bottom-16 text-white/5 -rotate-12`}></i>
+                  </div>
+                </div>
+
+                {/* Operation Form */}
+                <form onSubmit={handleSubmitInitial} className="space-y-16">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="space-y-6">
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-4">Allocation Quantity</label>
+                      <div className="relative group">
+                        <input 
+                          type="number" 
+                          value={amount} 
+                          onChange={(e) => setAmount(e.target.value)} 
+                          className="w-full px-12 py-8 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-[2.5rem] focus:ring-8 focus:ring-indigo-600/5 font-black text-4xl text-slate-800 shadow-inner transition-all outline-none" 
+                          placeholder="0000" 
+                        />
+                        <div className="absolute right-10 top-1/2 -translate-y-1/2 text-[11px] font-black text-slate-300 uppercase tracking-widest pointer-events-none">UNITS</div>
+                      </div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Threshold: {activeTab === 'deposit' ? MIN_DEPOSIT : MIN_WITHDRAWAL} Min</p>
+                    </div>
+                    <div className="space-y-6">
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-4">
+                        {activeTab === 'deposit' ? 'Verification Code (TX ID)' : 'Receiving Node ID'}
+                      </label>
+                      <input 
+                        type="text" 
+                        value={account} 
+                        onChange={(e) => setAccount(e.target.value)} 
+                        className="w-full px-12 py-8 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-[2.5rem] focus:ring-8 focus:ring-indigo-600/5 font-black text-lg text-slate-700 shadow-inner transition-all outline-none" 
+                        placeholder={activeTab === 'deposit' ? 'Paste Hash Here' : 'e.g. Wallet Address'} 
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="w-full py-10 bg-slate-900 text-white font-black rounded-[3rem] hover:bg-indigo-600 transition-all shadow-[0_40px_80px_-20px_rgba(15,23,42,0.4)] uppercase tracking-[0.5em] text-xs transform active:scale-[0.98] flex items-center justify-center gap-6"
+                  >
+                    Execute Protocol Sequence
+                    <i className="fa-solid fa-arrow-right-long text-sm"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="animate-in fade-in slide-in-from-right-12 duration-700">
+            <div className="bg-white rounded-[4rem] shadow-sm border border-slate-100 overflow-hidden">
+              <div className="p-12 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-center bg-slate-50/40 gap-8">
+                <div>
+                  <h3 className="font-black text-slate-900 uppercase tracking-tighter text-3xl">Asset Audit Ledger</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Verified synchronization of all network transfers</p>
+                </div>
+                <div className="flex bg-white p-2 rounded-[2rem] border border-slate-200">
+                  {['all', 'deposit', 'withdraw'].map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setHistoryFilter(f as any)}
+                      className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${historyFilter === f ? 'bg-indigo-600 text-white shadow-xl' : 'text-slate-400 hover:text-slate-900'}`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="divide-y divide-slate-50">
+                {filteredHistory.length === 0 ? (
+                  <div className="p-40 text-center">
+                    <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+                      <i className="fa-solid fa-receipt text-slate-200 text-5xl"></i>
+                    </div>
+                    <p className="text-slate-300 font-black text-xs uppercase tracking-[0.4em]">Empty synchronization log</p>
+                  </div>
+                ) : (
+                  filteredHistory.map(tx => (
+                    <div key={tx.id} className="p-12 flex items-center justify-between hover:bg-slate-50 transition-all group">
+                      <div className="flex items-center gap-10">
+                        <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center border-2 transition-transform group-hover:scale-110 shadow-sm ${
+                          tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                        }`}>
+                          <i className={`fa-solid ${tx.type === 'deposit' ? 'fa-arrow-down-long' : 'fa-arrow-up-long'} text-2xl`}></i>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-6 mb-3">
+                             <span className="font-black text-slate-900 text-2xl tracking-tighter capitalize">{tx.type} Request</span>
+                             <span className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border ${
+                               tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200 animate-pulse'
+                             }`}>
+                               {tx.status}
+                             </span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-6">
+                             <span className="flex items-center gap-2"><i className="fa-solid fa-clock opacity-50"></i> {tx.date.split(',')[0]}</span>
+                             <span className="w-1.5 h-1.5 bg-slate-200 rounded-full"></span>
+                             <span className="flex items-center gap-2"><i className="fa-solid fa-shield opacity-50"></i> {tx.id.toUpperCase()}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-black text-4xl tracking-tighter ${tx.type === 'deposit' ? 'text-emerald-500' : 'text-slate-900'}`}>
+                          {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2">NETWORK UNITS</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {view === 'transact' ? (
-        <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex p-3 bg-slate-100 m-6 rounded-[2rem] shadow-inner">
-            <button 
-              onClick={() => setActiveTab('deposit')}
-              className={`flex-1 py-5 text-xs font-black rounded-2xl transition-all tracking-widest ${activeTab === 'deposit' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              DEPOSIT FUNDS
-            </button>
-            <button 
-              onClick={() => setActiveTab('withdraw')}
-              className={`flex-1 py-5 text-xs font-black rounded-2xl transition-all tracking-widest ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              WITHDRAWAL
-            </button>
-          </div>
-
-          <div className="p-12 pt-6">
-            {activeTab === 'deposit' && (
-              <div className="mb-10 bg-red-50 border border-red-100 p-6 rounded-[2rem] animate-pulse">
-                <div className="flex items-center gap-4 text-red-600 mb-2">
-                  <i className="fa-solid fa-triangle-exclamation"></i>
-                  <span className="text-xs font-black uppercase tracking-widest">Show Payment First</span>
-                </div>
-                <p className="text-[11px] font-bold text-red-700 leading-relaxed">
-                  You MUST send the payment to our official address below BEFORE submitting this form. Minimum deposit is 5,000 Coins ($2.00). Submitting without payment will lead to a permanent account ban.
-                </p>
-              </div>
-            )}
-
-            <div className="mb-12">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 px-2">Select Gateway</label>
-              <div className="grid grid-cols-3 gap-6">
-                {Object.keys(GATEWAY_DETAILS).map(m => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMethod(m)}
-                    className={`p-8 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center gap-4 group ${
-                      method === m ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'
-                    }`}
-                  >
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform group-hover:scale-110 ${method === m ? 'bg-white shadow-sm' : 'bg-white/50'}`}>
-                      <i className={`fa-solid ${GATEWAY_DETAILS[m as keyof typeof GATEWAY_DETAILS].icon} ${method === m ? GATEWAY_DETAILS[m as keyof typeof GATEWAY_DETAILS].color : ''}`}></i>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest">{m}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {activeTab === 'deposit' && (
-              <div className="mb-10 p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem]">
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Step 1: Copy Official Address</div>
-                <div className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 mb-4 group">
-                  <div className="font-mono text-sm font-black text-slate-700 break-all">{currentGateway.address}</div>
-                  <button 
-                    onClick={() => handleCopy(currentGateway.address)}
-                    className="p-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"
-                  >
-                    <i className={`fa-solid ${copied ? 'fa-check' : 'fa-copy'}`}></i>
-                  </button>
-                </div>
-                <div className="flex items-center gap-3 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                  <i className="fa-solid fa-circle-info"></i>
-                  {currentGateway.step}
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmitInitial} className="space-y-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-4">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                    Coin Amount ({activeTab === 'deposit' ? `Min ${MIN_DEPOSIT}` : `Min ${MIN_WITHDRAWAL}`})
-                  </label>
-                  <div className="relative group">
-                    <input 
-                      type="number" 
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder={activeTab === 'deposit' ? `Min ${MIN_DEPOSIT}` : `Min ${MIN_WITHDRAWAL}`} 
-                      className="w-full px-8 py-6 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500 font-black text-2xl shadow-inner transition-all"
-                    />
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 font-black text-sm">COINS</div>
-                  </div>
-                  {amount && (
-                    <p className="px-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-                      Value: ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
-                    {activeTab === 'deposit' ? 'Step 2: Enter Transaction ID' : `Receive at ${method} ID`}
-                  </label>
-                  <input 
-                    type="text" 
-                    value={account}
-                    onChange={(e) => setAccount(e.target.value)}
-                    placeholder={activeTab === 'deposit' ? 'Paste Proof ID here' : 'Enter your account ID'} 
-                    className="w-full px-8 py-6 bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500 font-bold text-lg shadow-inner"
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit"
-                className="w-full py-7 bg-slate-900 text-white font-black rounded-[2rem] hover:bg-indigo-600 transition-all shadow-2xl shadow-slate-200 flex items-center justify-center gap-4 transform active:scale-[0.98]"
-              >
-                {activeTab === 'deposit' ? 'I HAVE PAID - SUBMIT PROOF' : 'CONFIRM WITHDRAWAL'}
-                <i className="fa-solid fa-arrow-right-arrow-left"></i>
-              </button>
-            </form>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="p-10 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
-            <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs">Ledger Activity</h3>
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-              {['all', 'deposit', 'withdraw'].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setHistoryFilter(f as any)}
-                  className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${historyFilter === f ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="divide-y divide-slate-50">
-            {filteredHistory.length === 0 ? (
-              <div className="p-32 text-center">
-                <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-slate-200 shadow-inner">
-                  <i className="fa-solid fa-receipt text-3xl"></i>
-                </div>
-                <p className="text-slate-400 font-black text-xs uppercase tracking-widest">No matching records</p>
-              </div>
-            ) : (
-              filteredHistory.map(tx => (
-                <div key={tx.id} className="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center gap-6">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-sm ${
-                      tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
-                    }`}>
-                      <i className={`fa-solid ${tx.type === 'deposit' ? 'fa-arrow-down' : 'fa-arrow-up'}`}></i>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-black text-slate-900 uppercase tracking-tight text-sm capitalize">{tx.type}</span>
-                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
-                          tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                          tx.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-red-50 text-red-600 border-red-100'
-                        }`}>{tx.status}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{tx.date}</span>
-                        <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
-                        <span className="text-[10px] text-indigo-500 font-black uppercase tracking-widest">{tx.method || 'Internal'}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`font-black text-xl ${tx.type === 'deposit' ? 'text-emerald-500' : 'text-slate-900'}`}>
-                      {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toLocaleString()}
-                    </div>
-                    <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                      ≈ ${(tx.amount / COIN_RATE).toFixed(2)} USD
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Enhanced Confirmation Modal */}
+      {/* Secure Confirmation Overlay */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white rounded-[3rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="p-10">
-              <div className="flex items-center gap-4 mb-8">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl shadow-lg ${activeTab === 'deposit' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
-                  <i className={`fa-solid ${activeTab === 'deposit' ? 'fa-shield-check' : 'fa-receipt'}`}></i>
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-3xl animate-in fade-in duration-500">
+          <div className="bg-white rounded-[4rem] w-full max-w-2xl overflow-hidden shadow-[0_60px_120px_-20px_rgba(0,0,0,0.6)] animate-in zoom-in-95 duration-500 border border-slate-200/50">
+            <div className="p-14 md:p-20">
+              <div className="flex items-center gap-8 mb-16">
+                <div className="w-20 h-20 bg-slate-900 rounded-[2.25rem] flex items-center justify-center text-white text-3xl shadow-3xl">
+                  <i className="fa-solid fa-shield-halved"></i>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">Final Verification</h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
-                    {activeTab === 'deposit' ? 'Deposit Review' : 'Withdrawal Review'}
-                  </p>
+                   <h3 className="text-4xl font-black text-slate-900 tracking-tighter">Security Approval</h3>
+                   <p className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em] mt-2">Authenticating Sync Sequence</p>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className={`p-6 rounded-[2rem] border ${activeTab === 'deposit' ? 'bg-red-50 border-red-100' : 'bg-indigo-50 border-indigo-100'}`}>
-                  <h4 className={`text-[10px] font-black uppercase tracking-widest mb-2 ${activeTab === 'deposit' ? 'text-red-600' : 'text-indigo-600'}`}>
-                    Important Notice
-                  </h4>
-                  <p className={`text-xs font-bold leading-relaxed ${activeTab === 'deposit' ? 'text-red-800' : 'text-indigo-800'}`}>
-                    {activeTab === 'deposit' 
-                      ? `By confirming, you testify that you have sent $${(parseInt(amount) / COIN_RATE).toFixed(2)} USD to our official ${method} account. Fake submissions result in permanent bans.`
-                      : `Please double check your ${method} ID. If the ID is incorrect, your coins may be lost forever. Processing time: 24-72 hours.`}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Amount</div>
-                    <div className="text-2xl font-black">{parseInt(amount).toLocaleString()} <span className="text-[10px] text-slate-400">Coins</span></div>
+              <div className="bg-slate-50 p-12 rounded-[3rem] border border-slate-200/60 mb-16 space-y-8">
+                  <div className="flex justify-between items-center pb-8 border-b border-slate-200">
+                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Operation Type</span>
+                    <span className="text-sm font-black text-slate-900 uppercase tracking-widest bg-white px-4 py-2 rounded-xl shadow-sm">{activeTab}</span>
                   </div>
-                  <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Gateway</div>
-                    <div className="text-sm font-black flex items-center gap-2">
-                       <i className={`fa-solid ${currentGateway.icon} ${currentGateway.color}`}></i>
-                       {method}
+                  <div className="flex justify-between items-start pb-8 border-b border-slate-200">
+                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Unit Valuation</span>
+                    <div className="text-right">
+                       <span className="text-4xl font-black text-slate-900 block leading-none tabular-nums">{parseInt(amount).toLocaleString()}</span>
+                       <span className="text-[10px] font-black text-indigo-600 uppercase mt-2 block tracking-widest">≈ ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD</span>
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-slate-900 p-6 rounded-[2rem] text-white">
-                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2">
-                    {activeTab === 'deposit' ? 'Transaction Proof ID' : 'Receiving Account ID'}
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Network Gateway</span>
+                    <span className="text-sm font-black text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100">{method}</span>
                   </div>
-                  <div className="text-sm font-mono font-bold break-all opacity-90">{account}</div>
-                </div>
               </div>
 
-              <div className="mt-10 flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-6">
                 <button 
-                  onClick={() => setShowConfirmModal(false)}
-                  disabled={isProcessing}
-                  className="flex-1 py-5 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
+                  onClick={() => setShowConfirmModal(false)} 
+                  className="flex-1 py-7 bg-slate-100 text-slate-500 font-black rounded-3xl text-xs uppercase tracking-[0.3em] hover:bg-slate-200 transition-all"
                 >
-                  Discard
+                  Terminate
                 </button>
                 <button 
-                  onClick={confirmAction}
-                  disabled={isProcessing}
-                  className="flex-2 py-5 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 disabled:opacity-50 flex items-center justify-center gap-3"
+                  onClick={confirmAction} 
+                  disabled={isProcessing} 
+                  className="flex-[2] py-7 bg-slate-900 text-white font-black rounded-3xl text-xs uppercase tracking-[0.3em] shadow-2xl shadow-indigo-200 hover:bg-indigo-600 transition-all active:scale-95 flex items-center justify-center gap-4"
                 >
                   {isProcessing ? (
                     <>
-                      <i className="fa-solid fa-spinner fa-spin"></i>
-                      Processing...
+                       <i className="fa-solid fa-spinner fa-spin"></i> AUTHENTICATING...
                     </>
-                  ) : (
-                    <>
-                      {activeTab === 'deposit' ? 'Confirm Payment' : 'Confirm Withdrawal'}
-                      <i className="fa-solid fa-circle-check"></i>
-                    </>
-                  )}
+                  ) : 'Authorize Sync'}
                 </button>
               </div>
             </div>

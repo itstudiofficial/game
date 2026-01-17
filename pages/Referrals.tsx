@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User } from '../types';
 
@@ -46,117 +45,187 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center mb-16">
-        <div className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-indigo-100 shadow-sm">
-          Partnership Program
-        </div>
-        <h1 className="text-5xl font-black text-slate-900 mb-4 tracking-tighter">Global <span className="text-indigo-600">Network</span></h1>
-        <p className="text-slate-500 font-medium max-w-xl mx-auto leading-relaxed">
-          Grow your affiliate army. Earn 10% commission on every task completed by your referrals, for life.
-        </p>
-      </div>
-
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
-          {/* Main Referral Link Card */}
-          <div className="lg:col-span-8 bg-white rounded-[3rem] p-12 border border-slate-100 shadow-sm">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">Your Unique Referral Link</h3>
-            <div className="flex flex-col md:flex-row gap-4 items-center mb-12">
-              <div className="flex-1 w-full p-6 bg-slate-50 rounded-2xl border border-slate-100 font-mono text-slate-700 text-sm font-black break-all">
-                {referralLink}
-              </div>
-              <button 
-                onClick={handleCopy}
-                className={`w-full md:w-auto px-10 py-6 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-3 ${
-                  copied ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-slate-100'
-                } shadow-xl`}
-              >
-                <i className={`fa-solid ${copied ? 'fa-check' : 'fa-copy'}`}></i>
-                {copied ? 'Copied Link' : 'Copy Link'}
-              </button>
-            </div>
-
-            {/* Viral Growth Kit (Social Sharing) */}
-            <div className="mb-12">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1 flex items-center gap-2">
-                <i className="fa-solid fa-share-nodes text-indigo-500"></i>
-                Viral Growth Kit - Share Instantly
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {shareLinks.map((share) => (
-                  <a
-                    key={share.name}
-                    href={share.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${share.color} text-white p-5 rounded-[1.5rem] flex flex-col items-center justify-center gap-3 transition-all hover:scale-105 hover:shadow-lg active:scale-95 group shadow-sm`}
-                  >
-                    <i className={`fa-brands ${share.icon} text-2xl group-hover:animate-bounce`}></i>
-                    <span className="text-[9px] font-black uppercase tracking-widest">{share.name}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-indigo-50 p-8 rounded-[2rem] border border-indigo-100">
-                <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2">Total Partners</div>
-                <div className="text-4xl font-black text-indigo-900">0</div>
-              </div>
-              <div className="bg-emerald-50 p-8 rounded-[2rem] border border-emerald-100">
-                <div className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2">Lifetime Coins</div>
-                <div className="text-4xl font-black text-emerald-900">0</div>
-              </div>
-              <div className="bg-amber-50 p-8 rounded-[2rem] border border-amber-100">
-                <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest mb-2">Active Bonus</div>
-                <div className="text-4xl font-black text-amber-900">10%</div>
-              </div>
-            </div>
+    <div className="pt-28 pb-20 min-h-screen bg-slate-50">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8">
+        
+        {/* Hub Header */}
+        <div className="mb-16 max-w-3xl">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-100 shadow-sm">
+            <i className="fa-solid fa-users-rays"></i>
+            Affiliate Command Center
           </div>
+          <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none mb-4">
+            Network <span className="text-indigo-600">Growth</span>
+          </h1>
+          <p className="text-slate-500 font-medium text-lg leading-relaxed">
+            Expand your earning footprint. Recruit active participants and secure a permanent 10% commission stream from their global task completion activity.
+          </p>
+        </div>
 
-          {/* Educational Sidebar Card */}
-          <div className="lg:col-span-4">
-             <div className="bg-indigo-600 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-200 h-full flex flex-col justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          {/* Main Referral Control */}
+          <div className="lg:col-span-8 space-y-10">
+            <div className="bg-white rounded-[4rem] p-10 md:p-16 border border-slate-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.04)] relative overflow-hidden">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10 px-2 flex items-center gap-2">
+                <i className="fa-solid fa-id-card text-indigo-500"></i>
+                Unique Partner ID URL
+              </h3>
+              
+              <div className="flex flex-col md:flex-row gap-4 items-center mb-16 group">
+                <div className="flex-1 w-full p-8 bg-slate-50 rounded-3xl border border-slate-100 font-mono text-slate-700 text-sm font-black break-all shadow-inner group-hover:bg-slate-100 transition-colors">
+                  {referralLink}
+                </div>
+                <button 
+                  onClick={handleCopy}
+                  className={`w-full md:w-auto px-12 py-8 rounded-3xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-4 ${
+                    copied ? 'bg-emerald-500 text-white shadow-2xl shadow-emerald-100 scale-95' : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-2xl shadow-slate-200'
+                  }`}
+                >
+                  <i className={`fa-solid ${copied ? 'fa-check-double' : 'fa-copy'}`}></i>
+                  {copied ? 'SYNCHRONIZED' : 'COPY LINK'}
+                </button>
+              </div>
+
+              {/* Social Outreach Kit */}
+              <div className="space-y-8">
+                <div className="flex items-center justify-between px-2">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <i className="fa-solid fa-bullhorn text-indigo-500"></i>
+                    Viral Outreach Kit
+                  </h4>
+                  <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded">Instant Share</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                  {shareLinks.map((share) => (
+                    <a
+                      key={share.name}
+                      href={share.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${share.color} text-white p-8 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 transition-all hover:scale-105 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] active:scale-95 group relative overflow-hidden`}
+                    >
+                      <i className={`fa-brands ${share.icon} text-3xl group-hover:rotate-12 transition-transform`}></i>
+                      <span className="text-[9px] font-black uppercase tracking-widest opacity-80">{share.name}</span>
+                      <div className="absolute top-0 left-0 w-full h-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Visual Asset */}
+              <div className="absolute -right-12 -top-12 w-64 h-64 bg-indigo-50 rounded-full blur-3xl pointer-events-none opacity-40"></div>
+            </div>
+
+            {/* Performance Ledger */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-indigo-600 p-10 rounded-[3rem] text-white shadow-2xl shadow-indigo-200 relative overflow-hidden group">
                 <div className="relative z-10">
-                  <h3 className="text-indigo-200 text-[10px] font-black uppercase tracking-widest mb-8">Earning Potential</h3>
-                  <p className="text-2xl font-black tracking-tight leading-snug">Earn more by doing less.</p>
-                  <p className="text-sm text-indigo-100/70 mt-4 leading-relaxed">
-                    Our multi-tier system ensures that you earn commission from every task your friends complete. There is no limit to your partnership growth.
-                  </p>
+                  <div className="text-[9px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Partner Count</div>
+                  <div className="text-5xl font-black tracking-tighter mb-2 group-hover:scale-110 transition-transform origin-left">0</div>
+                  <p className="text-[10px] font-bold text-indigo-200/60 uppercase">Active Nodes</p>
                 </div>
-                <div className="relative z-10 mt-8 pt-8 border-t border-white/10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                      <i className="fa-solid fa-gift text-indigo-200"></i>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Payouts occur instantly</span>
-                  </div>
-                </div>
-                <i className="fa-solid fa-users absolute -right-4 -bottom-4 text-9xl text-white/10"></i>
-             </div>
-          </div>
-        </div>
-
-        {/* Informational Footer */}
-        <div className="bg-slate-900 rounded-[3rem] p-12 text-white relative overflow-hidden">
-          <div className="relative z-10 max-w-2xl">
-            <h3 className="text-3xl font-black mb-6">Network Policy</h3>
-            <p className="text-slate-400 leading-relaxed mb-8">
-              Users linked via your referral ID are permanent partners. Self-referral is strictly prohibited and will result in a permanent vault freeze. Promote your link on social media, blogs, or via direct messaging to grow your passive income.
-            </p>
-            <div className="flex gap-4">
-              <div className="px-6 py-3 bg-white/5 rounded-xl border border-white/10 text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                <i className="fa-solid fa-shield-check text-emerald-500"></i>
-                Fraud Protection
+                <i className="fa-solid fa-user-group absolute -right-6 -bottom-6 text-8xl text-white/5 group-hover:rotate-12 transition-transform"></i>
               </div>
-              <div className="px-6 py-3 bg-white/5 rounded-xl border border-white/10 text-xs font-black uppercase tracking-widest flex items-center gap-2">
-                <i className="fa-solid fa-infinity text-indigo-400"></i>
-                Unlimited Slots
+
+              <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                <div className="relative z-10">
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Yield Revenue</div>
+                  <div className="text-5xl font-black text-slate-900 tracking-tighter mb-2">0</div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Lifetime Coins</p>
+                </div>
+                <i className="fa-solid fa-coins absolute -right-6 -bottom-6 text-8xl text-slate-50 group-hover:text-yellow-500/10 transition-all"></i>
+              </div>
+
+              <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl shadow-slate-300 relative overflow-hidden group">
+                <div className="relative z-10">
+                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-4">Yield Multiplier</div>
+                  <div className="text-5xl font-black tracking-tighter mb-2">10%</div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase">Per Task Done</p>
+                </div>
+                <i className="fa-solid fa-chart-line absolute -right-6 -bottom-6 text-8xl text-white/5"></i>
               </div>
             </div>
           </div>
-          <i className="fa-solid fa-network-wired absolute top-1/2 right-12 -translate-y-1/2 text-[15rem] text-white/5"></i>
+
+          {/* Educational Sidebar */}
+          <div className="lg:col-span-4 space-y-8 sticky top-28">
+            <div className="bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-3xl">
+              <div className="relative z-10">
+                <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-10">Yield Architecture</h3>
+                
+                <div className="space-y-10">
+                  {[
+                    { t: 'Permanent Linkage', d: 'Once a user joins via your link, they are locked into your earnings node forever.', icon: 'fa-link' },
+                    { t: 'Passive Accumulation', d: 'Every coin they earn from tasks generates an instant 10% bonus for you.', icon: 'fa-bolt-lightning' },
+                    { t: 'Automated Payouts', d: 'No claiming required. Affiliate yields are credited directly to your vault.', icon: 'fa-vault' }
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-6">
+                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-indigo-400 border border-white/10 shrink-0">
+                        <i className={`fa-solid ${item.icon}`}></i>
+                      </div>
+                      <div>
+                        <h5 className="text-[11px] font-black uppercase tracking-widest text-white mb-2">{item.t}</h5>
+                        <p className="text-xs font-bold text-slate-500 leading-relaxed">{item.d}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-12 p-8 bg-indigo-600 rounded-[2.5rem] shadow-xl">
+                   <p className="text-[9px] font-black text-indigo-100 uppercase tracking-widest mb-4">Pro Strategy</p>
+                   <p className="text-sm font-black leading-snug">Refer 50 active users to earn $50+/month purely from network yield.</p>
+                </div>
+              </div>
+              <i className="fa-solid fa-network-wired absolute -right-16 -bottom-16 text-[20rem] text-white/5 -rotate-12"></i>
+            </div>
+
+            <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
+               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Integrity Check</h4>
+               <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                 Accounts verified as "Self-Referrals" will be immediately flagged by our AI and result in permanent vault termination.
+               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Policy Footer */}
+        <div className="mt-20 bg-slate-900 rounded-[4rem] p-12 md:p-20 text-white relative overflow-hidden group">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-3xl md:text-5xl font-black tracking-tighter mb-8 leading-none">The Passive <br/> <span className="text-indigo-400">Wealth Loop</span></h2>
+              <p className="text-slate-400 font-medium text-lg leading-relaxed mb-10">
+                Ads Predia is built on community growth. Our partnership model rewards the visionaries who help expand our global micro-tasking network.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+                  <i className="fa-solid fa-infinity text-indigo-400"></i>
+                  No Referral Caps
+                </div>
+                <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
+                  <i className="fa-solid fa-money-bill-transfer text-emerald-400"></i>
+                  Lifetime Yields
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white/5 rounded-[3rem] p-10 border border-white/10 backdrop-blur-3xl">
+              <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-8">System Compliance</h4>
+              <ul className="space-y-6">
+                {[
+                   'One account per physical user node.',
+                   'Promotions must be ethical and non-deceptive.',
+                   'Network fraud results in global blacklisting.',
+                   'Referral bonuses are non-reversible once credited.'
+                ].map((rule, idx) => (
+                  <li key={idx} className="flex items-center gap-4 text-xs font-black text-slate-400">
+                    <i className="fa-solid fa-circle-check text-emerald-500/50"></i>
+                    {rule}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <i className="fa-solid fa-users absolute -right-20 -bottom-20 text-[25rem] text-white/5 group-hover:scale-110 transition-transform duration-1000"></i>
         </div>
       </div>
     </div>

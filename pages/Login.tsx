@@ -33,33 +33,33 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           isAdmin: true
         });
         setIsSubmitting(false);
-      }, 1000);
+      }, 1500);
       return;
     }
 
     if (isRegistering) {
       if (!username || !email || !password) {
-        alert('Please fill in all fields to create your account.');
+        alert('Required parameters missing for node creation.');
         return;
       }
       if (!validateEmail(email)) {
-        setEmailError('Please enter a valid email address.');
+        setEmailError('Invalid email format detected.');
         return;
       }
     } else {
       if (!email || !password) {
-        alert('Email and Password are required.');
+        alert('Authentication credentials required.');
         return;
       }
       if (!validateEmail(email)) {
-        setEmailError('Please enter a valid email address.');
+        setEmailError('Invalid email format.');
         return;
       }
     }
     
     setIsSubmitting(true);
     
-    // Simulating API verification
+    // Simulating Secure API verification
     setTimeout(() => {
       onLogin({
         username: isRegistering ? username : email.split('@')[0],
@@ -68,7 +68,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         isAdmin: false
       });
       setIsSubmitting(false);
-    }, 1200); 
+    }, 1500); 
   };
 
   const toggleMode = () => {
@@ -80,35 +80,48 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-20 flex justify-center bg-slate-50 min-h-[85vh]">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-[3rem] shadow-2xl border border-slate-100 overflow-hidden transition-all duration-500 hover:shadow-indigo-100/40">
-          <div className="bg-slate-900 p-12 text-white text-center relative overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-6 bg-slate-50 overflow-hidden">
+      
+      {/* Dynamic Background Elements */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/5 rounded-full blur-[120px]"></div>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+      </div>
+
+      <div className="w-full max-w-xl relative z-10">
+        <div className="bg-white rounded-[4rem] shadow-[0_80px_160px_-40px_rgba(15,23,42,0.12)] border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-700">
+          
+          {/* Immersive Header Slab */}
+          <div className="bg-slate-900 p-14 md:p-20 text-white text-center relative overflow-hidden group">
             <div className="relative z-10">
-              <div className="w-24 h-24 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-indigo-500/30 transform hover:rotate-6 transition-transform">
-                <i className={`fa-solid ${isRegistering ? 'fa-user-plus' : 'fa-shield-halved'} text-4xl`} aria-hidden="true"></i>
+              <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-3xl transform transition-all duration-700 group-hover:rotate-6 group-hover:scale-110">
+                <i className={`fa-solid ${isRegistering ? 'fa-user-plus' : 'fa-lock-open'} text-4xl text-slate-900`} aria-hidden="true"></i>
               </div>
-              <h1 className="text-4xl font-black tracking-tight leading-none mb-4">
-                {isRegistering ? 'Join Us' : 'Login'}
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none mb-6">
+                {isRegistering ? 'Sign Up' : 'Welcome Back'}
               </h1>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] opacity-70">
-                {isRegistering 
-                  ? 'Set your profile credentials' 
-                  : 'Enter your email and password'}
-              </p>
+              <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
+                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
+                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-200">
+                  {isRegistering ? 'Join the Network' : 'Authorized Access'}
+                </p>
+              </div>
             </div>
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px]"></div>
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-400/10 rounded-full blur-[80px]"></div>
+            
+            {/* Background Art */}
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]"></div>
+            <div className="absolute -top-32 -right-32 w-80 h-80 bg-indigo-500/20 rounded-full blur-[80px]"></div>
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-indigo-400/10 rounded-full blur-[80px]"></div>
           </div>
           
-          <form onSubmit={handleSubmit} className="p-12 space-y-8">
-            <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="p-12 md:p-20 space-y-10">
+            <div className="space-y-8">
               {isRegistering && (
-                <div className="animate-in fade-in slide-in-from-top-4 duration-400">
-                  <label htmlFor="username" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Username</label>
+                <div className="animate-in fade-in slide-in-from-top-6 duration-500">
+                  <label htmlFor="username" className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4 px-2">Full Name</label>
                   <div className="relative group">
-                    <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
-                      <i className="fa-solid fa-circle-user" aria-hidden="true"></i>
+                    <span className="absolute inset-y-0 left-0 pl-8 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                      <i className="fa-solid fa-user text-lg" aria-hidden="true"></i>
                     </span>
                     <input 
                       id="username"
@@ -116,19 +129,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       disabled={isSubmitting}
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Your unique handle" 
-                      className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all disabled:opacity-50 font-bold text-slate-700 placeholder-slate-300 shadow-inner"
+                      placeholder="e.g. John Doe" 
+                      className="w-full pl-16 pr-8 py-6 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-3xl focus:ring-8 focus:ring-indigo-600/5 outline-none transition-all disabled:opacity-50 font-black text-slate-800 placeholder-slate-300 shadow-inner"
                       required={isRegistering}
                     />
                   </div>
                 </div>
               )}
 
-              <div>
-                <label htmlFor="email" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Email Address</label>
+              <div className="animate-in fade-in duration-500">
+                <label htmlFor="email" className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4 px-2">Email</label>
                 <div className="relative group">
-                  <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
-                    <i className="fa-solid fa-envelope" aria-hidden="true"></i>
+                  <span className="absolute inset-y-0 left-0 pl-8 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                    <i className="fa-solid fa-envelope text-lg" aria-hidden="true"></i>
                   </span>
                   <input 
                     id="email"
@@ -140,24 +153,27 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       setEmail(e.target.value);
                       if (emailError) setEmailError('');
                     }}
-                    placeholder="user@example.com" 
-                    className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl focus:ring-2 ${emailError ? 'focus:ring-red-500 border-red-100' : 'focus:ring-indigo-600'} outline-none transition-all disabled:opacity-50 font-bold text-slate-700 placeholder-slate-300 shadow-inner`}
+                    placeholder="name@example.com" 
+                    className={`w-full pl-16 pr-8 py-6 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-3xl focus:ring-8 ${emailError ? 'focus:ring-red-500 border-red-100' : 'focus:ring-indigo-600/5'} outline-none transition-all disabled:opacity-50 font-black text-slate-800 placeholder-slate-300 shadow-inner`}
                     required
                   />
                 </div>
                 {emailError && (
-                  <p className="text-red-500 text-[10px] mt-2 font-black uppercase tracking-widest flex items-center px-1">
-                    <i className="fa-solid fa-circle-exclamation mr-2"></i>
+                  <p className="text-red-500 text-[10px] mt-4 font-black uppercase tracking-widest flex items-center px-4 animate-bounce">
+                    <i className="fa-solid fa-triangle-exclamation mr-3"></i>
                     {emailError}
                   </p>
                 )}
               </div>
 
-              <div>
-                <label htmlFor="password" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Password</label>
+              <div className="animate-in fade-in duration-500">
+                <div className="flex justify-between items-center mb-4 px-2">
+                  <label htmlFor="password" className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Password</label>
+                  {!isRegistering && <a href="#" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Forgot?</a>}
+                </div>
                 <div className="relative group">
-                  <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
-                    <i className="fa-solid fa-key" aria-hidden="true"></i>
+                  <span className="absolute inset-y-0 left-0 pl-8 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
+                    <i className="fa-solid fa-key text-lg" aria-hidden="true"></i>
                   </span>
                   <input 
                     id="password"
@@ -166,63 +182,68 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     disabled={isSubmitting}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••" 
-                    className="w-full pl-14 pr-16 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all disabled:opacity-50 font-bold text-slate-700 placeholder-slate-300 shadow-inner"
+                    placeholder="••••••••••••" 
+                    className="w-full pl-16 pr-20 py-6 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-3xl focus:ring-8 focus:ring-indigo-600/5 outline-none transition-all disabled:opacity-50 font-black text-slate-800 placeholder-slate-300 shadow-inner"
                     required
                   />
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 hover:text-indigo-600 transition-colors"
+                    className="absolute inset-y-0 right-0 pr-8 flex items-center text-slate-300 hover:text-indigo-600 transition-colors"
                   >
-                    <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                    <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'} text-lg`}></i>
                   </button>
                 </div>
               </div>
             </div>
 
             {!isRegistering && (
-              <div className="flex items-center justify-between">
-                <label className="flex items-center text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    className="w-5 h-5 rounded-lg text-indigo-600 mr-3 border-none bg-slate-100 focus:ring-indigo-600 cursor-pointer" 
-                  />
-                  Remember Me
-                </label>
-                <a href="#" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Forgot Password?</a>
-              </div>
+              <label className="flex items-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] cursor-pointer group w-fit px-2">
+                <input 
+                  type="checkbox" 
+                  className="w-6 h-6 rounded-xl text-indigo-600 mr-4 border-2 border-slate-100 bg-slate-50 focus:ring-offset-0 focus:ring-indigo-600 cursor-pointer transition-all" 
+                />
+                Remember Me
+              </label>
             )}
 
             <button 
               type="submit"
               disabled={isSubmitting}
-              className={`w-full py-7 bg-slate-900 text-white font-black rounded-[2rem] hover:bg-indigo-600 transition-all shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] hover:shadow-indigo-200 flex items-center justify-center gap-4 transform active:scale-[0.97] ${isSubmitting ? 'opacity-70 grayscale' : ''}`}
+              className={`group relative w-full py-8 bg-slate-900 text-white font-black rounded-[2.5rem] hover:bg-indigo-600 transition-all shadow-[0_40px_80px_-20px_rgba(15,23,42,0.3)] hover:shadow-indigo-500/40 flex items-center justify-center gap-6 transform active:scale-[0.98] ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
             >
               {isSubmitting ? (
                 <>
-                  <i className="fa-solid fa-spinner fa-spin text-lg"></i>
-                  <span className="text-xs uppercase tracking-[0.2em]">{isRegistering ? 'Creating Vault...' : 'Authorizing...'}</span>
+                  <i className="fa-solid fa-spinner fa-spin text-xl"></i>
+                  <span className="text-[11px] uppercase tracking-[0.4em]">{isRegistering ? 'CREATING ACCOUNT...' : 'AUTHENTICATING...'}</span>
                 </>
               ) : (
-                <span className="text-xs uppercase tracking-[0.2em]">{isRegistering ? 'Register Now' : 'Login account'}</span>
+                <>
+                  <span className="text-[11px] uppercase tracking-[0.4em]">{isRegistering ? 'Sign Up' : 'Log In'}</span>
+                  <i className="fa-solid fa-arrow-right text-indigo-400 group-hover:translate-x-2 transition-transform"></i>
+                </>
               )}
             </button>
           </form>
 
-          <div className="p-10 text-center bg-slate-50 border-t border-slate-100/50">
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-              {isRegistering ? 'Already have an account?' : 'New user?'} 
+          <div className="p-12 text-center bg-slate-50/50 border-t border-slate-100">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">
+              {isRegistering ? 'Already have an account?' : 'New to AdsPredia?'} 
               <button 
                 type="button"
                 onClick={() => !isSubmitting && toggleMode()}
-                className="text-indigo-600 font-black ml-3 hover:text-indigo-800 transition-colors focus:outline-none"
+                className="text-indigo-600 font-black ml-4 hover:text-indigo-800 transition-colors focus:outline-none border-b-2 border-indigo-100 pb-1"
               >
-                {isRegistering ? 'Sign In' : 'Create account'}
+                {isRegistering ? 'Log In' : 'Sign Up'}
               </button>
             </p>
           </div>
         </div>
+        
+        {/* Support Link */}
+        <p className="mt-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+          Need help? <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">Contact Support</a>
+        </p>
       </div>
     </div>
   );

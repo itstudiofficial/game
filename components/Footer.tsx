@@ -8,7 +8,6 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
   const handleNavClick = (id: string) => {
-    // If it's a known page, navigate to it
     if (['home', 'tasks', 'spin', 'referrals', 'create', 'wallet', 'dashboard', 'login'].includes(id)) {
       if (!isLoggedIn && ['tasks', 'spin', 'referrals', 'create', 'wallet', 'dashboard'].includes(id)) {
         setCurrentPage('login');
@@ -16,7 +15,6 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
         setCurrentPage(id);
       }
     } else {
-      // Otherwise, assume it's an informational/legal page handled by the app's modal system
       setCurrentPage(id);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -30,7 +28,7 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
           <div className="md:col-span-4">
             <div className="flex items-center mb-6 cursor-pointer" onClick={() => handleNavClick('home')}>
               <i className="fa-solid fa-coins text-indigo-400 text-2xl mr-2"></i>
-              <span className="text-2xl font-black text-white tracking-tighter">Ads <span className="text-indigo-400">Predia</span></span>
+              <span className="text-2xl font-black text-white tracking-tighter">Ads<span className="text-indigo-400">Predia</span></span>
             </div>
             <p className="text-sm leading-relaxed mb-8 max-w-sm">
               Empowering the digital economy through transparent micro-tasking. The global bridge between performance marketing and crowd-sourced talent.
@@ -108,7 +106,7 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-          <p>&copy; 2025 ADS PREDIA MICRO-TASKING</p>
+          <p>&copy; 2025 ADSPREDIA MICRO-TASKING</p>
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
