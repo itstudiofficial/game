@@ -24,7 +24,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     { name: 'Tasks', id: 'tasks', icon: 'fa-list-check' },
     { name: 'Advertise', id: 'create', icon: 'fa-bullhorn' },
     { name: 'Spin', id: 'spin', icon: 'fa-clover' },
-    { name: 'Network', id: 'referrals', icon: 'fa-users-rays' }, // Added Network link
+    { name: 'Network', id: 'referrals', icon: 'fa-users-rays' },
     { name: 'Wallet', id: 'wallet', icon: 'fa-wallet' },
   ];
 
@@ -53,10 +53,17 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
               className="flex-shrink-0 flex items-center cursor-pointer group" 
               onClick={() => handleNavClick('home')}
             >
-              <div className="w-10 h-10 mr-3 flex items-center justify-center bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-100 transform group-hover:rotate-12 transition-transform">
-                <i className="fa-solid fa-coins text-white text-xl"></i>
+              {/* Professional Custom SVG Logo */}
+              <div className="w-11 h-11 mr-4 flex items-center justify-center bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-200 transform group-hover:rotate-[15deg] transition-all duration-500 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-700 to-indigo-500 opacity-50"></div>
+                <svg viewBox="0 0 100 100" className="w-6 h-6 text-white fill-current relative z-10">
+                  <path d="M50 5 L95 85 L50 70 L5 85 Z" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M50 25 L75 75 L50 65 L25 75 Z" />
+                </svg>
               </div>
-              <span className="text-2xl font-black text-slate-800 tracking-tighter">Ads <span className="text-indigo-600">Predia</span></span>
+              <span className="text-2xl font-black text-slate-800 tracking-tighter transition-colors group-hover:text-indigo-600">
+                Ads <span className="text-indigo-600 group-hover:text-slate-800 transition-colors">Predia</span>
+              </span>
             </div>
             
             <div className="hidden lg:ml-10 lg:flex lg:space-x-1">

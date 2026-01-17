@@ -56,7 +56,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
 
       <div className="bg-white border-b border-slate-100 py-10">
         <div className="max-w-7xl mx-auto px-4 overflow-hidden">
-          <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">Trusted by Global Advertisers & 50,000+ Users</p>
+          <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">Trusted by Global Advertisers & 20,000+ Users</p>
           <div className="flex flex-wrap justify-center items-center gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
              <i className="fa-brands fa-google text-3xl"></i>
              <i className="fa-brands fa-youtube text-3xl"></i>
@@ -72,10 +72,10 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
           {[
-            { label: 'Registered Users', val: '52,400+', icon: 'fa-users', color: 'indigo' },
-            { label: 'Total Tasks Done', val: '1.2M+', icon: 'fa-check-to-slot', color: 'emerald' },
-            { label: 'Coins Distributed', val: '8.5M', icon: 'fa-coins', color: 'yellow' },
-            { label: 'Daily Payouts', val: '$2,500', icon: 'fa-receipt', color: 'blue' }
+            { label: 'Registered Users', val: '20,000+', icon: 'fa-users', color: 'indigo' },
+            { label: 'Total Tasks Done', val: '10,000+', icon: 'fa-check-to-slot', color: 'emerald' },
+            { label: 'Coin Distributed', val: '100,000+', icon: 'fa-coins', color: 'yellow' },
+            { label: 'Daily Payouts', val: '$200+', icon: 'fa-receipt', color: 'blue' }
           ].map((stat, i) => (
             <div key={i} className="text-center group p-6 hover:bg-slate-50 rounded-[2rem] transition-all">
               <div className={`w-16 h-16 mx-auto mb-6 bg-${stat.color}-50 rounded-2xl flex items-center justify-center text-${stat.color}-600 text-2xl group-hover:scale-110 transition-transform shadow-sm`}>
