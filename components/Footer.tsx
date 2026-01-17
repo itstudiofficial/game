@@ -1,14 +1,34 @@
 
 import React from 'react';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  setCurrentPage: (page: string) => void;
+  isLoggedIn: boolean;
+}
+
+const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
+  const handleNavClick = (id: string) => {
+    // If it's a known page, navigate to it
+    if (['home', 'tasks', 'spin', 'referrals', 'create', 'wallet', 'dashboard', 'login'].includes(id)) {
+      if (!isLoggedIn && ['tasks', 'spin', 'referrals', 'create', 'wallet', 'dashboard'].includes(id)) {
+        setCurrentPage('login');
+      } else {
+        setCurrentPage(id);
+      }
+    } else {
+      // Otherwise, assume it's an informational/legal page handled by the app's modal system
+      setCurrentPage(id);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="bg-slate-900 text-slate-400 pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20">
           {/* Brand Column */}
           <div className="md:col-span-4">
-            <div className="flex items-center mb-6">
+            <div className="flex items-center mb-6 cursor-pointer" onClick={() => handleNavClick('home')}>
               <i className="fa-solid fa-coins text-indigo-400 text-2xl mr-2"></i>
               <span className="text-2xl font-black text-white tracking-tighter">Ads <span className="text-indigo-400">Predia</span></span>
             </div>
@@ -32,44 +52,40 @@ const Footer: React.FC = () => {
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Earning</h4>
             <ul className="space-y-4 text-sm font-medium">
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Browse Tasks</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Daily Lucky Spin</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Reward Tiers</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Affiliate Program</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Leaderboard</a></li>
+              <li><button onClick={() => handleNavClick('tasks')} className="hover:text-indigo-400 transition-colors text-left">Browse Tasks</button></li>
+              <li><button onClick={() => handleNavClick('spin')} className="hover:text-indigo-400 transition-colors text-left">Daily Lucky Spin</button></li>
+              <li><button onClick={() => handleNavClick('referrals')} className="hover:text-indigo-400 transition-colors text-left">Affiliate Program</button></li>
+              <li><button onClick={() => handleNavClick('wallet')} className="hover:text-indigo-400 transition-colors text-left">Wallet / Payout</button></li>
             </ul>
           </div>
 
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Advertising</h4>
             <ul className="space-y-4 text-sm font-medium">
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Create Campaign</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Bulk Pricing</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Targeting Guide</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Case Studies</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Agency Portal</a></li>
+              <li><button onClick={() => handleNavClick('create')} className="hover:text-indigo-400 transition-colors text-left">Create Campaign</button></li>
+              <li><button onClick={() => handleNavClick('bulk-pricing')} className="hover:text-indigo-400 transition-colors text-left">Bulk Pricing</button></li>
+              <li><button onClick={() => handleNavClick('targeting-guide')} className="hover:text-indigo-400 transition-colors text-left">Targeting Guide</button></li>
+              <li><button onClick={() => handleNavClick('case-studies')} className="hover:text-indigo-400 transition-colors text-left">Case Studies</button></li>
             </ul>
           </div>
 
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Support</h4>
             <ul className="space-y-4 text-sm font-medium">
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Ticket Support</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">API Docs</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Payment FAQ</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Discord Server</a></li>
+              <li><button onClick={() => handleNavClick('help-center')} className="hover:text-indigo-400 transition-colors text-left">Help Center</button></li>
+              <li><button onClick={() => handleNavClick('ticket-support')} className="hover:text-indigo-400 transition-colors text-left">Ticket Support</button></li>
+              <li><button onClick={() => handleNavClick('api-docs')} className="hover:text-indigo-400 transition-colors text-left">API Docs</button></li>
+              <li><button onClick={() => handleNavClick('payment-faq')} className="hover:text-indigo-400 transition-colors text-left">Payment FAQ</button></li>
             </ul>
           </div>
 
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Legal</h4>
             <ul className="space-y-4 text-sm font-medium">
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Terms of Use</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Cookie Policy</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Fraud Policy</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition-colors">Refund Policy</a></li>
+              <li><button onClick={() => handleNavClick('terms')} className="hover:text-indigo-400 transition-colors text-left">Terms of Use</button></li>
+              <li><button onClick={() => handleNavClick('privacy')} className="hover:text-indigo-400 transition-colors text-left">Privacy Policy</button></li>
+              <li><button onClick={() => handleNavClick('fraud-policy')} className="hover:text-indigo-400 transition-colors text-left">Fraud Policy</button></li>
+              <li><button onClick={() => handleNavClick('refund-policy')} className="hover:text-indigo-400 transition-colors text-left">Refund Policy</button></li>
             </ul>
           </div>
         </div>
