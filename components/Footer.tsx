@@ -59,6 +59,7 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
             </ul>
           </div>
 
+          {/* Advertising Column */}
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Advertising</h4>
             <ul className="space-y-4 text-sm font-medium">
@@ -69,6 +70,7 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
             </ul>
           </div>
 
+          {/* Support Column */}
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Support</h4>
             <ul className="space-y-4 text-sm font-medium">
@@ -79,6 +81,7 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
             </ul>
           </div>
 
+          {/* Legal Column */}
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Legal</h4>
             <ul className="space-y-4 text-sm font-medium">
@@ -105,7 +108,7 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-          <p>&copy; 2024 ADS PREDIA MICRO-TASKING LTD. REG #8472910</p>
+          <p>&copy; 2025 ADS PREDIA MICRO-TASKING</p>
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>

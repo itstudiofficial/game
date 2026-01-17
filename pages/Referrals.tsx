@@ -10,12 +10,40 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   const [copied, setCopied] = useState(false);
   
   const referralLink = `https://adspredia.site/ref/${user.id.toLowerCase()}`;
+  const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my link: ${referralLink}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const shareLinks = [
+    {
+      name: 'WhatsApp',
+      icon: 'fa-whatsapp',
+      color: 'bg-[#25D366]',
+      url: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`
+    },
+    {
+      name: 'X (Twitter)',
+      icon: 'fa-x-twitter',
+      color: 'bg-[#000000]',
+      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`
+    },
+    {
+      name: 'Facebook',
+      icon: 'fa-facebook',
+      color: 'bg-[#1877F2]',
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`
+    },
+    {
+      name: 'Telegram',
+      icon: 'fa-telegram',
+      color: 'bg-[#0088cc]',
+      url: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareMessage)}`
+    }
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -34,7 +62,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
           {/* Main Referral Link Card */}
           <div className="lg:col-span-8 bg-white rounded-[3rem] p-12 border border-slate-100 shadow-sm">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">Your Unique Referral Link</h3>
-            <div className="flex flex-col md:flex-row gap-4 items-center mb-10">
+            <div className="flex flex-col md:flex-row gap-4 items-center mb-12">
               <div className="flex-1 w-full p-6 bg-slate-50 rounded-2xl border border-slate-100 font-mono text-slate-700 text-sm font-black break-all">
                 {referralLink}
               </div>
@@ -47,6 +75,28 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                 <i className={`fa-solid ${copied ? 'fa-check' : 'fa-copy'}`}></i>
                 {copied ? 'Copied Link' : 'Copy Link'}
               </button>
+            </div>
+
+            {/* Viral Growth Kit (Social Sharing) */}
+            <div className="mb-12">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-1 flex items-center gap-2">
+                <i className="fa-solid fa-share-nodes text-indigo-500"></i>
+                Viral Growth Kit - Share Instantly
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {shareLinks.map((share) => (
+                  <a
+                    key={share.name}
+                    href={share.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${share.color} text-white p-5 rounded-[1.5rem] flex flex-col items-center justify-center gap-3 transition-all hover:scale-105 hover:shadow-lg active:scale-95 group shadow-sm`}
+                  >
+                    <i className={`fa-brands ${share.icon} text-2xl group-hover:animate-bounce`}></i>
+                    <span className="text-[9px] font-black uppercase tracking-widest">{share.name}</span>
+                  </a>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
