@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Transaction } from '../types';
 
@@ -125,13 +126,13 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
                 onClick={() => setView('transact')}
                 className={`flex-1 lg:flex-none lg:px-16 py-6 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${view === 'transact' ? 'bg-white text-slate-900 shadow-2xl' : 'text-slate-500 hover:text-white'}`}
               >
-                Sync Operations
+                Transaction Hub
               </button>
               <button 
                 onClick={() => setView('history')}
                 className={`flex-1 lg:flex-none lg:px-16 py-6 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${view === 'history' ? 'bg-white text-slate-900 shadow-2xl' : 'text-slate-500 hover:text-white'}`}
               >
-                Audit Ledger
+                History Log
               </button>
             </div>
           </div>
@@ -148,13 +149,13 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
                   onClick={() => setActiveTab('deposit')}
                   className={`flex-1 py-6 text-[11px] font-black rounded-[2.5rem] transition-all duration-500 uppercase tracking-[0.2em] ${activeTab === 'deposit' ? 'bg-white text-indigo-600 shadow-2xl ring-1 ring-slate-100' : 'text-slate-400 hover:text-slate-800'}`}
                 >
-                  <i className="fa-solid fa-plus-circle mr-3"></i> Add Liquidity
+                  <i className="fa-solid fa-plus-circle mr-3"></i> Deposit
                 </button>
                 <button 
                   onClick={() => setActiveTab('withdraw')}
                   className={`flex-1 py-6 text-[11px] font-black rounded-[2.5rem] transition-all duration-500 uppercase tracking-[0.2em] ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-2xl ring-1 ring-slate-100' : 'text-slate-400 hover:text-slate-800'}`}
                 >
-                  <i className="fa-solid fa-arrow-right-from-bracket mr-3"></i> Asset Outflow
+                  <i className="fa-solid fa-arrow-right-from-bracket mr-3"></i> Withdraw
                 </button>
               </div>
 
@@ -289,7 +290,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
                     <div key={tx.id} className="p-12 flex items-center justify-between hover:bg-slate-50 transition-all group">
                       <div className="flex items-center gap-10">
                         <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center border-2 transition-transform group-hover:scale-110 shadow-sm ${
-                          tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                          tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-200'
                         }`}>
                           <i className={`fa-solid ${tx.type === 'deposit' ? 'fa-arrow-down-long' : 'fa-arrow-up-long'} text-2xl`}></i>
                         </div>
