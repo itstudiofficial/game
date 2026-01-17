@@ -14,9 +14,9 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
   const [copied, setCopied] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // 5000 Coins = 2 USD => 2500 Coins = 1 USD
+  // Economic Policy: 5000 Coins = 2 USD => 2500 Coins = 1 USD
   const COIN_RATE = 2500;
-  const MIN_DEPOSIT = 500;
+  const MIN_DEPOSIT = 5000; // Updated to 5000 as requested
   const MIN_WITHDRAWAL = 3000;
 
   const GATEWAY_DETAILS = {
@@ -57,7 +57,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
     const val = parseInt(amount);
     
     if (activeTab === 'deposit') {
-      if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Minimum deposit is ${MIN_DEPOSIT} coins`);
+      if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Minimum deposit is ${MIN_DEPOSIT} coins ($2.00)`);
       if (!account) return alert('Please complete the payment first and enter your Transaction ID!');
       setShowConfirmModal(true);
     } else {
@@ -94,7 +94,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
                <div className="bg-white/10 px-6 py-3 rounded-2xl text-lg font-black border border-white/10 backdrop-blur-xl shadow-lg">
                   ≈ ${(coins / COIN_RATE).toFixed(2)} USD
                </div>
-               <div className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Exchange: {COIN_RATE}/$</div>
+               <div className="text-[10px] font-black uppercase text-indigo-300 tracking-widest">Rate: 5,000 Coins / $2</div>
             </div>
           </div>
           <div className="bg-black/20 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-md text-center md:text-left min-w-[200px]">
@@ -102,11 +102,11 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[9px] font-bold text-indigo-200 uppercase">Min Deposit</span>
-                <span className="font-black text-sm">{MIN_DEPOSIT}</span>
+                <span className="font-black text-sm">{MIN_DEPOSIT.toLocaleString()} ($2)</span>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[9px] font-bold text-indigo-200 uppercase">Min Withdraw</span>
-                <span className="font-black text-sm">{MIN_WITHDRAWAL}</span>
+                <span className="font-black text-sm">{MIN_WITHDRAWAL.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -134,10 +134,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
             <div className="mb-10 bg-red-50 border border-red-100 p-6 rounded-[2rem] animate-pulse">
               <div className="flex items-center gap-4 text-red-600 mb-2">
                 <i className="fa-solid fa-triangle-exclamation"></i>
-                <span className="text-xs font-black uppercase tracking-widest">Mandatory Requirement</span>
+                <span className="text-xs font-black uppercase tracking-widest">Show Payment First</span>
               </div>
               <p className="text-[11px] font-bold text-red-700 leading-relaxed">
-                You MUST send the payment to our official address below BEFORE submitting this form. Submitting without payment will lead to a permanent account ban.
+                You MUST send the payment to our official address below BEFORE submitting this form. Minimum deposit is 5,000 Coins ($2.00). Submitting without payment will lead to a permanent account ban.
               </p>
             </div>
           )}
@@ -198,6 +198,11 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
                   />
                   <div className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 font-black text-sm">COINS</div>
                 </div>
+                {amount && (
+                  <p className="px-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                    Value: ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD
+                  </p>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -242,9 +247,9 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction }) => {
 
               <div className="space-y-6">
                 <div className="bg-red-50 p-6 rounded-[2rem] border border-red-100">
-                  <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Did you really pay?</h4>
+                  <h4 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-2">Show Payment First!</h4>
                   <p className="text-xs font-bold text-red-800 leading-relaxed">
-                    By clicking confirm, you legally testify that you have sent ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD to our {method} address.
+                    By clicking confirm, you legally testify that you have ALREADY sent ${(parseInt(amount) / COIN_RATE).toFixed(2)} USD to our {method} address.
                   </p>
                 </div>
 

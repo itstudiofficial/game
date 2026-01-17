@@ -22,8 +22,9 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
   const authLinks = [
     { name: 'Dashboard', id: 'dashboard', icon: 'fa-chart-pie' },
     { name: 'Tasks', id: 'tasks', icon: 'fa-list-check' },
-    { name: 'Advertise', id: 'create', icon: 'fa-bullhorn' }, // Changed 'Create' to 'Advertise'
+    { name: 'Advertise', id: 'create', icon: 'fa-bullhorn' },
     { name: 'Spin', id: 'spin', icon: 'fa-clover' },
+    { name: 'Network', id: 'referrals', icon: 'fa-users-rays' }, // Added Network link
     { name: 'Wallet', id: 'wallet', icon: 'fa-wallet' },
   ];
 
@@ -127,6 +128,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                           >
                             <i className="fa-solid fa-user-gear text-slate-400 group-hover:text-indigo-600"></i>
                             <span className="text-sm font-black text-slate-700 group-hover:text-indigo-600">Profile & Settings</span>
+                          </button>
+                          <button 
+                            onClick={() => handleNavClick('referrals')}
+                            className="w-full text-left px-5 py-4 rounded-xl hover:bg-indigo-50 flex items-center gap-4 transition-colors group"
+                          >
+                            <i className="fa-solid fa-users-rays text-slate-400 group-hover:text-indigo-600"></i>
+                            <span className="text-sm font-black text-slate-700 group-hover:text-indigo-600">Network & Banners</span>
                           </button>
                           <button 
                             onClick={() => handleNavClick('wallet')}

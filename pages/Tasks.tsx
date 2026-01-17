@@ -8,14 +8,24 @@ interface TasksProps {
 }
 
 const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
-  const [filter, setFilter] = useState<TaskType | 'All'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<TaskType | 'All'>('All');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'pending' | 'All'>('active');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
   const categories: (TaskType | 'All')[] = ['All', 'YouTube', 'Websites', 'Apps', 'Social Media'];
+  const statuses = [
+    { id: 'active', label: 'Live Gigs', icon: 'fa-bolt-lightning' },
+    { id: 'pending', label: 'Pending Review', icon: 'fa-clock-rotate-left' },
+    { id: 'All', label: 'Show All', icon: 'fa-layer-group' }
+  ];
 
-  const filteredTasks = filter === 'All' ? tasks : tasks.filter(t => t.type === filter);
+  const filteredTasks = tasks.filter(t => {
+    const categoryMatch = categoryFilter === 'All' || t.type === categoryFilter;
+    const statusMatch = statusFilter === 'All' || t.status === statusFilter;
+    return categoryMatch && statusMatch;
+  });
 
   const getIcon = (type: TaskType) => {
     switch(type) {
@@ -47,7 +57,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Header & Filter Section */}
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
         <div className="max-w-xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 border border-indigo-100">
@@ -57,26 +67,47 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
             </span>
             Real-Time Marketplace
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-3 tracking-tighter">Available Gigs</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-3 tracking-tighter">Gig <span className="text-indigo-600">Inventory</span></h1>
           <p className="text-slate-500 font-medium leading-relaxed">
-            Browse verified micro-tasks from global advertisers. Complete simple actions and accumulate coins in your digital vault instantly.
+            Browse verified micro-tasks. Switch to "Pending Review" to see campaigns currently undergoing platform verification.
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-2.5 p-1.5 bg-slate-100 rounded-[2rem] border border-slate-200">
-          {categories.map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
-                filter === f 
-                  ? 'bg-white text-indigo-600 shadow-lg shadow-slate-200 scale-105' 
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+        <div className="flex flex-col gap-4">
+          {/* Category Filter */}
+          <div className="flex flex-wrap gap-2.5 p-1.5 bg-slate-100 rounded-[2rem] border border-slate-200">
+            {categories.map(f => (
+              <button
+                key={f}
+                onClick={() => setCategoryFilter(f)}
+                className={`px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                  categoryFilter === f 
+                    ? 'bg-white text-indigo-600 shadow-md scale-105' 
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          {/* Status Toggle */}
+          <div className="flex gap-2.5 p-1.5 bg-indigo-50 rounded-2xl border border-indigo-100 self-end md:self-start">
+            {statuses.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setStatusFilter(s.id as any)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                  statusFilter === s.id 
+                    ? 'bg-indigo-600 text-white shadow-lg' 
+                    : 'text-indigo-400 hover:text-indigo-600'
+                }`}
+              >
+                <i className={`fa-solid ${s.icon}`}></i>
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -85,8 +116,8 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
            <div className="w-24 h-24 bg-slate-50 rounded-[3rem] flex items-center justify-center mx-auto mb-6 text-slate-200 shadow-inner">
               <i className="fa-solid fa-wind text-4xl"></i>
            </div>
-           <p className="text-slate-400 font-black text-xs uppercase tracking-[0.3em]">Quiet right now</p>
-           <p className="text-slate-300 text-sm mt-3 font-medium">No tasks found in the "{filter}" category.</p>
+           <p className="text-slate-400 font-black text-xs uppercase tracking-[0.3em]">No results found</p>
+           <p className="text-slate-300 text-sm mt-3 font-medium">Try adjusting your category or status filters.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -112,9 +143,16 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
 
               {/* Task Content */}
               <div className="flex-grow relative z-10">
-                <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight group-hover:text-indigo-600 transition-colors line-clamp-1">
-                  {task.title}
-                </h3>
+                <div className="flex items-center gap-2 mb-3">
+                   <h3 className="text-2xl font-black text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors line-clamp-1">
+                    {task.title}
+                  </h3>
+                  {task.status === 'pending' && (
+                    <span className="flex-shrink-0 px-2 py-0.5 bg-amber-100 text-amber-600 text-[8px] font-black rounded uppercase tracking-widest border border-amber-200">
+                      PENDING
+                    </span>
+                  )}
+                </div>
                 <p className="text-slate-500 text-sm leading-relaxed font-medium line-clamp-3 mb-8">
                   {task.description}
                 </p>
@@ -125,21 +163,26 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                  <div className="flex justify-between items-center text-[10px] font-black mb-3 uppercase tracking-widest">
                     <span className="text-slate-400">{task.completedCount} / {task.totalWorkers} Slots Taken</span>
                     <span className={task.completedCount/task.totalWorkers > 0.8 ? 'text-red-500' : 'text-emerald-500'}>
-                       {task.completedCount/task.totalWorkers > 0.8 ? 'LIMIT NEAR' : 'AVAILABLE'}
+                       {task.status === 'pending' ? 'REVIEWING' : (task.completedCount/task.totalWorkers > 0.8 ? 'LIMIT NEAR' : 'AVAILABLE')}
                     </span>
                  </div>
                  <div className="w-full bg-slate-100 rounded-full h-2.5 mb-8 overflow-hidden">
                     <div 
-                      className={`h-full rounded-full transition-all duration-1000 ease-out ${task.completedCount/task.totalWorkers > 0.8 ? 'bg-red-500' : 'bg-indigo-600'}`}
+                      className={`h-full rounded-full transition-all duration-1000 ease-out ${task.status === 'pending' ? 'bg-amber-400' : (task.completedCount/task.totalWorkers > 0.8 ? 'bg-red-500' : 'bg-indigo-600')}`}
                       style={{ width: `${(task.completedCount / task.totalWorkers) * 100}%` }}
                     ></div>
                  </div>
                  <button 
                   onClick={() => setSelectedTask(task)}
-                  className="w-full py-5 bg-slate-900 text-white hover:bg-indigo-600 font-black rounded-2xl transition-all duration-300 shadow-xl shadow-slate-100 flex items-center justify-center gap-3 group/btn"
+                  disabled={task.status === 'pending'}
+                  className={`w-full py-5 font-black rounded-2xl transition-all duration-300 shadow-xl flex items-center justify-center gap-3 group/btn ${
+                    task.status === 'pending' 
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none' 
+                    : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-slate-100'
+                  }`}
                  >
-                  View Details & Start
-                  <i className="fa-solid fa-arrow-right-long text-xs group-hover/btn:translate-x-1.5 transition-transform"></i>
+                  {task.status === 'pending' ? 'Under Review' : 'View Details & Start'}
+                  {task.status !== 'pending' && <i className="fa-solid fa-arrow-right-long text-xs group-hover/btn:translate-x-1.5 transition-transform"></i>}
                  </button>
               </div>
 
@@ -194,7 +237,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                     <div className="bg-emerald-50 p-8 rounded-[2.5rem] border border-emerald-100 text-emerald-700 relative overflow-hidden group">
                       <div className="relative z-10">
                         <div className="text-[9px] font-black uppercase tracking-widest mb-2">Campaign Status</div>
-                        <div className="text-4xl font-black tracking-tight">ACTIVE</div>
+                        <div className="text-4xl font-black tracking-tight">{selectedTask.status.toUpperCase()}</div>
                       </div>
                       <i className="fa-solid fa-circle-check absolute right-6 bottom-6 text-6xl text-emerald-500/10 group-hover:scale-125 transition-transform duration-700"></i>
                     </div>

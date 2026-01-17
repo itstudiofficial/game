@@ -9,6 +9,7 @@ import Wallet from './pages/Wallet';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import SpinWheel from './pages/SpinWheel';
+import Referrals from './pages/Referrals'; // Import Referrals
 import { User, Task, Transaction, TaskType } from './types';
 import { storage } from './services/storage';
 
@@ -31,7 +32,7 @@ const App: React.FC = () => {
       ...user,
       ...userData,
       isLoggedIn: true,
-      coins: user.isLoggedIn ? user.coins : 0 // Strictly 0 bonus
+      coins: user.isLoggedIn ? user.coins : 0
     };
     setUser(updatedUser);
     setCurrentPage('dashboard');
@@ -127,7 +128,7 @@ const App: React.FC = () => {
       ...taskData,
       creatorId: user.id,
       completedCount: 0,
-      status: 'pending' // Initial state
+      status: 'pending'
     };
 
     const updatedUser = {
@@ -196,6 +197,7 @@ const App: React.FC = () => {
         {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={completeTask} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} navigateTo={navigateTo} />}
         {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} transactions={transactions} />}
+        {currentPage === 'referrals' && <Referrals user={user} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} />}
         {currentPage === 'dashboard' && (
           user.isLoggedIn 

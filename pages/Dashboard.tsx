@@ -16,7 +16,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions, onDele
   
   const userTasks = tasks.filter(t => user.createdTasks.includes(t.id));
 
-  const COIN_RATE = 2500;
+  // Policy: 5,000 Coins = $2.00 => 2,500 Coins = $1.00
+  const COIN_RATE = 2500; 
   const usdValue = (user.coins / COIN_RATE).toFixed(2);
   const progressToNextDollar = ((user.coins % COIN_RATE) / COIN_RATE) * 100;
 
@@ -26,13 +27,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions, onDele
     bio: "Micro-task enthusiast looking for high-quality campaigns and digital growth.",
     location: "Global Citizen",
     language: "English"
-  });
-
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false,
-    payouts: true,
-    marketing: false
   });
 
   const handleProfileUpdate = (e: React.FormEvent) => {
@@ -88,14 +82,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions, onDele
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
             <div className="lg:col-span-8 bg-indigo-600 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-indigo-200">
               <div className="relative z-10 flex flex-col h-full justify-between">
-                <div>
-                  <div className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Current Net Worth</div>
-                  <div className="flex items-baseline gap-4">
-                    <div className="text-6xl font-black tracking-tighter">${usdValue}</div>
-                    <div className="text-xl font-bold text-indigo-200">USD</div>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Current Net Worth</div>
+                    <div className="flex items-baseline gap-4">
+                      <div className="text-6xl font-black tracking-tighter">${usdValue}</div>
+                      <div className="text-xl font-bold text-indigo-200">USD</div>
+                    </div>
+                    <div className="mt-2 text-indigo-100 font-medium opacity-80">
+                      Equivalent to {user.coins.toLocaleString()} total coins
+                    </div>
                   </div>
-                  <div className="mt-2 text-indigo-100 font-medium opacity-80">
-                    Equivalent to {user.coins.toLocaleString()} total coins
+                  <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 backdrop-blur-md">
+                     <div className="text-[8px] font-black uppercase tracking-widest text-indigo-200 mb-1">Exchange Rate</div>
+                     <div className="text-[10px] font-black">5,000 Coins = $2.00</div>
                   </div>
                 </div>
 
@@ -155,9 +155,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions, onDele
                       <div className="flex items-center space-x-6">
                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${
                           tx.type === 'earn' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                          tx.type === 'spend' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-slate-50 text-slate-500 border-slate-100'
+                          tx.type === 'spend' ? 'bg-red-50 text-red-600 border-red-100' : 
+                          tx.type === 'deposit' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-50 text-slate-500 border-slate-100'
                         }`}>
-                          <i className={`fa-solid ${tx.type === 'earn' ? 'fa-arrow-trend-up' : tx.type === 'spend' ? 'fa-bullhorn' : 'fa-arrows-rotate'}`}></i>
+                          <i className={`fa-solid ${tx.type === 'earn' ? 'fa-arrow-trend-up' : tx.type === 'spend' ? 'fa-bullhorn' : tx.type === 'deposit' ? 'fa-plus' : 'fa-arrows-rotate'}`}></i>
                         </div>
                         <div>
                           <div className="font-black text-slate-900 capitalize tracking-tight">{tx.type}</div>
@@ -165,11 +166,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions, onDele
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`font-black text-xl ${tx.type === 'earn' ? 'text-emerald-500' : 'text-slate-900'}`}>
-                          {tx.type === 'earn' ? '+' : '-'}{tx.amount}
+                        <div className={`font-black text-xl ${tx.type === 'earn' || tx.type === 'deposit' ? 'text-emerald-500' : 'text-slate-900'}`}>
+                          {tx.type === 'earn' || tx.type === 'deposit' ? '+' : '-'}{tx.amount.toLocaleString()}
                         </div>
                         <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                          ≈ ${(tx.amount / COIN_RATE).toFixed(3)}
+                          ≈ ${(tx.amount / COIN_RATE).toFixed(3)} USD
                         </div>
                       </div>
                     </div>
