@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Task, TaskType } from '../types';
 
 interface TasksProps {
@@ -13,6 +13,8 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories: {id: TaskType | 'All' | 'Pending', label: string, icon: string}[] = [
     { id: 'All', label: 'All Assets', icon: 'fa-layer-group' },
@@ -45,9 +47,25 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
     setSelectedTask(null);
     setIsSubmittingProof(false);
     setIsUploading(false);
+    setPreviewImage(null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleFinalSubmit = () => {
+    if (!previewImage) {
+      alert("Please upload a screenshot proof first.");
+      return;
+    }
     setIsUploading(true);
     const submissionTimestamp = new Date().toLocaleString();
     
@@ -263,25 +281,60 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                   <div 
                     onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                     onDragLeave={() => setDragActive(false)}
-                    onDrop={(e) => { e.preventDefault(); setDragActive(false); }}
-                    className={`relative border-4 border-dashed rounded-[3rem] p-16 flex flex-col items-center justify-center transition-all cursor-pointer ${
+                    onDrop={(e) => { 
+                      e.preventDefault(); 
+                      setDragActive(false); 
+                      const file = e.dataTransfer.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setPreviewImage(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative border-4 border-dashed rounded-[3rem] p-16 flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden min-h-[300px] ${
                       dragActive ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-slate-50 hover:border-slate-200'
                     }`}
                   >
-                    <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-slate-300 mb-6 shadow-sm border border-slate-50">
-                      <i className="fa-solid fa-cloud-arrow-up text-3xl"></i>
-                    </div>
-                    <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Drop Snapshot or Tap to Browse</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">PNG, JPG up to 10MB</p>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden" 
+                      accept="image/*"
+                    />
+                    
+                    {previewImage ? (
+                      <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center">
+                        <img src={previewImage} alt="Proof Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
+                            className="bg-white text-red-500 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl"
+                          >
+                            Remove Snapshot
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-slate-300 mb-6 shadow-sm border border-slate-50">
+                          <i className="fa-solid fa-cloud-arrow-up text-3xl"></i>
+                        </div>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Drop Snapshot or Tap to Browse</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">PNG, JPG up to 10MB</p>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4">
                     <button onClick={() => setIsSubmittingProof(false)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Back</button>
                     <button 
                       onClick={handleFinalSubmit} 
-                      disabled={isUploading} 
-                      className="flex-[2] py-6 bg-slate-900 text-white font-black rounded-3xl text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                      disabled={isUploading || !previewImage} 
+                      className={`flex-[2] py-6 text-white font-black rounded-3xl text-xs uppercase tracking-widest shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 ${
+                        previewImage ? 'bg-slate-900 hover:bg-indigo-600' : 'bg-slate-300 cursor-not-allowed'
+                      }`}
                     >
                       {isUploading ? (
                         <>
