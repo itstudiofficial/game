@@ -10,9 +10,9 @@ interface ReferralsProps {
 const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   const [copied, setCopied] = useState(false);
   const [refCount, setRefCount] = useState(0);
+  const [referredUsers, setReferredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Use query parameter format for maximum compatibility across all hosting environments (avoids 404)
   const referralLink = `${window.location.origin}/?ref=${user.id.toUpperCase()}`;
   const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my partner link: ${referralLink}`;
 
@@ -20,10 +20,13 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
     const fetchRefData = async () => {
       setLoading(true);
       try {
-        const count = await storage.getReferralCount(user.id);
-        setRefCount(count);
+        // Fetch all users and filter by referredBy locally for real-time accuracy
+        const allUsers = await storage.getAllUsers();
+        const partners = allUsers.filter(u => u.referredBy?.toUpperCase() === user.id.toUpperCase());
+        setReferredUsers(partners);
+        setRefCount(partners.length);
       } catch (e) {
-        console.error("Failed to load referral count");
+        console.error("Failed to load referral network data");
       } finally {
         setLoading(false);
       }
@@ -50,37 +53,16 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   };
 
   const shareLinks = [
-    {
-      name: 'WhatsApp',
-      icon: 'fa-whatsapp',
-      color: 'bg-[#25D366]',
-      url: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`
-    },
-    {
-      name: 'X (Twitter)',
-      icon: 'fa-x-twitter',
-      color: 'bg-[#000000]',
-      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`
-    },
-    {
-      name: 'Facebook',
-      icon: 'fa-facebook',
-      color: 'bg-[#1877F2]',
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`
-    },
-    {
-      name: 'Telegram',
-      icon: 'fa-telegram',
-      color: 'bg-[#0088cc]',
-      url: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareMessage)}`
-    }
+    { name: 'WhatsApp', icon: 'fa-whatsapp', color: 'bg-[#25D366]', url: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}` },
+    { name: 'X', icon: 'fa-x-twitter', color: 'bg-[#000000]', url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}` },
+    { name: 'Facebook', icon: 'fa-facebook', color: 'bg-[#1877F2]', url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}` },
+    { name: 'Telegram', icon: 'fa-telegram', color: 'bg-[#0088cc]', url: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareMessage)}` }
   ];
 
   return (
     <div className="pt-28 pb-20 min-h-screen bg-slate-50">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8">
         
-        {/* Hub Header */}
         <div className="mb-16 max-w-3xl">
           <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-100 shadow-sm">
             <i className="fa-solid fa-users-rays"></i>
@@ -95,25 +77,19 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* Main Referral Control */}
           <div className="lg:col-span-8 space-y-10">
-            <div className="bg-white rounded-[4rem] p-10 md:p-16 border border-slate-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.04)] relative overflow-hidden">
+            <div className="bg-white rounded-[4rem] p-10 md:p-16 border border-slate-100 shadow-sm relative overflow-hidden">
               <div className="flex justify-between items-center mb-10 px-4">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <i className="fa-solid fa-id-card text-indigo-500"></i>
                   Unique Partner ID URL
                 </h3>
-                <div className="flex items-center gap-2">
-                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                   <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Active Earning Node</span>
-                </div>
               </div>
               
-              {/* High-Impact Centerpiece Referral Link */}
               <div className="relative group mb-16">
                 <div className="flex flex-col md:flex-row gap-4 items-stretch">
                   <div className={`flex-1 min-w-0 p-8 md:p-10 rounded-[2.5rem] border-2 border-dashed transition-all duration-500 flex items-center justify-center text-center shadow-inner ${
-                    copied ? 'bg-emerald-50 border-emerald-200 shadow-emerald-100/20' : 'bg-slate-50 border-slate-200 group-hover:border-indigo-300 group-hover:bg-white'
+                    copied ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 group-hover:border-indigo-300 group-hover:bg-white'
                   }`}>
                     <span className={`font-mono text-sm md:text-lg font-black break-all transition-colors duration-500 ${
                       copied ? 'text-emerald-600' : 'text-slate-700 group-hover:text-indigo-600'
@@ -124,84 +100,94 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                   
                   <button 
                     onClick={handleCopy}
-                    className={`relative overflow-hidden px-10 md:px-14 py-8 rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-4 active:scale-95 shadow-2xl ${
-                      copied 
-                        ? 'bg-emerald-500 text-white shadow-emerald-200' 
-                        : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-slate-200 hover:-translate-y-1'
+                    className={`px-10 py-8 rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-4 active:scale-95 shadow-2xl ${
+                      copied ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:bg-indigo-600'
                     }`}
                   >
-                    {copied && (
-                      <div className="absolute bottom-0 left-0 h-1.5 bg-white/30 w-full animate-progress-shrink"></div>
-                    )}
-                    
-                    <i className={`fa-solid ${copied ? 'fa-check-double scale-125 animate-bounce' : 'fa-copy'} transition-transform duration-300`}></i>
-                    <span className="relative z-10 whitespace-nowrap">
-                      {copied ? 'LINK SYNCED!' : 'COPY PARTNER LINK'}
-                    </span>
+                    <i className={`fa-solid ${copied ? 'fa-check-double scale-125 animate-bounce' : 'fa-copy'}`}></i>
+                    <span className="relative z-10">{copied ? 'LINK SYNCED!' : 'COPY PARTNER LINK'}</span>
                   </button>
                 </div>
-                <div className={`absolute -inset-4 rounded-[3rem] blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none ${copied ? 'bg-emerald-400/10 opacity-100' : 'bg-indigo-400/5 group-hover:opacity-100'}`}></div>
               </div>
 
-              {/* Social Outreach Kit */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between px-2">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <i className="fa-solid fa-bullhorn text-indigo-500"></i>
-                    Viral Outreach Kit
-                  </h4>
-                  <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded">One-Tap Broadcast</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                  {shareLinks.map((share) => (
-                    <a
-                      key={share.name}
-                      href={share.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`${share.color} text-white p-8 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 transition-all hover:scale-105 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] active:scale-95 group relative overflow-hidden`}
-                    >
-                      <i className={`fa-brands ${share.icon} text-3xl group-hover:rotate-12 transition-transform`}></i>
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-80">{share.name}</span>
-                      <div className="absolute top-0 left-0 w-full h-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </a>
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                {shareLinks.map((share) => (
+                  <a key={share.name} href={share.url} target="_blank" rel="noopener noreferrer" className={`${share.color} text-white p-8 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 transition-all hover:-translate-y-2 group relative overflow-hidden`}>
+                    <i className={`fa-brands ${share.icon} text-3xl group-hover:rotate-12 transition-transform`}></i>
+                    <span className="text-[9px] font-black uppercase tracking-widest opacity-80">{share.name}</span>
+                  </a>
+                ))}
               </div>
             </div>
 
             {/* Performance Ledger */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-indigo-600 p-10 rounded-[3rem] text-white shadow-2xl shadow-indigo-200 relative overflow-hidden group">
+              <div className="bg-indigo-600 p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden group">
                 <div className="relative z-10">
                   <div className="text-[9px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Partner Count</div>
-                  <div className="text-5xl font-black tracking-tighter mb-2 group-hover:scale-110 transition-transform origin-left">
-                    {loading ? '...' : refCount}
-                  </div>
+                  <div className="text-5xl font-black tracking-tighter mb-2">{loading ? '...' : refCount}</div>
                   <p className="text-[10px] font-bold text-indigo-200/60 uppercase">Active Nodes</p>
                 </div>
-                <i className="fa-solid fa-user-group absolute -right-6 -bottom-6 text-8xl text-white/5 group-hover:rotate-12 transition-transform"></i>
               </div>
-              <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+              <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
                 <div className="relative z-10">
                   <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Yield Revenue</div>
                   <div className="text-5xl font-black text-slate-900 tracking-tighter mb-2">0</div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Lifetime Coins</p>
                 </div>
-                <i className="fa-solid fa-coins absolute -right-6 -bottom-6 text-8xl text-slate-50 group-hover:text-yellow-500/10 transition-all"></i>
               </div>
-              <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl shadow-slate-300 relative overflow-hidden group">
+              <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
                 <div className="relative z-10">
                   <div className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-4">Yield Multiplier</div>
                   <div className="text-5xl font-black tracking-tighter mb-2">10%</div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase">Per Task Done</p>
                 </div>
-                <i className="fa-solid fa-chart-line absolute -right-6 -bottom-6 text-8xl text-white/5"></i>
               </div>
+            </div>
+
+            {/* New: Detailed Referrals List */}
+            <div className="bg-white rounded-[4rem] border border-slate-100 shadow-sm overflow-hidden">
+               <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase">Network Directory</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Users recruited to your income node</p>
+                  </div>
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-300 shadow-inner">
+                    <i className="fa-solid fa-users"></i>
+                  </div>
+               </div>
+               <div className="divide-y divide-slate-50">
+                  {loading ? (
+                    <div className="p-20 text-center animate-pulse">
+                      <i className="fa-solid fa-spinner fa-spin text-4xl text-indigo-200 mb-4"></i>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Querying network database...</p>
+                    </div>
+                  ) : referredUsers.length === 0 ? (
+                    <div className="p-20 text-center">
+                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">No partners detected in your node yet.</p>
+                    </div>
+                  ) : (
+                    referredUsers.map(u => (
+                      <div key={u.id} className="p-8 flex items-center justify-between hover:bg-slate-50 transition-all group">
+                        <div className="flex items-center gap-6">
+                           <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">
+                              {u.username.charAt(0)}
+                           </div>
+                           <div>
+                              <p className="text-lg font-black text-slate-900 tracking-tight">{u.username}</p>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID: {u.id}</p>
+                           </div>
+                        </div>
+                        <div className="text-right">
+                           <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[8px] font-black rounded-lg uppercase tracking-widest border border-emerald-100">Active Node</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-4 space-y-8 sticky top-28">
             <div className="bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-3xl">
               <div className="relative z-10">
@@ -228,15 +214,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
           </div>
         </div>
       </div>
-      <style>{`
-        @keyframes progress-shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-        .animate-progress-shrink {
-          animation: progress-shrink 2.5s linear forwards;
-        }
-      `}</style>
     </div>
   );
 };

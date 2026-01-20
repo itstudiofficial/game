@@ -23,34 +23,19 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [infoModal, setInfoModal] = useState<{title: string, content: React.ReactNode} | null>(null);
 
-  // Referral detection & URL Handling (Fixing 404/Not Found issues)
   useEffect(() => {
     const handleUrlReferral = () => {
-      const path = window.location.pathname;
       const search = window.location.search;
-      let refId = '';
+      const urlParams = new URLSearchParams(search);
+      const refId = (urlParams.get('ref') || '').toUpperCase().trim();
 
-      // Mode 1: Path detection (/ref/ID)
-      if (path.includes('/ref/')) {
-        const parts = path.split('/ref/');
-        if (parts.length > 1) {
-          refId = parts[1].split('/')[0].toUpperCase().trim();
-        }
-      } 
-      // Mode 2: Query detection (?ref=ID) - Fallback for restrictive hosting
-      else if (search.includes('ref=')) {
-        const urlParams = new URLSearchParams(search);
-        refId = (urlParams.get('ref') || '').toUpperCase().trim();
-      }
-
-      if (refId && refId.length > 0 && refId !== 'UNDEFINED') {
-        console.log("Network Logic: Affiliate Node Identified ->", refId);
+      if (refId && refId.length > 0 && refId !== 'UNDEFINED' && refId !== 'NULL') {
+        console.log("System Alert: Staging Referral Node ->", refId);
         sessionStorage.setItem('pending_referral', refId);
         
-        // Immediately clean the URL to prevent 404 loops or confusing state
-        window.history.replaceState({}, '', '/');
+        // Clean URL while keeping query params logic separate from routing logic
+        window.history.replaceState({}, '', window.location.origin);
         
-        // If not logged in, prompt signup
         if (!storage.getUser().isLoggedIn) {
           setCurrentPage('login');
         }
@@ -70,20 +55,20 @@ const App: React.FC = () => {
     });
   }, []);
 
-  const handleLogin = (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean }) => {
-    const pendingRef = sessionStorage.getItem('pending_referral');
+  const handleLogin = (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean, referredBy?: string }) => {
+    // Priority: 1. Data from Login component (Session storage), 2. Existing referredBy
+    const finalReferredBy = (userData.referredBy || user.referredBy || '').toUpperCase().trim();
     
     const updatedUser: User = {
       ...user,
       ...userData,
       isLoggedIn: true,
       coins: user.isLoggedIn ? user.coins : 0,
-      referredBy: user.referredBy || (pendingRef ? pendingRef : '')
+      referredBy: finalReferredBy
     };
 
-    if (pendingRef) {
-      sessionStorage.removeItem('pending_referral');
-    }
+    // If we have a referral, clear it from session now that it's consumed
+    sessionStorage.removeItem('pending_referral');
 
     setUser(updatedUser);
     setCurrentPage(userData.isAdmin ? 'admin' : 'dashboard');
@@ -105,36 +90,10 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const showInfoPage = (id: string) => {
-    const infoPages: Record<string, {title: string, content: React.ReactNode}> = {
-      'terms': {
-        title: 'Terms of Use',
-        content: <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
-          <p>By using Ads Predia, you agree to comply with our global micro-tasking standards.</p>
-          <p>1. Self-referral and multiple accounts are strictly prohibited.</p>
-          <p>2. Proof of completion must be authentic and verifiable.</p>
-          <p>3. Advertisers must maintain a sufficient coin balance for escrow.</p>
-        </div>
-      },
-      'privacy': {
-        title: 'Privacy Policy',
-        content: <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
-          <p>We take your digital privacy seriously.</p>
-          <p>1. We never share your email with third-party advertisers.</p>
-          <p>2. Payment gateway details are processed via secure encrypted tunnels.</p>
-          <p>3. Proof screenshots are deleted from our servers after verification.</p>
-        </div>
-      }
-    };
-    if (infoPages[id]) setInfoModal(infoPages[id]);
-  };
-
   const navigateTo = (page: string) => {
     const mainPages = ['home', 'tasks', 'create', 'spin', 'referrals', 'wallet', 'dashboard', 'login', 'admin', 'features', 'contact'];
     if (mainPages.includes(page)) {
       setCurrentPage(page);
-    } else {
-      showInfoPage(page);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

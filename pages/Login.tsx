@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 
 interface LoginProps {
-  onLogin: (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean }) => void;
+  onLogin: (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean, referredBy?: string }) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -21,6 +21,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setEmailError('');
+
+    const pendingRef = sessionStorage.getItem('pending_referral') || '';
 
     // Admin Credentials Check
     if (!isRegistering && email === 'ehtesham@adspredia.site' && password === 'admin123') {
@@ -65,7 +67,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         username: isRegistering ? username : email.split('@')[0],
         email: email,
         isLoggedIn: true,
-        isAdmin: false
+        isAdmin: false,
+        referredBy: pendingRef // Capture the referral during the actual login event
       });
       setIsSubmitting(false);
     }, 1500); 
@@ -91,7 +94,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="w-full max-w-xl relative z-10">
         <div className="bg-white rounded-[4rem] shadow-[0_80px_160px_-40px_rgba(15,23,42,0.12)] border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-700">
           
-          {/* Immersive Header Slab */}
           <div className="bg-slate-900 p-14 md:p-20 text-white text-center relative overflow-hidden group">
             <div className="relative z-10">
               <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-3xl transform transition-all duration-700 group-hover:rotate-6 group-hover:scale-110">
@@ -108,10 +110,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               </div>
             </div>
             
-            {/* Background Art */}
             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]"></div>
-            <div className="absolute -top-32 -right-32 w-80 h-80 bg-indigo-500/20 rounded-full blur-[80px]"></div>
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-indigo-400/10 rounded-full blur-[80px]"></div>
           </div>
           
           <form onSubmit={handleSubmit} className="p-12 md:p-20 space-y-10">
@@ -169,7 +168,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <div className="animate-in fade-in duration-500">
                 <div className="flex justify-between items-center mb-4 px-2">
                   <label htmlFor="password" className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Password</label>
-                  {!isRegistering && <a href="#" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline decoration-2 underline-offset-4">Forgot?</a>}
                 </div>
                 <div className="relative group">
                   <span className="absolute inset-y-0 left-0 pl-8 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
@@ -196,16 +194,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </div>
               </div>
             </div>
-
-            {!isRegistering && (
-              <label className="flex items-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] cursor-pointer group w-fit px-2">
-                <input 
-                  type="checkbox" 
-                  className="w-6 h-6 rounded-xl text-indigo-600 mr-4 border-2 border-slate-100 bg-slate-50 focus:ring-offset-0 focus:ring-indigo-600 cursor-pointer transition-all" 
-                />
-                Remember Me
-              </label>
-            )}
 
             <button 
               type="submit"
@@ -239,11 +227,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </p>
           </div>
         </div>
-        
-        {/* Support Link */}
-        <p className="mt-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-          Need help? <a href="#" className="text-indigo-600 hover:text-indigo-800 transition-colors">Contact Support</a>
-        </p>
       </div>
     </div>
   );
