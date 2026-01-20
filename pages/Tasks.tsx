@@ -176,7 +176,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                   <button className={`w-full py-4 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     task.status === 'active' ? 'bg-slate-900 group-hover:bg-indigo-600' : 'bg-slate-400 cursor-not-allowed'
                   }`}>
-                    {task.status === 'active' ? 'Start Task' : 'Under Review'}
+                    View Details
                   </button>
                 </div>
                 
@@ -217,7 +217,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                 <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="bg-slate-50 p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-inner">
                     <h4 className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 md:mb-4">Operational Instructions</h4>
-                    <p className="text-slate-700 text-sm md:text-base font-bold leading-relaxed">
+                    <p className="text-slate-700 text-sm md:text-base font-bold leading-relaxed whitespace-pre-wrap">
                       {selectedTask.description}
                     </p>
                   </div>
@@ -257,7 +257,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                         selectedTask.status === 'active' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
-                      Next Step
+                      Start Verification
                     </button>
                   </div>
                   <p className="text-center text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">

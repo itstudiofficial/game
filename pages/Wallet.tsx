@@ -27,7 +27,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
   const GATEWAY_DETAILS = {
     'Easypaisa': { 
       address: '+92-3338182116', 
-      name: 'Ehtesham U.',
       icon: 'fa-mobile-screen-button', 
       color: 'text-emerald-500', 
       bg: 'bg-emerald-50',
@@ -35,7 +34,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
     },
     'USDT': { 
       address: 'TWFfb9ewKRbtSz8qTitr2fJpyRPQWtKj2U', 
-      name: 'Network Vault (TRC20)',
       icon: 'fa-brands fa-ethereum', 
       color: 'text-indigo-500', 
       bg: 'bg-indigo-50',
@@ -43,7 +41,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
     },
     'Payeer': { 
       address: 'P1061557241', 
-      name: 'AdsPredia Global',
       icon: 'fa-wallet', 
       color: 'text-blue-500', 
       bg: 'bg-blue-50',
@@ -121,7 +118,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
                 <h2 className="text-5xl md:text-9xl font-black tracking-tighter leading-none tabular-nums">
                   {coins.toLocaleString()}
                 </h2>
-                <span className="text-sm md:text-xl font-black text-slate-500 uppercase tracking-widest">Global Units</span>
+                <span className="text-sm md:text-xl font-black text-slate-500 uppercase tracking-widest">All Coins</span>
               </div>
               <div className="flex flex-wrap items-center gap-4 md:gap-6 justify-center lg:justify-start">
                  <div className="bg-white/5 px-6 md:px-10 py-3 md:py-5 rounded-2xl md:rounded-[2rem] text-xl md:text-3xl font-black border border-white/10 backdrop-blur-3xl shadow-2xl flex items-center gap-3 md:gap-4">
@@ -177,47 +174,37 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
               </div>
 
               <div className="px-6 md:px-24 pb-16 md:pb-24 space-y-12 md:space-y-16">
-                {/* Method Selection */}
-                <div>
-                  <h4 className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-8 md:mb-10 text-center">Select Network Gateway</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8">
-                    {Object.keys(GATEWAY_DETAILS).map(m => {
-                      const gateway = GATEWAY_DETAILS[m as keyof typeof GATEWAY_DETAILS];
-                      const isActive = method === m;
-                      return (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => setMethod(m)}
-                          className={`group p-6 md:p-10 rounded-3xl md:rounded-[3rem] border-2 transition-all duration-500 flex flex-row sm:flex-col items-center gap-4 md:gap-6 ${
-                            isActive ? 'border-indigo-600 bg-indigo-50 shadow-xl' : 'border-slate-50 bg-slate-50 hover:border-slate-200'
-                          }`}
-                        >
-                          <div className={`w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-3xl flex items-center justify-center text-2xl md:text-3xl transition-all duration-500 shrink-0 ${isActive ? 'bg-white shadow-lg scale-110' : 'bg-white/80'}`}>
-                            <i className={`fa-solid ${gateway.icon} ${isActive ? gateway.color : 'text-slate-300'}`}></i>
-                          </div>
-                          <div className="text-left sm:text-center">
-                            <span className={`block text-[11px] md:text-[13px] font-black uppercase tracking-tight ${isActive ? 'text-indigo-900' : 'text-slate-500'}`}>{m}</span>
-                            <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.2em]">{isActive ? 'Network Selected' : 'Available'}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
+                
+                {/* Method Selection Dropdown */}
+                <div className="max-w-2xl mx-auto space-y-6">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] text-center">Select Currency / Gateway</label>
+                  <div className="relative group">
+                    <select 
+                      value={method} 
+                      onChange={(e) => setMethod(e.target.value)}
+                      className="w-full bg-slate-50 border-2 border-slate-100 px-10 py-6 rounded-[2rem] font-black text-slate-800 outline-none appearance-none cursor-pointer focus:border-indigo-400 transition-all text-sm uppercase tracking-widest shadow-inner"
+                    >
+                      {Object.keys(GATEWAY_DETAILS).map(m => (
+                        <option key={m} value={m}>{m} Network</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                      <i className="fa-solid fa-chevron-down"></i>
+                    </div>
                   </div>
                 </div>
 
                 {/* Gateway Details Card - Only for Deposit */}
                 {activeTab === 'deposit' && (
-                  <div className="bg-slate-900 p-8 md:p-16 rounded-[2rem] md:rounded-[4rem] text-white relative overflow-hidden group shadow-2xl">
+                  <div className="bg-slate-900 p-8 md:p-16 rounded-[2rem] md:rounded-[4rem] text-white relative overflow-hidden group shadow-2xl animate-in zoom-in-95 duration-500">
                     <div className="relative z-10 space-y-8 md:space-y-10">
                       <div>
-                        <p className="text-[9px] md:text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Official Payment Node</p>
+                        <p className="text-[9px] md:text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Official Payment Address</p>
                         <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
                           <div className="flex-1">
                             <span className="text-xl md:text-4xl font-black text-white font-mono tracking-tight break-all">
                               {currentGateway.address}
                             </span>
-                            <p className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2">Account Name: <span className="text-white">{currentGateway.name}</span></p>
                           </div>
                           <button 
                             onClick={() => handleCopy(currentGateway.address)} 
@@ -274,7 +261,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
 
                     <div className="space-y-4">
                       <label className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">
-                        {activeTab === 'deposit' ? 'TxID / Reference' : 'Account Details'}
+                        {activeTab === 'deposit' ? 'TxID / Reference' : 'Destination Account'}
                       </label>
                       <div className="relative">
                         <input 
@@ -297,11 +284,11 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
 
                   <button 
                     type="submit" 
-                    className={`w-full py-8 md:py-10 text-white font-black rounded-2xl md:rounded-[3rem] transition-all shadow-2xl flex items-center justify-center gap-4 md:gap-6 uppercase tracking-[0.4em] text-[10px] md:text-xs active:scale-[0.98] ${
+                    className={`w-full py-8 md:py-10 text-white font-black rounded-2xl md:rounded-[3rem] transition-all shadow-2xl flex items-center justify-center gap-4 md:gap-6 uppercase tracking-[0.4em] text-xs active:scale-[0.98] ${
                       activeTab === 'deposit' ? 'bg-slate-900 hover:bg-emerald-600 shadow-emerald-100' : 'bg-slate-900 hover:bg-indigo-600 shadow-indigo-100'
                     }`}
                   >
-                    {activeTab === 'deposit' ? 'Deposit now' : 'Withdraw now'}
+                    {activeTab === 'deposit' ? 'Submit Deposit' : 'Request Withdrawal'}
                     <i className={`fa-solid ${activeTab === 'deposit' ? 'fa-arrow-down' : 'fa-arrow-up'}`}></i>
                   </button>
                 </form>
@@ -313,7 +300,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
             <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] shadow-sm border border-slate-100 overflow-hidden flex flex-col">
               <div className="p-8 md:p-12 border-b border-slate-50 flex flex-col xl:flex-row justify-between items-center bg-slate-50/40 gap-6 md:gap-8 sticky top-0 z-10 backdrop-blur-md">
                 <div className="text-center xl:text-left">
-                  <h3 className="font-black text-slate-900 uppercase tracking-tighter text-2xl md:text-3xl">All Income History</h3>
+                  <h3 className="font-black text-slate-900 uppercase tracking-tighter text-2xl md:text-3xl">Asset History</h3>
                   <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Verified network synchronization logs</p>
                 </div>
                 
@@ -420,8 +407,8 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Account</span>
-                    <span className="text-[10px] md:text-xs font-black text-slate-800 bg-white p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-200 break-all font-mono">{account}</span>
+                    <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Network Gateway</span>
+                    <span className="text-[10px] md:text-xs font-black text-slate-800 bg-white p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-200 break-all font-mono uppercase tracking-widest">{method}</span>
                   </div>
               </div>
 
