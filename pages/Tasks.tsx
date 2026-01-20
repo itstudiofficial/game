@@ -158,7 +158,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                   <button className={`w-full py-4 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     task.status === 'active' ? 'bg-slate-900 group-hover:bg-indigo-600' : 'bg-slate-400 cursor-not-allowed'
                   }`}>
-                    {task.status === 'active' ? 'Initialize Protocol' : 'Under Review'}
+                    {task.status === 'active' ? 'Start Task' : 'Under Review'}
                   </button>
                 </div>
                 
