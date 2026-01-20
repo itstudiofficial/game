@@ -76,7 +76,7 @@ const AdminPanel: React.FC = () => {
       totalWorkers: 100,
       status: 'active'
     });
-    alert('Global task injected into the network successfully.');
+    alert('Global campaign injected into the network successfully.');
   };
 
   const handleApplyAdjustment = async () => {
@@ -117,7 +117,7 @@ const AdminPanel: React.FC = () => {
     const isBanned = user.status === 'banned';
     const newStatus = isBanned ? 'active' : 'banned';
     
-    if (window.confirm(isBanned ? `Restore node access for ${user.username}?` : `Ban identity ${user.username} from the network?`)) {
+    if (window.confirm(isBanned ? `Restore access for ${user.username}?` : `Ban user ${user.username} from the network?`)) {
       await storage.updateUserInCloud(userId, { status: newStatus });
       fetchData();
     }
@@ -146,7 +146,7 @@ const AdminPanel: React.FC = () => {
     const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, status } : t);
     storage.setTasks(updatedTasks);
     setTasks(updatedTasks);
-    alert(`Task ${taskId} is now ${status.toUpperCase()}`);
+    alert(`Campaign ${taskId} is now ${status.toUpperCase()}`);
   };
 
   const handleDeleteTask = (taskId: string) => {
@@ -186,22 +186,22 @@ const AdminPanel: React.FC = () => {
                 <i className="fa-solid fa-user-shield"></i>
              </div>
              <div>
-                <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Command<span className="text-indigo-600">Center</span></h1>
+                <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Admin <span className="text-indigo-600">Dashboard</span></h1>
                 <div className="flex items-center gap-4 mt-2">
                    <span className="flex h-2 w-2 relative">
                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                    </span>
-                   <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Node Secure • Admin Privileges Active</p>
+                   <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">System Secure • Oversight Enabled</p>
                 </div>
              </div>
           </div>
 
           <div className="flex bg-slate-100/50 p-2 rounded-[2.5rem] border border-slate-200 backdrop-blur-3xl shadow-inner">
             {[
-              { id: 'users', label: 'Nodes', icon: 'fa-users-gear' },
-              { id: 'transactions', label: 'Audit Ledger', icon: 'fa-file-invoice-dollar' },
-              { id: 'tasks', label: 'Market Ops', icon: 'fa-satellite-dish' }
+              { id: 'users', label: 'All Users', icon: 'fa-users-gear' },
+              { id: 'transactions', label: 'Income History', icon: 'fa-file-invoice-dollar' },
+              { id: 'tasks', label: 'All Campaigns', icon: 'fa-satellite-dish' }
             ].map(v => (
               <button
                 key={v.id}
@@ -231,7 +231,7 @@ const AdminPanel: React.FC = () => {
                     </div>
                     <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[8px] font-black uppercase tracking-widest border border-emerald-100">Synchronized</div>
                   </div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">Total Verified Nodes</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">Total Active Users</p>
                   <div className="text-7xl font-black text-slate-900 tracking-tighter tabular-nums">{users.length}</div>
                </div>
 
@@ -243,7 +243,7 @@ const AdminPanel: React.FC = () => {
                   </div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">Global Vault Balance</p>
                   <div className="text-7xl font-black text-slate-900 tracking-tighter tabular-nums">{totalCoins.toLocaleString()}</div>
-                  <div className="text-[10px] font-black text-indigo-400 mt-4 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded w-fit">In-Network Units</div>
+                  <div className="text-[10px] font-black text-indigo-400 mt-4 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded w-fit">Network Assets</div>
                </div>
 
                <div className="bg-slate-900 p-12 rounded-[3.5rem] border border-slate-800 shadow-2xl relative overflow-hidden group">
@@ -260,18 +260,18 @@ const AdminPanel: React.FC = () => {
                </div>
             </div>
 
-            {/* Node Management List */}
+            {/* User Management List */}
             <div className="bg-white rounded-[4rem] border border-slate-200 overflow-hidden shadow-sm">
                <div className="p-14 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-10 bg-slate-50/50">
                   <div>
-                    <h3 className="font-black text-slate-900 uppercase tracking-tighter text-4xl">Node Manifest</h3>
-                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">Managing global identity matrix</p>
+                    <h3 className="font-black text-slate-900 uppercase tracking-tighter text-4xl">User Directory</h3>
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">Managing global participant accounts</p>
                   </div>
                   <div className="relative w-full md:w-auto">
                     <i className="fa-solid fa-magnifying-glass absolute left-8 top-1/2 -translate-y-1/2 text-slate-300"></i>
                     <input 
                       type="text" 
-                      placeholder="Search Node ID or Email..." 
+                      placeholder="Search Username or Email..." 
                       className="w-full md:w-96 bg-white border-2 border-slate-100 pl-16 pr-8 py-6 rounded-3xl text-sm font-black text-slate-800 outline-none focus:border-indigo-100 focus:ring-8 focus:ring-indigo-500/5 transition-all shadow-inner"
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -282,7 +282,7 @@ const AdminPanel: React.FC = () => {
                   {filteredUsers.length === 0 ? (
                     <div className="p-40 text-center">
                        <i className="fa-solid fa-user-slash text-6xl text-slate-100 mb-8"></i>
-                       <p className="text-slate-300 font-black uppercase tracking-[0.4em]">Zero Matching Nodes</p>
+                       <p className="text-slate-300 font-black uppercase tracking-[0.4em]">Zero Matching Users</p>
                     </div>
                   ) : (
                     filteredUsers.map(u => (
@@ -294,8 +294,8 @@ const AdminPanel: React.FC = () => {
                             <div className="flex-1">
                                <div className="flex flex-wrap items-center gap-4 mb-2">
                                  <span className="font-black text-slate-900 text-2xl tracking-tighter">{u.username}</span>
-                                 {u.isAdmin && <span className="bg-indigo-600 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase border border-indigo-400 shadow-lg shadow-indigo-100">SUPERVISOR</span>}
-                                 {u.status === 'banned' && <span className="bg-red-50 text-red-500 text-[8px] font-black px-3 py-1 rounded-full uppercase border border-red-100">RESTRICTED</span>}
+                                 {u.isAdmin && <span className="bg-indigo-600 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase border border-indigo-400 shadow-lg shadow-indigo-100">ADMIN</span>}
+                                 {u.status === 'banned' && <span className="bg-red-50 text-red-500 text-[8px] font-black px-3 py-1 rounded-full uppercase border border-red-100">BANNED</span>}
                                </div>
                                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-4">
                                  <span className="flex items-center gap-2"><i className="fa-solid fa-envelope opacity-30"></i> {u.email}</span>
@@ -308,7 +308,7 @@ const AdminPanel: React.FC = () => {
                          <div className="flex items-center gap-16 text-center w-full xl:w-auto border-t xl:border-0 pt-10 xl:pt-0 border-slate-100">
                             <div>
                                <div className="text-4xl font-black text-slate-900 tabular-nums tracking-tighter">{u.coins.toLocaleString()}</div>
-                               <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Authorized Units</div>
+                               <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Wallet Units</div>
                             </div>
                             <div className="flex gap-4">
                                <button 
@@ -323,7 +323,7 @@ const AdminPanel: React.FC = () => {
                                  className={`px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 flex items-center gap-3 ${u.status === 'banned' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white' : 'bg-red-50 text-red-500 hover:bg-red-600 hover:text-white'}`}
                                >
                                  <i className={`fa-solid ${u.status === 'banned' ? 'fa-unlock' : 'fa-ban'} text-[10px]`}></i>
-                                 {u.status === 'banned' ? 'Restore' : 'Ban'}
+                                 {u.status === 'banned' ? 'Unban' : 'Ban'}
                                </button>
                             </div>
                          </div>
@@ -340,8 +340,8 @@ const AdminPanel: React.FC = () => {
              <div className="bg-white rounded-[4rem] border border-slate-200 overflow-hidden shadow-sm">
                 <div className="p-14 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                    <div>
-                      <h3 className="font-black text-slate-900 uppercase tracking-tighter text-4xl">Financial Audit</h3>
-                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">Real-time ledger of all network value transfers</p>
+                      <h3 className="font-black text-slate-900 uppercase tracking-tighter text-4xl">Income History</h3>
+                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">Global ledger of all value transfers</p>
                    </div>
                    <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-slate-200 border border-slate-100 shadow-inner">
                       <i className="fa-solid fa-receipt text-3xl"></i>
@@ -350,7 +350,7 @@ const AdminPanel: React.FC = () => {
                 
                 <div className="divide-y divide-slate-100">
                    {transactions.length === 0 ? (
-                      <div className="p-40 text-center text-slate-300 font-black uppercase tracking-[0.4em]">Zero Transactions Recorded</div>
+                      <div className="p-40 text-center text-slate-300 font-black uppercase tracking-[0.4em]">Zero Records Found</div>
                    ) : (
                      transactions.map(tx => (
                        <div key={tx.id} className="p-12 flex flex-col md:flex-row justify-between items-center gap-10 hover:bg-slate-50 transition-all group">
@@ -422,17 +422,17 @@ const AdminPanel: React.FC = () => {
         {view === 'tasks' && (
           <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 space-y-12">
             
-            {/* Market Control Strip */}
+            {/* Campaign Control Strip */}
             <div className="bg-slate-900 p-14 rounded-[4rem] border border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-12 shadow-2xl relative overflow-hidden">
                <div className="relative z-10 text-center lg:text-left">
-                  <h3 className="font-black text-white uppercase tracking-tighter text-4xl">Operational Market</h3>
-                  <p className="text-[11px] font-black text-indigo-400 uppercase tracking-widest mt-2">Deploy and authorize inventory streams</p>
+                  <h3 className="font-black text-white uppercase tracking-tighter text-4xl">All Campaigns</h3>
+                  <p className="text-[11px] font-black text-indigo-400 uppercase tracking-widest mt-2">Oversight of global task streams</p>
                </div>
                <button 
                 onClick={() => setIsCreatingTask(true)}
                 className="px-14 py-8 bg-indigo-600 text-white rounded-[2.5rem] text-xs font-black uppercase tracking-[0.3em] hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-900/40 flex items-center gap-5 active:scale-95 group relative overflow-hidden"
                >
-                 <span className="relative z-10"><i className="fa-solid fa-plus-circle mr-2"></i> Deploy Global Task</span>
+                 <span className="relative z-10"><i className="fa-solid fa-plus-circle mr-2"></i> Deploy Admin Campaign</span>
                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
                </button>
             </div>
@@ -441,12 +441,12 @@ const AdminPanel: React.FC = () => {
             <div className="space-y-8">
               <h4 className="text-[11px] font-black text-amber-500 uppercase tracking-[0.4em] flex items-center gap-4 ml-8">
                 <i className="fa-solid fa-clock-rotate-left"></i>
-                Pending Network Authorizations
+                Pending Admin Authorizations
               </h4>
               <div className="bg-white rounded-[4rem] border-2 border-dashed border-amber-200 overflow-hidden shadow-xl shadow-amber-500/5">
                 <div className="divide-y divide-amber-100">
                   {tasks.filter(t => t.status === 'pending').length === 0 ? (
-                    <div className="p-32 text-center text-amber-200 font-black uppercase tracking-[0.4em]">Zero Pending Verifications</div>
+                    <div className="p-32 text-center text-amber-200 font-black uppercase tracking-[0.4em]">Zero Pending Campaigns</div>
                   ) : (
                     tasks.filter(t => t.status === 'pending').map(task => (
                       <div key={task.id} className="p-12 flex flex-col xl:flex-row justify-between items-center gap-12 bg-amber-50/20 hover:bg-amber-50 transition-all">
@@ -471,7 +471,7 @@ const AdminPanel: React.FC = () => {
                               <i className="fa-solid fa-check"></i> Approve
                            </button>
                            <button onClick={() => handleTaskStatus(task.id, 'rejected')} className="px-10 py-5 bg-red-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-red-500 shadow-xl shadow-red-900/20 transition-all flex items-center gap-3">
-                              <i className="fa-solid fa-xmark"></i> Deny
+                              <i className="fa-solid fa-xmark"></i> Reject
                            </button>
                         </div>
                       </div>
@@ -481,11 +481,11 @@ const AdminPanel: React.FC = () => {
               </div>
             </div>
 
-            {/* Global Inventory List */}
+            {/* Global Campaign List */}
             <div className="space-y-8">
               <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] flex items-center gap-4 ml-8">
                 <i className="fa-solid fa-box-open"></i>
-                Authorized Active Inventory
+                Authorized Campaign Inventory
               </h4>
               <div className="bg-white rounded-[4rem] border border-slate-200 overflow-hidden shadow-sm">
                 <div className="divide-y divide-slate-100">
@@ -514,7 +514,7 @@ const AdminPanel: React.FC = () => {
                          <div className="flex flex-wrap items-center gap-20 text-center w-full xl:w-auto border-t xl:border-0 pt-10 xl:pt-0 border-slate-100">
                             <div>
                                <div className="text-4xl font-black text-slate-900 tabular-nums tracking-tighter">{task.reward}</div>
-                               <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Reward Units</div>
+                               <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Unit Reward</div>
                             </div>
                             <div className="min-w-[160px]">
                                <div className="text-4xl font-black text-slate-900 tabular-nums tracking-tighter mb-4">{task.completedCount} <span className="text-lg opacity-20">/</span> {task.totalWorkers}</div>
@@ -570,7 +570,7 @@ const AdminPanel: React.FC = () => {
                     <button onClick={() => setAdjustingUser(null)} className="flex-1 py-7 bg-slate-100 text-slate-500 font-black rounded-[2rem] uppercase text-[11px] tracking-[0.2em] hover:bg-slate-200 transition-all">Cancel</button>
                     <button onClick={handleApplyAdjustment} className="flex-[2] py-7 bg-slate-900 text-white font-black rounded-[2rem] uppercase text-[11px] tracking-[0.2em] shadow-2xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-4">
                        <i className="fa-solid fa-sync"></i>
-                       Update Node
+                       Update Account
                     </button>
                  </div>
               </div>
@@ -588,7 +588,7 @@ const AdminPanel: React.FC = () => {
                        <i className="fa-solid fa-satellite-dish"></i>
                     </div>
                     <div>
-                       <h3 className="text-4xl font-black text-slate-900 tracking-tighter">Market Injection</h3>
+                       <h3 className="text-4xl font-black text-slate-900 tracking-tighter">Campaign Injection</h3>
                        <p className="text-[11px] font-black text-indigo-600 uppercase tracking-widest mt-2">Deploying Administrative Campaign</p>
                     </div>
                  </div>
@@ -607,7 +607,7 @@ const AdminPanel: React.FC = () => {
                         value={newTaskData.title}
                         onChange={e => setNewTaskData({...newTaskData, title: e.target.value})}
                         className="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-100 px-10 py-8 rounded-[2.5rem] font-black text-slate-800 outline-none transition-all shadow-inner text-lg" 
-                        placeholder="e.g. Subscribe to Verified Network Channel"
+                        placeholder="e.g. Subscribe to Official Network Stream"
                        />
                     </div>
 
@@ -624,7 +624,7 @@ const AdminPanel: React.FC = () => {
                           />
                        </div>
                        <div className="space-y-6">
-                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest px-8">Asset Class</label>
+                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest px-8">Campaign Type</label>
                           <select 
                             value={newTaskData.type}
                             onChange={e => setNewTaskData({...newTaskData, type: e.target.value as TaskType})}
@@ -650,7 +650,7 @@ const AdminPanel: React.FC = () => {
                           />
                        </div>
                        <div className="space-y-6">
-                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest px-8">Node Allocation</label>
+                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest px-8">Slot Allocation</label>
                           <input 
                             required
                             type="number" 
@@ -680,7 +680,7 @@ const AdminPanel: React.FC = () => {
                         value={newTaskData.description}
                         onChange={e => setNewTaskData({...newTaskData, description: e.target.value})}
                         className="w-full bg-slate-50 border-2 border-transparent focus:border-indigo-100 px-12 py-10 rounded-[3rem] font-black text-slate-800 outline-none resize-none leading-relaxed shadow-inner" 
-                        placeholder="Provide explicit step-by-step instructions for our human nodes..."
+                        placeholder="Provide explicit step-by-step instructions for our global users..."
                        ></textarea>
                     </div>
 
