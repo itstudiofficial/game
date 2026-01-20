@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
+import { storage } from '../services/storage';
 
 interface ReferralsProps {
   user: User;
@@ -7,14 +9,30 @@ interface ReferralsProps {
 
 const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   const [copied, setCopied] = useState(false);
+  const [refCount, setRefCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   
-  const referralLink = `https://adspredia.site/ref/${user.id.toLowerCase()}`;
+  // Construct the absolute referral URL based on current origin
+  const referralLink = `${window.location.origin}/ref/${user.id.toLowerCase()}`;
   const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my link: ${referralLink}`;
+
+  useEffect(() => {
+    const fetchRefData = async () => {
+      setLoading(true);
+      const count = await storage.getReferralCount(user.id);
+      setRefCount(count);
+      setLoading(false);
+    };
+    if (user.isLoggedIn) {
+      fetchRefData();
+    }
+  }, [user.id]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // Visual cue logic: resets after 2.5 seconds
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const shareLinks = [
@@ -66,24 +84,52 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
           {/* Main Referral Control */}
           <div className="lg:col-span-8 space-y-10">
             <div className="bg-white rounded-[4rem] p-10 md:p-16 border border-slate-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.04)] relative overflow-hidden">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10 px-2 flex items-center gap-2">
-                <i className="fa-solid fa-id-card text-indigo-500"></i>
-                Unique Partner ID URL
-              </h3>
-              
-              <div className="flex flex-col md:flex-row gap-4 items-center mb-16 group">
-                <div className="flex-1 w-full p-8 bg-slate-50 rounded-3xl border border-slate-100 font-mono text-slate-700 text-sm font-black break-all shadow-inner group-hover:bg-slate-100 transition-colors">
-                  {referralLink}
+              <div className="flex justify-between items-center mb-10 px-4">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <i className="fa-solid fa-id-card text-indigo-500"></i>
+                  Unique Partner ID URL
+                </h3>
+                <div className="flex items-center gap-2">
+                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                   <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Active Earning Node</span>
                 </div>
-                <button 
-                  onClick={handleCopy}
-                  className={`w-full md:w-auto px-12 py-8 rounded-3xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-4 ${
-                    copied ? 'bg-emerald-500 text-white shadow-2xl shadow-emerald-100 scale-95' : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-2xl shadow-slate-200'
-                  }`}
-                >
-                  <i className={`fa-solid ${copied ? 'fa-check-double' : 'fa-copy'}`}></i>
-                  {copied ? 'SYNCHRONIZED' : 'COPY LINK'}
-                </button>
+              </div>
+              
+              {/* High-Impact Centerpiece Referral Link */}
+              <div className="relative group mb-16">
+                <div className="flex flex-col md:flex-row gap-4 items-stretch">
+                  <div className={`flex-1 min-w-0 p-8 md:p-10 rounded-[2.5rem] border-2 border-dashed transition-all duration-500 flex items-center justify-center text-center shadow-inner ${
+                    copied ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 group-hover:border-indigo-300 group-hover:bg-white'
+                  }`}>
+                    <span className={`font-mono text-sm md:text-lg font-black break-all transition-colors duration-500 ${
+                      copied ? 'text-emerald-600' : 'text-slate-700 group-hover:text-indigo-600'
+                    }`}>
+                      {referralLink}
+                    </span>
+                  </div>
+                  
+                  <button 
+                    onClick={handleCopy}
+                    className={`relative overflow-hidden px-10 md:px-14 py-8 rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-4 active:scale-95 shadow-2xl ${
+                      copied 
+                        ? 'bg-emerald-500 text-white shadow-emerald-200' 
+                        : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-slate-200 hover:-translate-y-1'
+                    }`}
+                  >
+                    {/* Progress Fill Animation for Copied State */}
+                    {copied && (
+                      <div className="absolute bottom-0 left-0 h-1.5 bg-white/30 w-full animate-progress-shrink"></div>
+                    )}
+                    
+                    <i className={`fa-solid ${copied ? 'fa-check-double scale-125 animate-bounce' : 'fa-copy'} transition-transform duration-300`}></i>
+                    <span className="relative z-10 whitespace-nowrap">
+                      {copied ? 'LINK SYNCED!' : 'COPY PARTNER LINK'}
+                    </span>
+                  </button>
+                </div>
+                
+                {/* Visual Glow behind link */}
+                <div className={`absolute -inset-4 rounded-[3rem] blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none ${copied ? 'bg-emerald-400/10 opacity-100' : 'bg-indigo-400/5 group-hover:opacity-100'}`}></div>
               </div>
 
               {/* Social Outreach Kit */}
@@ -93,7 +139,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                     <i className="fa-solid fa-bullhorn text-indigo-500"></i>
                     Viral Outreach Kit
                   </h4>
-                  <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded">Instant Share</span>
+                  <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded">One-Tap Broadcast</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                   {shareLinks.map((share) => (
@@ -112,7 +158,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                 </div>
               </div>
               
-              {/* Visual Asset */}
               <div className="absolute -right-12 -top-12 w-64 h-64 bg-indigo-50 rounded-full blur-3xl pointer-events-none opacity-40"></div>
             </div>
 
@@ -121,7 +166,9 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
               <div className="bg-indigo-600 p-10 rounded-[3rem] text-white shadow-2xl shadow-indigo-200 relative overflow-hidden group">
                 <div className="relative z-10">
                   <div className="text-[9px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Partner Count</div>
-                  <div className="text-5xl font-black tracking-tighter mb-2 group-hover:scale-110 transition-transform origin-left">0</div>
+                  <div className="text-5xl font-black tracking-tighter mb-2 group-hover:scale-110 transition-transform origin-left">
+                    {loading ? '...' : refCount}
+                  </div>
                   <p className="text-[10px] font-bold text-indigo-200/60 uppercase">Active Nodes</p>
                 </div>
                 <i className="fa-solid fa-user-group absolute -right-6 -bottom-6 text-8xl text-white/5 group-hover:rotate-12 transition-transform"></i>
@@ -187,47 +234,17 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
             </div>
           </div>
         </div>
-
-        {/* Policy Footer */}
-        <div className="mt-20 bg-slate-900 rounded-[4rem] p-12 md:p-20 text-white relative overflow-hidden group">
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <h2 className="text-3xl md:text-5xl font-black tracking-tighter mb-8 leading-none">The Passive <br/> <span className="text-indigo-400">Wealth Loop</span></h2>
-              <p className="text-slate-400 font-medium text-lg leading-relaxed mb-10">
-                Ads Predia is built on community growth. Our partnership model rewards the visionaries who help expand our global micro-tasking network.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
-                  <i className="fa-solid fa-infinity text-indigo-400"></i>
-                  No Referral Caps
-                </div>
-                <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-3">
-                  <i className="fa-solid fa-money-bill-transfer text-emerald-400"></i>
-                  Lifetime Yields
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white/5 rounded-[3rem] p-10 border border-white/10 backdrop-blur-3xl">
-              <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-8">System Compliance</h4>
-              <ul className="space-y-6">
-                {[
-                   'One account per physical user node.',
-                   'Promotions must be ethical and non-deceptive.',
-                   'Network fraud results in global blacklisting.',
-                   'Referral bonuses are non-reversible once credited.'
-                ].map((rule, idx) => (
-                  <li key={idx} className="flex items-center gap-4 text-xs font-black text-slate-400">
-                    <i className="fa-solid fa-circle-check text-emerald-500/50"></i>
-                    {rule}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          <i className="fa-solid fa-users absolute -right-20 -bottom-20 text-[25rem] text-white/5 group-hover:scale-110 transition-transform duration-1000"></i>
-        </div>
       </div>
+      
+      <style>{`
+        @keyframes progress-shrink {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+        .animate-progress-shrink {
+          animation: progress-shrink 2.5s linear forwards;
+        }
+      `}</style>
     </div>
   );
 };

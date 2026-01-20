@@ -1,6 +1,6 @@
 
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, get, onValue, push, update } from 'firebase/database';
+import { getDatabase, ref, set, get, onValue, push, update, query, orderByChild, equalTo } from 'firebase/database';
 import { User, Task, Transaction } from '../types';
 
 const firebaseConfig = {
@@ -70,12 +70,20 @@ export const storage = {
     const updated = [tx, ...txs];
     localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
     
-    // Sync to user specific and global admin log
     await push(ref(db, `user_transactions/${tx.userId}`), tx);
     await set(ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`), tx);
   },
 
-  // Admin specific methods
+  getReferralCount: async (userId: string): Promise<number> => {
+    const usersRef = ref(db, KEYS.USERS);
+    const referralQuery = query(usersRef, orderByChild('referredBy'), equalTo(userId));
+    const snapshot = await get(referralQuery);
+    if (snapshot.exists()) {
+      return Object.keys(snapshot.val()).length;
+    }
+    return 0;
+  },
+
   getAllUsers: async (): Promise<User[]> => {
     const snapshot = await get(ref(db, KEYS.USERS));
     const data = snapshot.val();

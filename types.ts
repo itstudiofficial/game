@@ -26,6 +26,7 @@ export interface User {
   lastSpinTimestamp?: number;
   dailySpinsCount?: number;
   status?: 'active' | 'banned';
+  referredBy?: string;
 }
 
 export interface Transaction {

@@ -23,6 +23,18 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [infoModal, setInfoModal] = useState<{title: string, content: React.ReactNode} | null>(null);
 
+  // Referral detection
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/ref/')) {
+      const refId = path.split('/ref/')[1].toUpperCase();
+      sessionStorage.setItem('pending_referral', refId);
+      // Redirect to home or login to clear URL bar but keep context
+      window.history.replaceState({}, '', '/');
+      setCurrentPage('login');
+    }
+  }, []);
+
   useEffect(() => {
     storage.setUser(user);
   }, [user]);
@@ -34,12 +46,18 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean }) => {
+    const pendingRef = sessionStorage.getItem('pending_referral');
+    
     const updatedUser = {
       ...user,
       ...userData,
       isLoggedIn: true,
-      coins: user.isLoggedIn ? user.coins : 0
+      coins: user.isLoggedIn ? user.coins : 0,
+      referredBy: !user.isLoggedIn && pendingRef ? pendingRef : user.referredBy
     };
+
+    if (pendingRef) sessionStorage.removeItem('pending_referral');
+
     setUser(updatedUser);
     setCurrentPage(userData.isAdmin ? 'admin' : 'dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
