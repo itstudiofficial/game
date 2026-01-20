@@ -1,27 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Transaction } from '../types';
+import { User } from '../types';
 import { storage } from '../services/storage';
 
 interface ReferralsProps {
   user: User;
-  onClaim: (amount: number) => void;
 }
 
-const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
+const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   const [copied, setCopied] = useState(false);
   const [refCount, setRefCount] = useState(0);
   const [referredUsers, setReferredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [claiming, setClaiming] = useState(false);
   
   const REFERRAL_REWARD = 50;
   const referralLink = `${window.location.origin}/?ref=${user.id.toUpperCase()}`;
   const shareMessage = `Join Ads Predia and start earning daily coins! Get 50 coins instantly when you sign up using my partner link: ${referralLink}`;
-
-  // Simple logic for unclaimed rewards (simulated for UI)
-  // In a real app, you'd track 'claimedReferrals' in the user object
-  const unclaimedAmount = refCount * REFERRAL_REWARD;
 
   useEffect(() => {
     const fetchRefData = async () => {
@@ -58,18 +52,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleClaimRewards = async () => {
-    if (unclaimedAmount <= 0 || claiming) return;
-    setClaiming(true);
-    
-    // Simulate API delay for synchronization
-    setTimeout(() => {
-      onClaim(unclaimedAmount);
-      setClaiming(false);
-      alert(`Success! ${unclaimedAmount} Coins have been added to your vault.`);
-    }, 1500);
-  };
-
   const shareLinks = [
     { name: 'WhatsApp', icon: 'fa-whatsapp', color: 'bg-[#25D366]', url: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}` },
     { name: 'X', icon: 'fa-x-twitter', color: 'bg-[#000000]', url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}` },
@@ -90,7 +72,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
             Refer & <span className="text-indigo-600">Earn 50</span>
           </h1>
           <p className="text-slate-500 font-medium text-lg leading-relaxed">
-            Expand your earning footprint. For every verified user who joins through your link, you receive a flat 50 Coin reward instantly claimable to your vault.
+            Expand your earning footprint. For every verified user who joins through your link, you receive a flat 50 Coin reward credited automatically to your vault upon their first login.
           </p>
         </div>
 
@@ -139,36 +121,21 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
               </div>
             </div>
 
-            {/* Claim Section */}
+            {/* Overview Card */}
             <div className="bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white shadow-3xl relative overflow-hidden">
                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
                   <div className="text-center md:text-left">
-                     <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Claimable Earnings</p>
+                     <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Total Referral Earnings</p>
                      <div className="flex items-baseline gap-4 mb-4 justify-center md:justify-start">
-                        <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none tabular-nums">{unclaimedAmount}</h2>
+                        <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none tabular-nums">{refCount * REFERRAL_REWARD}</h2>
                         <span className="text-lg font-bold text-slate-500 uppercase tracking-widest">Coins</span>
                      </div>
-                     <p className="text-xs font-bold text-slate-400">Total verified referrals: {refCount}</p>
+                     <p className="text-xs font-bold text-slate-400 italic">Rewards are credited instantly when your partners login for the first time.</p>
                   </div>
-                  <button 
-                    onClick={handleClaimRewards}
-                    disabled={unclaimedAmount <= 0 || claiming}
-                    className={`w-full md:w-auto px-16 py-8 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-4 shadow-2xl active:scale-95 ${
-                      unclaimedAmount > 0 && !claiming 
-                        ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-500/30' 
-                        : 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/10'
-                    }`}
-                  >
-                    {claiming ? (
-                      <>
-                        <i className="fa-solid fa-spinner fa-spin"></i> Synchronizing...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fa-solid fa-money-bill-transfer"></i> Claim All
-                      </>
-                    )}
-                  </button>
+                  <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 text-center">
+                    <p className="text-4xl font-black">{refCount}</p>
+                    <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mt-2">Active Partners</p>
+                  </div>
                </div>
                <i className="fa-solid fa-coins absolute -right-20 -bottom-20 text-[20rem] text-white/5 -rotate-12 pointer-events-none"></i>
             </div>
@@ -179,14 +146,14 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
                 <div className="relative z-10">
                   <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Partner Count</div>
                   <div className="text-5xl font-black text-slate-900 tracking-tighter mb-2">{loading ? '...' : refCount}</div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Active Nodes</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Successful Node Links</p>
                 </div>
               </div>
               <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
                 <div className="relative z-10">
                   <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Referral Multiplier</div>
                   <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-2">50</div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Fixed Units / User</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Fixed Coins / User</p>
                 </div>
               </div>
             </div>
@@ -242,7 +209,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
                   {[
                     { t: 'Flat Bounty', d: 'Receive exactly 50 Coins for every successful registration through your link.', icon: 'fa-gift' },
                     { t: 'Permanent Linkage', d: 'Once a user joins via your link, they are locked into your network forever.', icon: 'fa-link' },
-                    { t: 'Manual Synchronization', d: 'Visit this page anytime to claim your accumulated bounties to your main vault.', icon: 'fa-money-bill-transfer' }
+                    { t: 'Auto Synchronization', d: 'Earnings are credited to your vault automatically during the referred user\'s session.', icon: 'fa-money-bill-transfer' }
                   ].map((item, i) => (
                     <div key={i} className="flex gap-6">
                       <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-indigo-400 border border-white/10 shrink-0">

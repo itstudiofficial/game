@@ -23,7 +23,6 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User>(storage.getUser());
   const [tasks, setTasks] = useState<Task[]>(storage.getTasks());
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
-  const [infoModal, setInfoModal] = useState<{title: string, content: React.ReactNode} | null>(null);
 
   useEffect(() => {
     const handleUrlReferral = () => {
@@ -52,8 +51,39 @@ const App: React.FC = () => {
     });
   }, []);
 
-  const handleLogin = (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean, referredBy?: string }) => {
-    const finalReferredBy = (userData.referredBy || user.referredBy || '').toUpperCase().trim();
+  const handleLogin = async (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean, referredBy?: string }) => {
+    const pendingRef = sessionStorage.getItem('pending_referral');
+    const finalReferredBy = (userData.referredBy || pendingRef || '').toUpperCase().trim();
+    
+    // Referral Logic: Credit the referrer 50 coins one-time at login/signup
+    if (pendingRef && !user.isLoggedIn) {
+      try {
+        const allUsers = await storage.getAllUsers();
+        const referrer = allUsers.find(u => u.id.toUpperCase() === pendingRef.toUpperCase());
+        
+        if (referrer) {
+          const reward = 50;
+          await storage.updateUserInCloud(referrer.id, { coins: referrer.coins + reward });
+          
+          const refTx: Transaction = {
+            id: 'REF-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+            userId: referrer.id,
+            username: referrer.username,
+            amount: reward,
+            type: 'earn',
+            status: 'success',
+            method: `Referral: ${userData.username}`,
+            date: new Date().toLocaleString()
+          };
+          await storage.addTransaction(refTx);
+          console.log(`Referral reward of ${reward} credited to ${referrer.username}`);
+        }
+      } catch (err) {
+        console.error("Referral processing failed", err);
+      }
+      sessionStorage.removeItem('pending_referral');
+    }
+
     const updatedUser: User = {
       ...user,
       ...userData,
@@ -61,7 +91,7 @@ const App: React.FC = () => {
       coins: user.isLoggedIn ? user.coins : 0,
       referredBy: finalReferredBy
     };
-    sessionStorage.removeItem('pending_referral');
+    
     setUser(updatedUser);
     setCurrentPage(userData.isAdmin ? 'admin' : 'dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -127,24 +157,6 @@ const App: React.FC = () => {
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
     alert(`Success! You earned ${task.reward} coins.`);
-  };
-
-  const handleClaimReferralRewards = (amount: number) => {
-    const updatedUser = { ...user, coins: user.coins + amount };
-    setUser(updatedUser);
-    
-    const newTx: Transaction = {
-      id: 'REF-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-      userId: user.id,
-      username: user.username,
-      amount: amount,
-      type: 'earn',
-      status: 'success',
-      method: 'Referral Bounty',
-      date: new Date().toLocaleString()
-    };
-    storage.addTransaction(newTx);
-    setTransactions([newTx, ...transactions]);
   };
 
   const handleSpin = (reward: number, cost: number) => {
@@ -248,7 +260,7 @@ const App: React.FC = () => {
         {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={deleteTask} onUpdateTask={updateTask} />}
         {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
         {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} transactions={transactions} />}
-        {currentPage === 'referrals' && <Referrals user={user} onClaim={handleClaimReferralRewards} />}
+        {currentPage === 'referrals' && <Referrals user={user} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} transactions={transactions} />}
         {currentPage === 'dashboard' && (
           user.isLoggedIn 

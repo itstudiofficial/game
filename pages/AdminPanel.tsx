@@ -15,8 +15,6 @@ const AdminPanel: React.FC = () => {
   const [adjustmentAmount, setAdjustmentAmount] = useState<string>('');
   const [adjustmentType, setAdjustmentType] = useState<'add' | 'subtract'>('add');
 
-  const [selectedProof, setSelectedProof] = useState<{taskId: string, username: string, proofImg: string} | null>(null);
-
   // Task Creation State
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [newTaskData, setNewTaskData] = useState({
@@ -28,8 +26,6 @@ const AdminPanel: React.FC = () => {
     totalWorkers: 100,
     status: 'active' as const
   });
-
-  const COIN_RATE = 3000;
 
   const fetchData = async () => {
     setLoading(true);
@@ -113,23 +109,35 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleTransactionStatus = async (tx: Transaction, status: 'success' | 'failed') => {
-    await storage.updateGlobalTransaction(tx.id, { status });
-    
-    if (tx.type === 'deposit' && status === 'success') {
-      const user = users.find(u => u.id === tx.userId);
-      if (user) {
-        await storage.updateUserInCloud(tx.userId, { coins: user.coins + tx.amount });
+    try {
+      // 1. Update the transaction status globally
+      await storage.updateGlobalTransaction(tx.id, { status });
+      
+      const targetUser = users.find(u => u.id === tx.userId);
+      
+      // 2. Handle balance logic
+      if (tx.type === 'deposit' && status === 'success') {
+        // If deposit approved, add coins to user
+        if (targetUser) {
+          await storage.updateUserInCloud(tx.userId, { coins: (targetUser.coins || 0) + tx.amount });
+          alert(`Approved: ${tx.amount} coins added to ${targetUser.username}'s vault.`);
+        }
+      } else if (tx.type === 'withdraw' && status === 'failed') {
+        // If withdrawal failed, refund the coins back to user (since they were deducted at request time)
+        if (targetUser) {
+          await storage.updateUserInCloud(tx.userId, { coins: (targetUser.coins || 0) + tx.amount });
+          alert(`Rejected: ${tx.amount} coins refunded to ${targetUser.username}'s vault.`);
+        }
+      } else {
+        alert(`Transaction updated to ${status}.`);
       }
+      
+      // 3. Refresh the view
+      await fetchData();
+    } catch (err) {
+      console.error("Failed to update transaction status", err);
+      alert("Error processing transaction synchronization.");
     }
-    // If withdrawal fails, refund the user
-    if (tx.type === 'withdraw' && status === 'failed') {
-      const user = users.find(u => u.id === tx.userId);
-      if (user) {
-        await storage.updateUserInCloud(tx.userId, { coins: user.coins + tx.amount });
-      }
-    }
-    
-    fetchData();
   };
 
   const handleDeleteTask = (taskId: string) => {
@@ -145,9 +153,6 @@ const AdminPanel: React.FC = () => {
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const pendingFinance = transactions.filter(tx => tx.status === 'pending' && (tx.type === 'deposit' || tx.type === 'withdraw'));
-  const totalCoins = users.reduce((acc, curr) => acc + curr.coins, 0);
-
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-slate-50">
       <div className="text-center">
@@ -161,8 +166,6 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-600 pt-32 pb-20 font-medium">
-      
-      {/* Admin Branding Header */}
       <div className="max-w-[1600px] mx-auto px-6 mb-12">
         <div className="bg-white rounded-[3.5rem] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col xl:flex-row justify-between items-center gap-10 relative overflow-hidden">
           <div className="flex items-center gap-8 relative z-10">
@@ -198,7 +201,6 @@ const AdminPanel: React.FC = () => {
       <div className="max-w-[1600px] mx-auto px-6">
         {view === 'users' && (
           <div className="animate-in fade-in slide-in-from-bottom-6 duration-500 space-y-10">
-            {/* User Directory */}
             <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden">
                <div className="p-10 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-50/50">
                   <h3 className="font-black text-slate-900 uppercase tracking-tighter text-2xl">User Directory</h3>
@@ -317,7 +319,6 @@ const AdminPanel: React.FC = () => {
         {view === 'finance' && (
           <div className="animate-in fade-in slide-in-from-right-6 duration-500 space-y-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-               {/* Deposit Management */}
                <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden">
                   <div className="p-10 border-b border-slate-100 bg-emerald-50/30 flex justify-between items-center">
                      <h3 className="font-black text-emerald-900 uppercase tracking-tighter text-2xl">Deposit Requests</h3>
@@ -352,7 +353,6 @@ const AdminPanel: React.FC = () => {
                   </div>
                </div>
 
-               {/* Withdrawal Management */}
                <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden">
                   <div className="p-10 border-b border-slate-100 bg-indigo-50/30 flex justify-between items-center">
                      <h3 className="font-black text-indigo-900 uppercase tracking-tighter text-2xl">Withdrawal Requests</h3>
@@ -375,7 +375,7 @@ const AdminPanel: React.FC = () => {
                                 </div>
                              </div>
                              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-[10px] font-mono break-all text-slate-600">
-                                Destination Account: {tx.id}
+                                Destination: {tx.id}
                              </div>
                              <div className="flex gap-4">
                                 <button onClick={() => handleTransactionStatus(tx, 'success')} className="flex-1 py-4 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase hover:bg-indigo-500 shadow-lg shadow-indigo-100 transition-all">Authorize</button>
@@ -391,7 +391,6 @@ const AdminPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Adjustment Modal */}
       {adjustingUser && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500">
            <div className="bg-white w-full max-w-xl rounded-[3rem] p-12 shadow-2xl border border-slate-200">
@@ -417,7 +416,6 @@ const AdminPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Create Campaign Modal */}
       {isCreatingTask && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500 overflow-y-auto">
            <div className="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl border border-slate-200 my-auto">
