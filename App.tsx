@@ -23,29 +23,41 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [infoModal, setInfoModal] = useState<{title: string, content: React.ReactNode} | null>(null);
 
-  // Referral detection & URL Handling
+  // Referral detection & URL Handling (Fixing 404/Not Found issues)
   useEffect(() => {
-    // We check the actual pathname for the /ref/ pattern
-    const path = window.location.pathname;
-    const refPrefix = '/ref/';
-    
-    if (path.includes(refPrefix)) {
-      const parts = path.split(refPrefix);
-      if (parts.length > 1) {
-        // Extract the ID and sanitize it (uppercase)
-        const refId = parts[1].split('/')[0].toUpperCase().trim();
+    const handleUrlReferral = () => {
+      const path = window.location.pathname;
+      const search = window.location.search;
+      let refId = '';
+
+      // Mode 1: Path detection (/ref/ID)
+      if (path.includes('/ref/')) {
+        const parts = path.split('/ref/');
+        if (parts.length > 1) {
+          refId = parts[1].split('/')[0].toUpperCase().trim();
+        }
+      } 
+      // Mode 2: Query detection (?ref=ID) - Fallback for restrictive hosting
+      else if (search.includes('ref=')) {
+        const urlParams = new URLSearchParams(search);
+        refId = (urlParams.get('ref') || '').toUpperCase().trim();
+      }
+
+      if (refId && refId.length > 0 && refId !== 'UNDEFINED') {
+        console.log("Network Logic: Affiliate Node Identified ->", refId);
+        sessionStorage.setItem('pending_referral', refId);
         
-        if (refId && refId.length > 0) {
-          console.log("System Alert: Referral Node Detected ->", refId);
-          // Store in sessionStorage to survive refresh but stay transient
-          sessionStorage.setItem('pending_referral', refId);
-          
-          // Immediately clean URL and redirect to login/register to prompt conversion
-          window.history.replaceState({}, '', '/');
+        // Immediately clean the URL to prevent 404 loops or confusing state
+        window.history.replaceState({}, '', '/');
+        
+        // If not logged in, prompt signup
+        if (!storage.getUser().isLoggedIn) {
           setCurrentPage('login');
         }
       }
-    }
+    };
+
+    handleUrlReferral();
   }, []);
 
   useEffect(() => {
@@ -61,19 +73,16 @@ const App: React.FC = () => {
   const handleLogin = (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean }) => {
     const pendingRef = sessionStorage.getItem('pending_referral');
     
-    // Create updated user profile
     const updatedUser: User = {
       ...user,
       ...userData,
       isLoggedIn: true,
       coins: user.isLoggedIn ? user.coins : 0,
-      // Priority: 1. Existing referral, 2. Pending URL referral, 3. Empty
       referredBy: user.referredBy || (pendingRef ? pendingRef : '')
     };
 
     if (pendingRef) {
       sessionStorage.removeItem('pending_referral');
-      console.log("Affiliate Binding Successful for:", userData.username);
     }
 
     setUser(updatedUser);

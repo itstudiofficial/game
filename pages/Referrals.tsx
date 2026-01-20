@@ -12,10 +12,9 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   const [refCount, setRefCount] = useState(0);
   const [loading, setLoading] = useState(true);
   
-  // Construct a standard URL that the App component will recognize regardless of browser/domain
-  // format: domain.com/ref/ID
-  const referralLink = `${window.location.origin}/ref/${user.id.toUpperCase()}`;
-  const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my partner link to join the network: ${referralLink}`;
+  // Use query parameter format for maximum compatibility across all hosting environments (avoids 404)
+  const referralLink = `${window.location.origin}/?ref=${user.id.toUpperCase()}`;
+  const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my partner link: ${referralLink}`;
 
   useEffect(() => {
     const fetchRefData = async () => {
@@ -35,11 +34,9 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   }, [user.id, user.isLoggedIn]);
 
   const handleCopy = () => {
-    // Primary clipboard copy
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(referralLink);
     } else {
-      // Fallback for older browsers
       const textArea = document.createElement("textarea");
       textArea.value = referralLink;
       document.body.appendChild(textArea);
@@ -49,7 +46,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
     }
     
     setCopied(true);
-    // Animation reset timing
     setTimeout(() => setCopied(false), 2500);
   };
 
@@ -134,7 +130,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                         : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-slate-200 hover:-translate-y-1'
                     }`}
                   >
-                    {/* Progress Fill Animation for Copied State */}
                     {copied && (
                       <div className="absolute bottom-0 left-0 h-1.5 bg-white/30 w-full animate-progress-shrink"></div>
                     )}
@@ -145,8 +140,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                     </span>
                   </button>
                 </div>
-                
-                {/* Visual Glow behind link */}
                 <div className={`absolute -inset-4 rounded-[3rem] blur-2xl opacity-0 transition-opacity duration-500 pointer-events-none ${copied ? 'bg-emerald-400/10 opacity-100' : 'bg-indigo-400/5 group-hover:opacity-100'}`}></div>
               </div>
 
@@ -175,8 +168,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                   ))}
                 </div>
               </div>
-              
-              <div className="absolute -right-12 -top-12 w-64 h-64 bg-indigo-50 rounded-full blur-3xl pointer-events-none opacity-40"></div>
             </div>
 
             {/* Performance Ledger */}
@@ -191,7 +182,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                 </div>
                 <i className="fa-solid fa-user-group absolute -right-6 -bottom-6 text-8xl text-white/5 group-hover:rotate-12 transition-transform"></i>
               </div>
-
               <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
                 <div className="relative z-10">
                   <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Yield Revenue</div>
@@ -200,7 +190,6 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                 </div>
                 <i className="fa-solid fa-coins absolute -right-6 -bottom-6 text-8xl text-slate-50 group-hover:text-yellow-500/10 transition-all"></i>
               </div>
-
               <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl shadow-slate-300 relative overflow-hidden group">
                 <div className="relative z-10">
                   <div className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-4">Yield Multiplier</div>
@@ -212,12 +201,11 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
             </div>
           </div>
 
-          {/* Educational Sidebar */}
+          {/* Sidebar */}
           <div className="lg:col-span-4 space-y-8 sticky top-28">
             <div className="bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-3xl">
               <div className="relative z-10">
                 <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-10">Yield Architecture</h3>
-                
                 <div className="space-y-10">
                   {[
                     { t: 'Permanent Linkage', d: 'Once a user joins via your link, they are locked into your earnings node forever.', icon: 'fa-link' },
@@ -235,25 +223,11 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                     </div>
                   ))}
                 </div>
-
-                <div className="mt-12 p-8 bg-indigo-600 rounded-[2.5rem] shadow-xl">
-                   <p className="text-[9px] font-black text-indigo-100 uppercase tracking-widest mb-4">Pro Strategy</p>
-                   <p className="text-sm font-black leading-snug">Refer 50 active users to earn $50+/month purely from network yield.</p>
-                </div>
               </div>
-              <i className="fa-solid fa-network-wired absolute -right-16 -bottom-16 text-[20rem] text-white/5 -rotate-12"></i>
-            </div>
-
-            <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Integrity Check</h4>
-               <p className="text-xs font-medium text-slate-600 leading-relaxed">
-                 Accounts verified as "Self-Referrals" will be immediately flagged by our AI and result in permanent vault termination.
-               </p>
             </div>
           </div>
         </div>
       </div>
-      
       <style>{`
         @keyframes progress-shrink {
           from { width: 100%; }
