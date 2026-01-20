@@ -23,7 +23,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
             {/* AdsPredia Brand Shield */}
             <div className="inline-flex items-center gap-4 px-6 py-3 rounded-full bg-white shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] border border-slate-100 mb-12 animate-in fade-in slide-in-from-top-6 duration-700">
               <div className="flex items-center gap-2">
-                <i className="fa-solid fa-coins text-indigo-600 text-xs"></i>
+                <i className="fa-solid fa-shield-halved text-indigo-600 text-xs"></i>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900">
                   Ads<span className="text-indigo-600">Predia</span>
                 </span>
@@ -111,7 +111,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
             ].map((stat, i) => (
               <div key={i} className="text-center group flex flex-col items-center md:border-r border-slate-50 last:border-0 px-8">
                 <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 shadow-sm">
-                  <i className="fa-solid ${stat.icon} ${stat.color} text-xl group-hover:text-white"></i>
+                  <i className={`fa-solid ${stat.icon} ${stat.color} text-xl group-hover:text-white`}></i>
                 </div>
                 <div className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2 tabular-nums">{stat.val}</div>
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{stat.label}</div>

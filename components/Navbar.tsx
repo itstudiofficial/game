@@ -75,15 +75,15 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                 onClick={() => handleNavClick('home')}
               >
                 <div className="flex items-center bg-white pr-6 pl-2 py-2 rounded-2xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all duration-300">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-500 group-hover:rotate-12 ${user.isAdmin ? 'bg-indigo-900' : 'bg-gradient-to-br from-indigo-600 to-indigo-800'}`}>
-                    <i className={`fa-solid ${user.isAdmin ? 'fa-shield-halved' : 'fa-coins'} text-white text-base`}></i>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-500 group-hover:rotate-12 ${user.isAdmin ? 'bg-slate-900' : 'bg-gradient-to-br from-indigo-500 to-indigo-700'}`}>
+                    <i className={`fa-solid ${user.isAdmin ? 'fa-user-shield' : 'fa-shield-halved'} text-white text-base`}></i>
                   </div>
                   <div className="ml-3">
                     <span className="text-xl font-black tracking-tighter text-slate-900 block leading-none">
                       Ads<span className="text-indigo-600">Predia</span>
                     </span>
                     <span className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-400 mt-1 block">
-                      {user.isAdmin ? 'Admin Console' : 'Income Hub'}
+                      {user.isAdmin ? 'Admin Network' : 'Security Earning'}
                     </span>
                   </div>
                 </div>
@@ -225,7 +225,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
              <div className="p-10 flex items-center justify-between border-b border-slate-50">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${user.isAdmin ? 'bg-indigo-900' : 'bg-indigo-600'}`}>
-                    <i className={`fa-solid ${user.isAdmin ? 'fa-shield-halved' : 'fa-coins'} text-white text-lg`}></i>
+                    <i className={`fa-solid ${user.isAdmin ? 'fa-user-shield' : 'fa-shield-halved'} text-white text-lg`}></i>
                   </div>
                   <span className="text-2xl font-black text-slate-900 tracking-tighter">AdsPredia</span>
                 </div>
