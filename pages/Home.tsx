@@ -30,7 +30,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
               </div>
               <div className="w-px h-3 bg-slate-200"></div>
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
-                Network Active: <span className="text-indigo-600">2,842 Live</span>
+                Network Active: <span className="text-indigo-600">Verified</span>
               </span>
             </div>
 
@@ -45,7 +45,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
               
               {/* Floating Asset Displays */}
               <div className="hidden xl:block absolute -bottom-10 -right-24 w-44 h-44 bg-slate-900 rounded-[3rem] shadow-3xl -rotate-6 flex flex-col items-center justify-center p-8 transition-transform hover:rotate-0 duration-500">
-                 <div className="text-3xl font-black text-white tracking-tighter">$4.2k</div>
+                 <div className="text-3xl font-black text-white tracking-tighter">$10k+</div>
                  <div className="text-[8px] font-black text-indigo-400 uppercase tracking-widest mt-2">Daily Payouts</div>
               </div>
             </div>
@@ -92,7 +92,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
                </div>
                <div className="flex items-center gap-4">
                  <i className="fa-solid fa-user-check text-3xl"></i>
-                 <span className="text-[10px] font-black uppercase tracking-[0.3em]">32k+ Network Users</span>
+                 <span className="text-[10px] font-black uppercase tracking-[0.3em]">10k+ Network Users</span>
                </div>
             </div>
           </div>
@@ -104,9 +104,9 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
         <div className="max-w-[1600px] mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-0">
             {[
-              { label: 'Network Payouts', val: '$148.9k', icon: 'fa-money-bill-trend-up', color: 'text-emerald-500' },
-              { label: 'Active Campaigns', val: '2,842', icon: 'fa-layer-group', color: 'text-indigo-600' },
-              { label: 'Market Partners', val: '32.1k', icon: 'fa-users', color: 'text-blue-500' },
+              { label: 'Network Payouts', val: '$10k+', icon: 'fa-money-bill-trend-up', color: 'text-emerald-500' },
+              { label: 'Daily Campaigns', val: '100+', icon: 'fa-layer-group', color: 'text-indigo-600' },
+              { label: 'Market Partners', val: '10k+', icon: 'fa-users', color: 'text-blue-500' },
               { label: 'Conversion Rate', val: '99.8%', icon: 'fa-circle-check', color: 'text-amber-500' }
             ].map((stat, i) => (
               <div key={i} className="text-center group flex flex-col items-center md:border-r border-slate-50 last:border-0 px-8">
@@ -180,7 +180,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
                   Start Your <br/>
                   <span className="text-indigo-500">Journey Today</span>
                 </h2>
-                <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+                <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed max-wxl mx-auto lg:mx-0">
                   Join the global movement of digital freelancers and performance advertisers. Your first coin is just 60 seconds away.
                 </p>
               </div>
@@ -195,7 +195,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
                 </button>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-center backdrop-blur-md">
-                    <p className="text-3xl font-black text-white">32k+</p>
+                    <p className="text-3xl font-black text-white">10k+</p>
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Active Nodes</p>
                   </div>
                   <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-center backdrop-blur-md">
