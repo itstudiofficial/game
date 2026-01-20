@@ -23,15 +23,23 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [infoModal, setInfoModal] = useState<{title: string, content: React.ReactNode} | null>(null);
 
-  // Referral detection
+  // Referral detection & URL Handling
   useEffect(() => {
     const path = window.location.pathname;
-    if (path.startsWith('/ref/')) {
-      const refId = path.split('/ref/')[1].toUpperCase();
-      sessionStorage.setItem('pending_referral', refId);
-      // Redirect to home or login to clear URL bar but keep context
-      window.history.replaceState({}, '', '/');
-      setCurrentPage('login');
+    // Check if URL matches /ref/ID
+    if (path.includes('/ref/')) {
+      const parts = path.split('/ref/');
+      if (parts.length > 1) {
+        const refId = parts[1].split('/')[0].toUpperCase();
+        if (refId) {
+          console.log("System Alert: Referral Node Detected ->", refId);
+          // Store in sessionStorage to survive refresh but stay transient
+          sessionStorage.setItem('pending_referral', refId);
+          // Immediately clean URL for SEO and UX, then move to login
+          window.history.replaceState({}, '', '/');
+          setCurrentPage('login');
+        }
+      }
     }
   }, []);
 
@@ -48,15 +56,20 @@ const App: React.FC = () => {
   const handleLogin = (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean }) => {
     const pendingRef = sessionStorage.getItem('pending_referral');
     
-    const updatedUser = {
+    // Create updated user profile
+    const updatedUser: User = {
       ...user,
       ...userData,
       isLoggedIn: true,
       coins: user.isLoggedIn ? user.coins : 0,
-      referredBy: !user.isLoggedIn && pendingRef ? pendingRef : user.referredBy
+      // Priority: 1. Existing referral, 2. Pending URL referral, 3. Empty
+      referredBy: user.referredBy || (pendingRef ? pendingRef : '')
     };
 
-    if (pendingRef) sessionStorage.removeItem('pending_referral');
+    if (pendingRef) {
+      sessionStorage.removeItem('pending_referral');
+      console.log("Affiliate Binding Successful for:", userData.username);
+    }
 
     setUser(updatedUser);
     setCurrentPage(userData.isAdmin ? 'admin' : 'dashboard');
@@ -64,7 +77,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    const guestUser = {
+    const guestUser: User = {
       ...user,
       username: 'Guest',
       isLoggedIn: false,

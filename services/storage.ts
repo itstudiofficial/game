@@ -75,11 +75,16 @@ export const storage = {
   },
 
   getReferralCount: async (userId: string): Promise<number> => {
-    const usersRef = ref(db, KEYS.USERS);
-    const referralQuery = query(usersRef, orderByChild('referredBy'), equalTo(userId));
-    const snapshot = await get(referralQuery);
-    if (snapshot.exists()) {
-      return Object.keys(snapshot.val()).length;
+    try {
+      const usersRef = ref(db, KEYS.USERS);
+      // Case-insensitive check: we store IDs as they are, usually uppercase
+      const referralQuery = query(usersRef, orderByChild('referredBy'), equalTo(userId.toUpperCase()));
+      const snapshot = await get(referralQuery);
+      if (snapshot.exists()) {
+        return Object.keys(snapshot.val()).length;
+      }
+    } catch (e) {
+      console.error("Referral fetch error:", e);
     }
     return 0;
   },

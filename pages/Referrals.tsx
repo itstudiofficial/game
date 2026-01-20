@@ -12,26 +12,31 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   const [refCount, setRefCount] = useState(0);
   const [loading, setLoading] = useState(true);
   
-  // Construct the absolute referral URL based on current origin
-  const referralLink = `${window.location.origin}/ref/${user.id.toLowerCase()}`;
+  // Use window.location.origin to ensure the link works regardless of the domain/environment
+  const referralLink = `${window.location.origin}/ref/${user.id.toUpperCase()}`;
   const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my link: ${referralLink}`;
 
   useEffect(() => {
     const fetchRefData = async () => {
       setLoading(true);
-      const count = await storage.getReferralCount(user.id);
-      setRefCount(count);
-      setLoading(false);
+      try {
+        const count = await storage.getReferralCount(user.id);
+        setRefCount(count);
+      } catch (e) {
+        console.error("Failed to load referral count");
+      } finally {
+        setLoading(false);
+      }
     };
     if (user.isLoggedIn) {
       fetchRefData();
     }
-  }, [user.id]);
+  }, [user.id, user.isLoggedIn]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    // Visual cue logic: resets after 2.5 seconds
+    // Visual cue logic: resets after 2.5 seconds to match progress bar
     setTimeout(() => setCopied(false), 2500);
   };
 
