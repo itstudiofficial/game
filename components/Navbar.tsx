@@ -238,26 +238,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
              </div>
 
              <div className="flex-grow overflow-y-auto p-8 space-y-10">
-               {user.isLoggedIn ? (
-                 <div className={`rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-3xl ${user.isAdmin ? 'bg-indigo-950' : 'bg-slate-900'}`}>
-                    <div className="relative z-10">
-                      <p className={`text-[9px] font-black uppercase tracking-[0.3em] mb-3 ${user.isAdmin ? 'text-indigo-300' : 'text-indigo-400'}`}>
-                        {user.isAdmin ? 'Admin Inventory' : 'Your Assets'}
-                      </p>
-                      <div className="flex items-baseline gap-3 mb-8">
-                         <p className="text-5xl font-black tracking-tighter tabular-nums">{user.coins.toLocaleString()}</p>
-                         <span className="text-[11px] opacity-40 uppercase font-black">Coins</span>
-                      </div>
-                      <button 
-                        onClick={() => handleNavClick(user.isAdmin ? 'admin' : 'wallet')}
-                        className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 ${user.isAdmin ? 'bg-indigo-600 text-white shadow-indigo-900/50' : 'bg-indigo-600 shadow-indigo-500/30'}`}
-                      >
-                        {user.isAdmin ? 'Access Ledger' : 'Deposit Units'}
-                      </button>
-                    </div>
-                    <i className="fa-solid fa-vault absolute -right-8 -bottom-8 text-8xl text-white/5 rotate-12"></i>
-                 </div>
-               ) : (
+               {!user.isLoggedIn && (
                  <div className="px-2">
                     <button 
                       onClick={() => handleNavClick('login')} 

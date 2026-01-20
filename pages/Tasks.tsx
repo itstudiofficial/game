@@ -17,7 +17,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories: {id: TaskType | 'All' | 'Pending', label: string, icon: string}[] = [
-    { id: 'All', label: 'All Assets', icon: 'fa-layer-group' },
+    { id: 'All', label: 'All Tasks', icon: 'fa-layer-group' },
     { id: 'YouTube', label: 'Video Ops', icon: 'fa-youtube' },
     { id: 'Websites', label: 'Web Traffic', icon: 'fa-globe' },
     { id: 'Apps', label: 'App Installs', icon: 'fa-mobile-screen' },
@@ -91,7 +91,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
               Real-time Task Marketplace
             </div>
             <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none mb-4">
-              Active <span className="text-indigo-600">Inventory</span>
+              Active <span className="text-indigo-600">Tasks</span>
             </h1>
             <p className="text-slate-500 font-medium text-lg leading-relaxed">
               Monetize your digital engagement. Complete verified micro-tasks and scale your coin vault with guaranteed payouts.
@@ -190,50 +190,50 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
 
       {/* Task Interaction Overlay */}
       {selectedTask && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-2xl animate-in fade-in duration-500">
-          <div className="bg-white rounded-[4rem] w-full max-w-2xl shadow-[0_60px_120px_-20px_rgba(0,0,0,0.5)] border border-slate-200/50 overflow-hidden animate-in zoom-in-95 duration-500">
-            <div className="p-10 md:p-16">
-              <div className="flex justify-between items-start mb-12">
-                <div className="flex items-center gap-6">
-                   <div className="w-16 h-16 bg-slate-900 rounded-[1.75rem] flex items-center justify-center text-white text-2xl shadow-xl">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-2xl animate-in fade-in duration-500 overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] w-full max-w-2xl shadow-[0_60px_120px_-20px_rgba(0,0,0,0.5)] border border-slate-200/50 overflow-hidden animate-in zoom-in-95 duration-500 my-auto">
+            <div className="p-6 md:p-16">
+              <div className="flex justify-between items-start mb-8 md:mb-12">
+                <div className="flex items-center gap-4 md:gap-6">
+                   <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-900 rounded-[1.25rem] md:rounded-[1.75rem] flex items-center justify-center text-white text-xl md:text-2xl shadow-xl shrink-0">
                       <i className={`fa-solid ${getIcon(selectedTask.type).split(' ')[0]}`}></i>
                    </div>
                    <div>
-                      <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter leading-none mb-2">{selectedTask.title}</h2>
-                      <div className="flex items-center gap-3">
-                         <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[8px] font-black rounded-lg uppercase tracking-widest border border-indigo-100">
+                      <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tighter leading-none mb-2 line-clamp-1">{selectedTask.title}</h2>
+                      <div className="flex items-center gap-2 md:gap-3">
+                         <span className="px-2 py-0.5 md:px-3 md:py-1 bg-indigo-50 text-indigo-600 text-[7px] md:text-[8px] font-black rounded-lg uppercase tracking-widest border border-indigo-100">
                             {selectedTask.type} Unit
                          </span>
-                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">ID: {selectedTask.id.toUpperCase()}</span>
+                         <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">ID: {selectedTask.id.toUpperCase()}</span>
                       </div>
                    </div>
                 </div>
-                <button onClick={handleCloseModal} className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:text-slate-900 transition-colors">
-                  <i className="fa-solid fa-xmark text-xl"></i>
+                <button onClick={handleCloseModal} className="w-10 h-10 md:w-12 md:h-12 bg-slate-50 text-slate-400 rounded-xl md:rounded-2xl flex items-center justify-center hover:text-slate-900 transition-colors shrink-0">
+                  <i className="fa-solid fa-xmark text-lg"></i>
                 </button>
               </div>
 
               {!isSubmittingProof ? (
-                <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="bg-slate-50 p-8 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-inner">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Operational Instructions</h4>
+                <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="bg-slate-50 p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-inner">
+                    <h4 className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 md:mb-4">Operational Instructions</h4>
                     <p className="text-slate-700 text-sm md:text-base font-bold leading-relaxed">
                       {selectedTask.description}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="p-8 bg-slate-900 rounded-[2rem] text-white">
-                        <div className="text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-1">Asset Value</div>
-                        <div className="text-3xl font-black">{selectedTask.reward} <span className="text-[10px] text-slate-500 uppercase">Coins</span></div>
+                  <div className="grid grid-cols-2 gap-4 md:gap-6">
+                    <div className="p-5 md:p-8 bg-slate-900 rounded-[1.75rem] md:rounded-[2rem] text-white">
+                        <div className="text-[7px] md:text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-1">Asset Value</div>
+                        <div className="text-xl md:text-3xl font-black">{selectedTask.reward} <span className="text-[8px] md:text-[10px] text-slate-500 uppercase">Coins</span></div>
                     </div>
-                    <div className={`p-8 rounded-[2rem] border ${
+                    <div className={`p-5 md:p-8 rounded-[1.75rem] md:rounded-[2rem] border ${
                       selectedTask.status === 'active' ? 'bg-indigo-50 border-indigo-100' : 'bg-amber-50 border-amber-100'
                     }`}>
-                        <div className={`text-[8px] font-black uppercase tracking-widest mb-1 ${
+                        <div className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest mb-1 ${
                           selectedTask.status === 'active' ? 'text-indigo-600' : 'text-amber-600'
                         }`}>Security Level</div>
-                        <div className={`text-3xl font-black ${
+                        <div className={`text-xl md:text-3xl font-black ${
                           selectedTask.status === 'active' ? 'text-indigo-900' : 'text-amber-900'
                         }`}>{selectedTask.status.toUpperCase()}</div>
                     </div>
@@ -244,36 +244,36 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                       href={selectedTask.link} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className={`flex-[2] py-6 text-white font-black rounded-3xl text-xs uppercase tracking-widest text-center shadow-2xl transition-all active:scale-95 ${
+                      className={`flex-[2] py-5 md:py-6 text-white font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest text-center shadow-2xl transition-all active:scale-95 ${
                         selectedTask.status === 'active' ? 'bg-indigo-600 shadow-indigo-200 hover:bg-indigo-700' : 'bg-slate-400 cursor-not-allowed pointer-events-none'
                       }`}
                     >
-                      <i className="fa-solid fa-up-right-from-square mr-3"></i> Open Target Asset
+                      <i className="fa-solid fa-up-right-from-square mr-2 md:mr-3"></i> Open Target Asset
                     </a>
                     <button 
                       onClick={() => setIsSubmittingProof(true)}
                       disabled={selectedTask.status !== 'active'}
-                      className={`flex-1 py-6 font-black rounded-3xl text-xs uppercase tracking-widest transition-all ${
+                      className={`flex-1 py-5 md:py-6 font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest transition-all ${
                         selectedTask.status === 'active' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
                       Next Step
                     </button>
                   </div>
-                  <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                  <p className="text-center text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">
                     {selectedTask.status === 'active' ? 'You must complete the action before submitting proof' : 'This task is awaiting administrative activation'}
                   </p>
                 </div>
               ) : (
-                <div className="space-y-10 animate-in slide-in-from-right-12 duration-500">
-                  <div className="bg-amber-50 p-8 rounded-[2.5rem] border border-amber-100 flex items-center gap-6">
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-amber-500 text-xl shadow-sm">
+                <div className="space-y-6 md:space-y-10 animate-in slide-in-from-right-12 duration-500">
+                  <div className="bg-amber-50 p-5 md:p-8 rounded-[1.75rem] md:rounded-[2.5rem] border border-amber-100 flex items-center gap-4 md:gap-6">
+                    <div className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-amber-500 text-xl shadow-sm shrink-0">
                       <i className="fa-solid fa-camera"></i>
                     </div>
                     <div>
-                      <h5 className="font-black text-amber-900 text-xs uppercase tracking-widest mb-1">Verification Required</h5>
-                      <p className="text-[11px] text-amber-800/70 font-bold leading-relaxed">
-                        Upload a visual capture of your completed action for our AI validation gateway.
+                      <h5 className="font-black text-amber-900 text-[10px] md:text-xs uppercase tracking-widest mb-1">Verification Required</h5>
+                      <p className="text-[10px] md:text-[11px] text-amber-800/70 font-bold leading-relaxed">
+                        Upload a visual capture of your completed action for validation.
                       </p>
                     </div>
                   </div>
@@ -292,7 +292,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                       }
                     }}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`relative border-4 border-dashed rounded-[3rem] p-16 flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden min-h-[300px] ${
+                    className={`relative border-2 md:border-4 border-dashed rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden min-h-[220px] md:min-h-[300px] ${
                       dragActive ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-slate-50 hover:border-slate-200'
                     }`}
                   >
@@ -310,7 +310,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                           <button 
                             onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
-                            className="bg-white text-red-500 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl"
+                            className="bg-white text-red-500 px-4 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest shadow-xl"
                           >
                             Remove Snapshot
                           </button>
@@ -318,21 +318,26 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                       </div>
                     ) : (
                       <>
-                        <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-slate-300 mb-6 shadow-sm border border-slate-50">
-                          <i className="fa-solid fa-cloud-arrow-up text-3xl"></i>
+                        <div className="w-14 h-14 md:w-20 md:h-20 bg-white rounded-2xl md:rounded-3xl flex items-center justify-center text-slate-300 mb-4 md:mb-6 shadow-sm border border-slate-50">
+                          <i className="fa-solid fa-cloud-arrow-up text-2xl md:text-3xl"></i>
                         </div>
-                        <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Drop Snapshot or Tap to Browse</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">PNG, JPG up to 10MB</p>
+                        <p className="text-[10px] md:text-xs font-black text-slate-900 uppercase tracking-widest text-center">Drop Snapshot or Tap to Browse</p>
+                        <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">PNG, JPG up to 10MB</p>
                       </>
                     )}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <button onClick={() => setIsSubmittingProof(false)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Back</button>
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                    <button 
+                      onClick={() => setIsSubmittingProof(false)} 
+                      className="order-2 sm:order-1 flex-1 py-5 md:py-6 bg-slate-100 text-slate-500 font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                    >
+                      Back
+                    </button>
                     <button 
                       onClick={handleFinalSubmit} 
                       disabled={isUploading || !previewImage} 
-                      className={`flex-[2] py-6 text-white font-black rounded-3xl text-xs uppercase tracking-widest shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 ${
+                      className={`order-1 sm:order-2 flex-[2] py-5 md:py-6 text-white font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest shadow-2xl transition-all flex items-center justify-center gap-2 md:gap-3 active:scale-95 disabled:opacity-50 ${
                         previewImage ? 'bg-slate-900 hover:bg-indigo-600' : 'bg-slate-300 cursor-not-allowed'
                       }`}
                     >
