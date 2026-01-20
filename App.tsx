@@ -13,6 +13,8 @@ import Referrals from './pages/Referrals';
 import AdminPanel from './pages/AdminPanel';
 import Features from './pages/Features';
 import Contact from './pages/Contact';
+import MyCampaigns from './pages/MyCampaigns';
+import ProfileSettings from './pages/ProfileSettings';
 import { User, Task, Transaction, TaskType } from './types';
 import { storage } from './services/storage';
 
@@ -30,18 +32,13 @@ const App: React.FC = () => {
       const refId = (urlParams.get('ref') || '').toUpperCase().trim();
 
       if (refId && refId.length > 0 && refId !== 'UNDEFINED' && refId !== 'NULL') {
-        console.log("System Alert: Staging Referral Node ->", refId);
         sessionStorage.setItem('pending_referral', refId);
-        
-        // Clean URL while keeping query params logic separate from routing logic
         window.history.replaceState({}, '', window.location.origin);
-        
         if (!storage.getUser().isLoggedIn) {
           setCurrentPage('login');
         }
       }
     };
-
     handleUrlReferral();
   }, []);
 
@@ -56,9 +53,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean, referredBy?: string }) => {
-    // Priority: 1. Data from Login component (Session storage), 2. Existing referredBy
     const finalReferredBy = (userData.referredBy || user.referredBy || '').toUpperCase().trim();
-    
     const updatedUser: User = {
       ...user,
       ...userData,
@@ -66,10 +61,7 @@ const App: React.FC = () => {
       coins: user.isLoggedIn ? user.coins : 0,
       referredBy: finalReferredBy
     };
-
-    // If we have a referral, clear it from session now that it's consumed
     sessionStorage.removeItem('pending_referral');
-
     setUser(updatedUser);
     setCurrentPage(userData.isAdmin ? 'admin' : 'dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -91,7 +83,7 @@ const App: React.FC = () => {
   };
 
   const navigateTo = (page: string) => {
-    const mainPages = ['home', 'tasks', 'create', 'spin', 'referrals', 'wallet', 'dashboard', 'login', 'admin', 'features', 'contact'];
+    const mainPages = ['home', 'tasks', 'create', 'my-campaigns', 'profile', 'spin', 'referrals', 'wallet', 'dashboard', 'login', 'admin', 'features', 'contact'];
     if (mainPages.includes(page)) {
       setCurrentPage(page);
     }
@@ -134,17 +126,30 @@ const App: React.FC = () => {
     };
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
-
     alert(`Success! You earned ${task.reward} coins.`);
   };
 
-  const handleSpin = (reward: number, cost: number) => {
-    const updatedUser = {
-      ...user,
-      coins: user.coins - cost + reward
-    };
+  const handleClaimReferralRewards = (amount: number) => {
+    const updatedUser = { ...user, coins: user.coins + amount };
     setUser(updatedUser);
+    
+    const newTx: Transaction = {
+      id: 'REF-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+      userId: user.id,
+      username: user.username,
+      amount: amount,
+      type: 'earn',
+      status: 'success',
+      method: 'Referral Bounty',
+      date: new Date().toLocaleString()
+    };
+    storage.addTransaction(newTx);
+    setTransactions([newTx, ...transactions]);
+  };
 
+  const handleSpin = (reward: number, cost: number) => {
+    const updatedUser = { ...user, coins: user.coins - cost + reward };
+    setUser(updatedUser);
     const newTx: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
       userId: user.id,
@@ -165,7 +170,6 @@ const App: React.FC = () => {
       setCurrentPage('wallet');
       return;
     }
-
     const newTask: Task = {
       id: Math.random().toString(36).substr(2, 9),
       ...taskData,
@@ -173,18 +177,15 @@ const App: React.FC = () => {
       completedCount: 0,
       status: 'pending'
     };
-
     const updatedUser = {
       ...user,
       coins: user.coins - totalCost,
       createdTasks: [...user.createdTasks, newTask.id]
     };
     setUser(updatedUser);
-    
     const updatedTasks = [newTask, ...tasks];
     setTasks(updatedTasks);
     storage.setTasks(updatedTasks);
-
     const newTx: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
       userId: user.id,
@@ -196,9 +197,23 @@ const App: React.FC = () => {
     };
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
-
     alert('Campaign created! Status: PENDING review.');
-    setCurrentPage('dashboard');
+    setCurrentPage('my-campaigns');
+  };
+
+  const updateTask = (id: string, data: Partial<Task>) => {
+    const updatedTasks = tasks.map(t => t.id === id ? { ...t, ...data } : t);
+    setTasks(updatedTasks);
+    storage.setTasks(updatedTasks);
+    alert('Campaign updated successfully.');
+  };
+
+  const deleteTask = (id: string) => {
+    if (window.confirm('Delete this campaign? This action is permanent.')) {
+      const updatedTasks = tasks.filter(t => t.id !== id);
+      setTasks(updatedTasks);
+      storage.setTasks(updatedTasks);
+    }
   };
 
   const handleWalletAction = (type: 'deposit' | 'withdraw', amount: number, method: string) => {
@@ -212,12 +227,10 @@ const App: React.FC = () => {
       status: 'pending',
       date: new Date().toLocaleString()
     };
-    
     if (type === 'withdraw') {
       if (amount < 3000) return alert('Minimum withdrawal is 3000 coins');
       setUser({ ...user, coins: user.coins - amount });
     }
-
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
     alert(`${type.toUpperCase()} request for ${amount} coins submitted.`);
@@ -232,32 +245,20 @@ const App: React.FC = () => {
         {currentPage === 'contact' && <Contact />}
         {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={completeTask} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userCoins={user.coins} navigateTo={navigateTo} />}
+        {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={deleteTask} onUpdateTask={updateTask} />}
+        {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
         {currentPage === 'spin' && <SpinWheel userCoins={user.coins} onSpin={handleSpin} transactions={transactions} />}
-        {currentPage === 'referrals' && <Referrals user={user} />}
+        {currentPage === 'referrals' && <Referrals user={user} onClaim={handleClaimReferralRewards} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} onAction={handleWalletAction} transactions={transactions} />}
         {currentPage === 'dashboard' && (
           user.isLoggedIn 
-          ? <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={(id) => {}} onUpdateTask={(id, data) => {}} />
+          ? <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={deleteTask} onUpdateTask={updateTask} />
           : <Login onLogin={handleLogin} />
         )}
         {currentPage === 'login' && <Login onLogin={handleLogin} />}
         {currentPage === 'admin' && user.isAdmin && <AdminPanel />}
       </main>
       <Footer setCurrentPage={navigateTo} isLoggedIn={user.isLoggedIn} />
-
-      {infoModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden">
-             <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center">
-                <h3 className="text-xl font-black text-slate-900">{infoModal.title}</h3>
-                <button onClick={() => setInfoModal(null)} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
-                  <i className="fa-solid fa-xmark"></i>
-                </button>
-             </div>
-             <div className="p-10">{infoModal.content}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

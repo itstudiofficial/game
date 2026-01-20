@@ -1,26 +1,32 @@
 
 import React, { useState, useEffect } from 'react';
-import { User } from '../types';
+import { User, Transaction } from '../types';
 import { storage } from '../services/storage';
 
 interface ReferralsProps {
   user: User;
+  onClaim: (amount: number) => void;
 }
 
-const Referrals: React.FC<ReferralsProps> = ({ user }) => {
+const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
   const [copied, setCopied] = useState(false);
   const [refCount, setRefCount] = useState(0);
   const [referredUsers, setReferredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [claiming, setClaiming] = useState(false);
   
+  const REFERRAL_REWARD = 50;
   const referralLink = `${window.location.origin}/?ref=${user.id.toUpperCase()}`;
-  const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my partner link: ${referralLink}`;
+  const shareMessage = `Join Ads Predia and start earning daily coins! Get 50 coins instantly when you sign up using my partner link: ${referralLink}`;
+
+  // Simple logic for unclaimed rewards (simulated for UI)
+  // In a real app, you'd track 'claimedReferrals' in the user object
+  const unclaimedAmount = refCount * REFERRAL_REWARD;
 
   useEffect(() => {
     const fetchRefData = async () => {
       setLoading(true);
       try {
-        // Fetch all users and filter by referredBy locally for real-time accuracy
         const allUsers = await storage.getAllUsers();
         const partners = allUsers.filter(u => u.referredBy?.toUpperCase() === user.id.toUpperCase());
         setReferredUsers(partners);
@@ -52,6 +58,18 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleClaimRewards = async () => {
+    if (unclaimedAmount <= 0 || claiming) return;
+    setClaiming(true);
+    
+    // Simulate API delay for synchronization
+    setTimeout(() => {
+      onClaim(unclaimedAmount);
+      setClaiming(false);
+      alert(`Success! ${unclaimedAmount} Coins have been added to your vault.`);
+    }, 1500);
+  };
+
   const shareLinks = [
     { name: 'WhatsApp', icon: 'fa-whatsapp', color: 'bg-[#25D366]', url: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}` },
     { name: 'X', icon: 'fa-x-twitter', color: 'bg-[#000000]', url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}` },
@@ -69,15 +87,16 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
             Affiliate Command Center
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none mb-4">
-            Network <span className="text-indigo-600">Growth</span>
+            Refer & <span className="text-indigo-600">Earn 50</span>
           </h1>
           <p className="text-slate-500 font-medium text-lg leading-relaxed">
-            Expand your earning footprint. Recruit active participants and secure a permanent 10% commission stream from their global task completion activity.
+            Expand your earning footprint. For every verified user who joins through your link, you receive a flat 50 Coin reward instantly claimable to your vault.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-8 space-y-10">
+            {/* Referral Link Card */}
             <div className="bg-white rounded-[4rem] p-10 md:p-16 border border-slate-100 shadow-sm relative overflow-hidden">
               <div className="flex justify-between items-center mb-10 px-4">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -86,7 +105,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                 </h3>
               </div>
               
-              <div className="relative group mb-16">
+              <div className="relative group mb-12">
                 <div className="flex flex-col md:flex-row gap-4 items-stretch">
                   <div className={`flex-1 min-w-0 p-8 md:p-10 rounded-[2.5rem] border-2 border-dashed transition-all duration-500 flex items-center justify-center text-center shadow-inner ${
                     copied ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 group-hover:border-indigo-300 group-hover:bg-white'
@@ -105,7 +124,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                     }`}
                   >
                     <i className={`fa-solid ${copied ? 'fa-check-double scale-125 animate-bounce' : 'fa-copy'}`}></i>
-                    <span className="relative z-10">{copied ? 'LINK SYNCED!' : 'COPY PARTNER LINK'}</span>
+                    <span className="relative z-10">{copied ? 'LINK SYNCED!' : 'COPY LINK'}</span>
                   </button>
                 </div>
               </div>
@@ -120,32 +139,59 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
               </div>
             </div>
 
-            {/* Performance Ledger */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-indigo-600 p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden group">
+            {/* Claim Section */}
+            <div className="bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white shadow-3xl relative overflow-hidden">
+               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+                  <div className="text-center md:text-left">
+                     <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-4">Claimable Earnings</p>
+                     <div className="flex items-baseline gap-4 mb-4 justify-center md:justify-start">
+                        <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none tabular-nums">{unclaimedAmount}</h2>
+                        <span className="text-lg font-bold text-slate-500 uppercase tracking-widest">Coins</span>
+                     </div>
+                     <p className="text-xs font-bold text-slate-400">Total verified referrals: {refCount}</p>
+                  </div>
+                  <button 
+                    onClick={handleClaimRewards}
+                    disabled={unclaimedAmount <= 0 || claiming}
+                    className={`w-full md:w-auto px-16 py-8 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-4 shadow-2xl active:scale-95 ${
+                      unclaimedAmount > 0 && !claiming 
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-500/30' 
+                        : 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/10'
+                    }`}
+                  >
+                    {claiming ? (
+                      <>
+                        <i className="fa-solid fa-spinner fa-spin"></i> Synchronizing...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-money-bill-transfer"></i> Claim All
+                      </>
+                    )}
+                  </button>
+               </div>
+               <i className="fa-solid fa-coins absolute -right-20 -bottom-20 text-[20rem] text-white/5 -rotate-12 pointer-events-none"></i>
+            </div>
+
+            {/* Performance Ledger Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
                 <div className="relative z-10">
-                  <div className="text-[9px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Partner Count</div>
-                  <div className="text-5xl font-black tracking-tighter mb-2">{loading ? '...' : refCount}</div>
-                  <p className="text-[10px] font-bold text-indigo-200/60 uppercase">Active Nodes</p>
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Partner Count</div>
+                  <div className="text-5xl font-black text-slate-900 tracking-tighter mb-2">{loading ? '...' : refCount}</div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Active Nodes</p>
                 </div>
               </div>
               <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
                 <div className="relative z-10">
-                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Yield Revenue</div>
-                  <div className="text-5xl font-black text-slate-900 tracking-tighter mb-2">0</div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Lifetime Coins</p>
-                </div>
-              </div>
-              <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
-                <div className="relative z-10">
-                  <div className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-4">Yield Multiplier</div>
-                  <div className="text-5xl font-black tracking-tighter mb-2">10%</div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase">Per Task Done</p>
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Referral Multiplier</div>
+                  <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-2">50</div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Fixed Units / User</p>
                 </div>
               </div>
             </div>
 
-            {/* New: Detailed Referrals List */}
+            {/* Detailed Referrals List */}
             <div className="bg-white rounded-[4rem] border border-slate-100 shadow-sm overflow-hidden">
                <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                   <div>
@@ -179,7 +225,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
                            </div>
                         </div>
                         <div className="text-right">
-                           <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[8px] font-black rounded-lg uppercase tracking-widest border border-emerald-100">Active Node</span>
+                           <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[8px] font-black rounded-lg uppercase tracking-widest border border-emerald-100">Verified Partner</span>
                         </div>
                       </div>
                     ))
@@ -191,12 +237,12 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
           <div className="lg:col-span-4 space-y-8 sticky top-28">
             <div className="bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-3xl">
               <div className="relative z-10">
-                <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-10">Yield Architecture</h3>
+                <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-10">Reward Architecture</h3>
                 <div className="space-y-10">
                   {[
-                    { t: 'Permanent Linkage', d: 'Once a user joins via your link, they are locked into your earnings node forever.', icon: 'fa-link' },
-                    { t: 'Passive Accumulation', d: 'Every coin they earn from tasks generates an instant 10% bonus for you.', icon: 'fa-bolt-lightning' },
-                    { t: 'Automated Payouts', d: 'No claiming required. Affiliate yields are credited directly to your vault.', icon: 'fa-vault' }
+                    { t: 'Flat Bounty', d: 'Receive exactly 50 Coins for every successful registration through your link.', icon: 'fa-gift' },
+                    { t: 'Permanent Linkage', d: 'Once a user joins via your link, they are locked into your network forever.', icon: 'fa-link' },
+                    { t: 'Manual Synchronization', d: 'Visit this page anytime to claim your accumulated bounties to your main vault.', icon: 'fa-money-bill-transfer' }
                   ].map((item, i) => (
                     <div key={i} className="flex gap-6">
                       <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-indigo-400 border border-white/10 shrink-0">

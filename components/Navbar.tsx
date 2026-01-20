@@ -25,9 +25,11 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     { name: 'Dashboard', id: 'dashboard', icon: 'fa-chart-pie' },
     { name: 'Tasks', id: 'tasks', icon: 'fa-list-check' },
     { name: 'Create', id: 'create', icon: 'fa-bullhorn' },
+    { name: 'My Campaigns', id: 'my-campaigns', icon: 'fa-paper-plane' },
     { name: 'Wallet', id: 'wallet', icon: 'fa-wallet' },
     { name: 'Spin', id: 'spin', icon: 'fa-clover' },
     { name: 'Affiliate', id: 'referrals', icon: 'fa-users' },
+    { name: 'Profile', id: 'profile', icon: 'fa-user-gear' },
   ];
 
   const publicLinks = [
@@ -91,12 +93,12 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center bg-slate-100/40 p-1.5 rounded-[1.75rem] border border-slate-200/30 backdrop-blur-sm">
+            <div className="hidden lg:flex items-center bg-slate-100/40 p-1.5 rounded-[1.75rem] border border-slate-200/30 backdrop-blur-sm overflow-x-auto no-scrollbar max-w-[50%] xl:max-w-none">
               {currentLinks.map(link => (
                 <button
                   key={link.id}
                   onClick={() => handleNavClick(link.id)}
-                  className={`relative px-5 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                  className={`relative px-5 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap ${
                     currentPage === link.id 
                       ? 'text-indigo-600 bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-100' 
                       : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
