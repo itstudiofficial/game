@@ -25,17 +25,22 @@ const App: React.FC = () => {
 
   // Referral detection & URL Handling
   useEffect(() => {
+    // We check the actual pathname for the /ref/ pattern
     const path = window.location.pathname;
-    // Check if URL matches /ref/ID
-    if (path.includes('/ref/')) {
-      const parts = path.split('/ref/');
+    const refPrefix = '/ref/';
+    
+    if (path.includes(refPrefix)) {
+      const parts = path.split(refPrefix);
       if (parts.length > 1) {
-        const refId = parts[1].split('/')[0].toUpperCase();
-        if (refId) {
+        // Extract the ID and sanitize it (uppercase)
+        const refId = parts[1].split('/')[0].toUpperCase().trim();
+        
+        if (refId && refId.length > 0) {
           console.log("System Alert: Referral Node Detected ->", refId);
           // Store in sessionStorage to survive refresh but stay transient
           sessionStorage.setItem('pending_referral', refId);
-          // Immediately clean URL for SEO and UX, then move to login
+          
+          // Immediately clean URL and redirect to login/register to prompt conversion
           window.history.replaceState({}, '', '/');
           setCurrentPage('login');
         }

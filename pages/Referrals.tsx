@@ -12,9 +12,10 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   const [refCount, setRefCount] = useState(0);
   const [loading, setLoading] = useState(true);
   
-  // Use window.location.origin to ensure the link works regardless of the domain/environment
+  // Construct a standard URL that the App component will recognize regardless of browser/domain
+  // format: domain.com/ref/ID
   const referralLink = `${window.location.origin}/ref/${user.id.toUpperCase()}`;
-  const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my link: ${referralLink}`;
+  const shareMessage = `Join Ads Predia and start earning daily coins for micro-tasks! Use my partner link to join the network: ${referralLink}`;
 
   useEffect(() => {
     const fetchRefData = async () => {
@@ -34,9 +35,21 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
   }, [user.id, user.isLoggedIn]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(referralLink);
+    // Primary clipboard copy
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(referralLink);
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = referralLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+    
     setCopied(true);
-    // Visual cue logic: resets after 2.5 seconds to match progress bar
+    // Animation reset timing
     setTimeout(() => setCopied(false), 2500);
   };
 
@@ -104,7 +117,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user }) => {
               <div className="relative group mb-16">
                 <div className="flex flex-col md:flex-row gap-4 items-stretch">
                   <div className={`flex-1 min-w-0 p-8 md:p-10 rounded-[2.5rem] border-2 border-dashed transition-all duration-500 flex items-center justify-center text-center shadow-inner ${
-                    copied ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200 group-hover:border-indigo-300 group-hover:bg-white'
+                    copied ? 'bg-emerald-50 border-emerald-200 shadow-emerald-100/20' : 'bg-slate-50 border-slate-200 group-hover:border-indigo-300 group-hover:bg-white'
                   }`}>
                     <span className={`font-mono text-sm md:text-lg font-black break-all transition-colors duration-500 ${
                       copied ? 'text-emerald-600' : 'text-slate-700 group-hover:text-indigo-600'
