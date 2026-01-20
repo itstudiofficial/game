@@ -58,14 +58,22 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
             <div className="flex flex-col sm:flex-row justify-center items-center gap-8 w-full sm:w-auto px-6">
               <button 
                 onClick={() => onStart(isLoggedIn ? 'tasks' : 'login')}
-                className="group relative w-full sm:w-auto px-16 py-7 bg-slate-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] transition-all hover:bg-indigo-600 hover:scale-105 active:scale-95 shadow-[0_40px_80px_-20px_rgba(15,23,42,0.4)] flex items-center justify-center gap-5"
+                className="group relative w-full sm:w-auto px-16 py-8 bg-slate-900 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.4em] transition-all duration-500 hover:bg-indigo-600 hover:scale-105 active:scale-95 shadow-[0_40px_80px_-20px_rgba(79,70,229,0.35)] flex items-center justify-center gap-5 overflow-hidden"
               >
-                <i className="fa-solid fa-rocket group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform"></i>
-                Get Started
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+                <div className="flex items-center gap-3">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  </span>
+                  <span className="relative z-10">Get Started Now</span>
+                </div>
+                <i className="fa-solid fa-arrow-right relative z-10 group-hover:translate-x-2 transition-transform"></i>
               </button>
+              
               <button 
                 onClick={() => onStart(isLoggedIn ? 'create' : 'login')}
-                className="w-full sm:w-auto px-16 py-7 bg-white text-slate-900 border-2 border-slate-100 rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-5 shadow-xl shadow-slate-200/40"
+                className="w-full sm:w-auto px-16 py-8 bg-white text-slate-900 border-2 border-slate-100 rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.4em] hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-5 shadow-xl shadow-slate-200/40"
               >
                 <i className="fa-solid fa-bullhorn text-indigo-600"></i>
                 Launch Campaign
@@ -103,7 +111,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
             ].map((stat, i) => (
               <div key={i} className="text-center group flex flex-col items-center md:border-r border-slate-50 last:border-0 px-8">
                 <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 shadow-sm">
-                  <i className={`fa-solid ${stat.icon} ${stat.color} text-xl group-hover:text-white`}></i>
+                  <i className="fa-solid ${stat.icon} ${stat.color} text-xl group-hover:text-white"></i>
                 </div>
                 <div className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2 tabular-nums">{stat.val}</div>
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{stat.label}</div>
@@ -203,6 +211,13 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
           </div>
         </div>
       </section>
+      <style>{`
+        @keyframes shimmer {
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </div>
   );
 };

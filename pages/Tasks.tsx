@@ -8,21 +8,25 @@ interface TasksProps {
 }
 
 const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
-  const [categoryFilter, setCategoryFilter] = useState<TaskType | 'All'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<TaskType | 'All' | 'Pending'>('All');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
-  const categories: {id: TaskType | 'All', label: string, icon: string}[] = [
+  const categories: {id: TaskType | 'All' | 'Pending', label: string, icon: string}[] = [
     { id: 'All', label: 'All Assets', icon: 'fa-layer-group' },
     { id: 'YouTube', label: 'Video Ops', icon: 'fa-youtube' },
     { id: 'Websites', label: 'Web Traffic', icon: 'fa-globe' },
     { id: 'Apps', label: 'App Installs', icon: 'fa-mobile-screen' },
-    { id: 'Social Media', label: 'Social Reach', icon: 'fa-share-nodes' }
+    { id: 'Social Media', label: 'Social Reach', icon: 'fa-share-nodes' },
+    { id: 'Pending', label: 'Pending Assets', icon: 'fa-clock-rotate-left' }
   ];
 
   const filteredTasks = tasks.filter(t => {
+    if (categoryFilter === 'Pending') {
+      return t.status === 'pending';
+    }
     const categoryMatch = categoryFilter === 'All' || t.type === categoryFilter;
     return categoryMatch && t.status === 'active';
   });
@@ -62,7 +66,6 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
         {/* Market Header */}
         <div className="mb-12 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="max-w-2xl">
-            {/* REMOVED: animate-ping from the live indicator dot */}
             <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-100 shadow-sm">
               <span className="flex h-2 w-2">
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.4)]"></span>
@@ -138,18 +141,24 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                        Slots: <span className="text-slate-900">{task.completedCount} / {task.totalWorkers}</span>
                     </div>
-                    <div className="text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-lg">
-                      Active
+                    <div className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${
+                      task.status === 'active' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                    }`}>
+                      {task.status}
                     </div>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-indigo-600 rounded-full transition-all duration-700 shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+                      className={`h-full rounded-full transition-all duration-700 shadow-sm ${
+                        task.status === 'active' ? 'bg-indigo-600' : 'bg-amber-500'
+                      }`}
                       style={{ width: `${(task.completedCount / task.totalWorkers) * 100}%` }}
                     ></div>
                   </div>
-                  <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest group-hover:bg-indigo-600 transition-all">
-                    Initialize Protocol
+                  <button className={`w-full py-4 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    task.status === 'active' ? 'bg-slate-900 group-hover:bg-indigo-600' : 'bg-slate-400 cursor-not-allowed'
+                  }`}>
+                    {task.status === 'active' ? 'Initialize Protocol' : 'Under Review'}
                   </button>
                 </div>
                 
@@ -200,9 +209,15 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                         <div className="text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-1">Asset Value</div>
                         <div className="text-3xl font-black">{selectedTask.reward} <span className="text-[10px] text-slate-500 uppercase">Coins</span></div>
                     </div>
-                    <div className="p-8 bg-indigo-50 rounded-[2rem] border border-indigo-100">
-                        <div className="text-[8px] font-black text-indigo-600 uppercase tracking-widest mb-1">Security Level</div>
-                        <div className="text-3xl font-black text-indigo-900">VERIFIED</div>
+                    <div className={`p-8 rounded-[2rem] border ${
+                      selectedTask.status === 'active' ? 'bg-indigo-50 border-indigo-100' : 'bg-amber-50 border-amber-100'
+                    }`}>
+                        <div className={`text-[8px] font-black uppercase tracking-widest mb-1 ${
+                          selectedTask.status === 'active' ? 'text-indigo-600' : 'text-amber-600'
+                        }`}>Security Level</div>
+                        <div className={`text-3xl font-black ${
+                          selectedTask.status === 'active' ? 'text-indigo-900' : 'text-amber-900'
+                        }`}>{selectedTask.status.toUpperCase()}</div>
                     </div>
                   </div>
 
@@ -211,18 +226,25 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                       href={selectedTask.link} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex-[2] py-6 bg-indigo-600 text-white font-black rounded-3xl text-xs uppercase tracking-widest text-center shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
+                      className={`flex-[2] py-6 text-white font-black rounded-3xl text-xs uppercase tracking-widest text-center shadow-2xl transition-all active:scale-95 ${
+                        selectedTask.status === 'active' ? 'bg-indigo-600 shadow-indigo-200 hover:bg-indigo-700' : 'bg-slate-400 cursor-not-allowed pointer-events-none'
+                      }`}
                     >
                       <i className="fa-solid fa-up-right-from-square mr-3"></i> Open Target Asset
                     </a>
                     <button 
                       onClick={() => setIsSubmittingProof(true)}
-                      className="flex-1 py-6 bg-slate-900 text-white font-black rounded-3xl text-xs uppercase tracking-widest hover:bg-slate-800 transition-all"
+                      disabled={selectedTask.status !== 'active'}
+                      className={`flex-1 py-6 font-black rounded-3xl text-xs uppercase tracking-widest transition-all ${
+                        selectedTask.status === 'active' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
                     >
                       Next Step
                     </button>
                   </div>
-                  <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">You must complete the action before submitting proof</p>
+                  <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    {selectedTask.status === 'active' ? 'You must complete the action before submitting proof' : 'This task is awaiting administrative activation'}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-10 animate-in slide-in-from-right-12 duration-500">

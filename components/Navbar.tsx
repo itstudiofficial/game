@@ -36,11 +36,11 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     { name: 'Contact', id: 'contact', icon: 'fa-headset' },
   ];
 
-  if (user.isAdmin) {
-    authLinks.unshift({ name: 'Admin', id: 'admin', icon: 'fa-user-shield' });
-  }
+  const finalAuthLinks = user.isAdmin 
+    ? [{ name: 'Admin', id: 'admin', icon: 'fa-user-shield' }, ...authLinks]
+    : authLinks;
 
-  const currentLinks = user.isLoggedIn ? authLinks : publicLinks;
+  const currentLinks = user.isLoggedIn ? finalAuthLinks : publicLinks;
 
   const handleNavClick = (id: string) => {
     setCurrentPage(id);
@@ -61,7 +61,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
           <div className="flex justify-between items-center">
             
-            {/* AdsPredia Logo Base */}
+            {/* Logo Section */}
             <div className="flex items-center gap-6">
               <button 
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -75,33 +75,35 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                 onClick={() => handleNavClick('home')}
               >
                 <div className="flex items-center bg-white pr-6 pl-2 py-2 rounded-2xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all duration-300">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200/40 group-hover:rotate-12 transition-all duration-500">
-                    <i className="fa-solid fa-coins text-white text-base"></i>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-500 group-hover:rotate-12 ${user.isAdmin ? 'bg-indigo-900' : 'bg-gradient-to-br from-indigo-600 to-indigo-800'}`}>
+                    <i className={`fa-solid ${user.isAdmin ? 'fa-shield-halved' : 'fa-coins'} text-white text-base`}></i>
                   </div>
                   <div className="ml-3">
                     <span className="text-xl font-black tracking-tighter text-slate-900 block leading-none">
                       Ads<span className="text-indigo-600">Predia</span>
                     </span>
-                    <span className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-400 mt-1 block">Income Hub</span>
+                    <span className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-400 mt-1 block">
+                      {user.isAdmin ? 'Admin Console' : 'Income Hub'}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Desktop Navigation Hub */}
+            {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center bg-slate-100/40 p-1.5 rounded-[1.75rem] border border-slate-200/30 backdrop-blur-sm">
               {currentLinks.map(link => (
                 <button
                   key={link.id}
                   onClick={() => handleNavClick(link.id)}
-                  className={`relative px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                  className={`relative px-5 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
                     currentPage === link.id 
                       ? 'text-indigo-600 bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-100' 
                       : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <i className={`fa-solid ${link.icon} text-[11px] ${currentPage === link.id ? 'opacity-100' : 'opacity-40'}`}></i>
+                  <div className="flex items-center gap-2.5">
+                    <i className={`fa-solid ${link.icon} text-[10px] ${currentPage === link.id ? 'opacity-100' : 'opacity-40'}`}></i>
                     {link.name}
                   </div>
                 </button>
@@ -111,39 +113,45 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
             {/* User Session Hub */}
             <div className="flex items-center gap-4">
               {!user.isLoggedIn ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <button 
                     onClick={() => handleNavClick('login')} 
-                    className="hidden md:block px-6 py-4 text-slate-600 font-black text-[10px] uppercase tracking-widest hover:text-indigo-600 transition-colors"
+                    className="hidden md:block px-4 py-4 text-slate-600 font-black text-[10px] uppercase tracking-widest hover:text-indigo-600 transition-colors"
                   >
                     Login
                   </button>
                   <button 
                     onClick={() => handleNavClick('login')} 
-                    className="bg-slate-900 text-white px-10 py-4.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-300 hover:bg-indigo-600 hover:-translate-y-0.5 transition-all active:scale-95"
+                    className="group relative h-14 px-8 bg-slate-900 text-white rounded-[1.25rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] hover:bg-indigo-600 hover:-translate-y-0.5 transition-all duration-300 active:scale-95 overflow-hidden flex items-center gap-4"
                   >
-                    Get Started
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                    </span>
+                    <span className="relative z-10">Get Started</span>
+                    <i className="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  {/* Financial Status */}
                   <div 
-                    onClick={() => handleNavClick('wallet')}
-                    className="flex items-center gap-5 pl-6 pr-2.5 py-2.5 bg-slate-900 rounded-[1.5rem] cursor-pointer hover:bg-indigo-950 transition-all border border-slate-800 shadow-2xl shadow-indigo-100/10 group"
+                    onClick={() => handleNavClick(user.isAdmin ? 'admin' : 'wallet')}
+                    className={`flex items-center gap-5 pl-6 pr-2.5 py-2.5 rounded-[1.5rem] cursor-pointer transition-all border shadow-2xl group ${user.isAdmin ? 'bg-indigo-900 border-indigo-800' : 'bg-slate-900 border-slate-800 shadow-indigo-100/10'}`}
                   >
                     <div className="flex flex-col">
                        <span className="text-sm font-black text-white leading-none tabular-nums tracking-tighter">
                          {user.coins.toLocaleString()}
                        </span>
-                       <span className="text-[7px] font-black text-indigo-400 uppercase tracking-widest mt-1.5 opacity-70">Coin Vault</span>
+                       <span className={`text-[7px] font-black uppercase tracking-widest mt-1.5 opacity-70 ${user.isAdmin ? 'text-indigo-200' : 'text-indigo-400'}`}>
+                         {user.isAdmin ? 'Admin Vault' : 'Coin Vault'}
+                       </span>
                     </div>
-                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black group-hover:rotate-12 transition-all">
-                      <i className="fa-solid fa-plus text-xs"></i>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black group-hover:rotate-12 transition-all ${user.isAdmin ? 'bg-indigo-600' : 'bg-indigo-600'}`}>
+                      <i className={`fa-solid ${user.isAdmin ? 'fa-gear' : 'fa-plus'} text-xs`}></i>
                     </div>
                   </div>
 
-                  {/* Profile Context */}
                   <div className="relative">
                     <button 
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -158,20 +166,23 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setIsUserMenuOpen(false)}></div>
                         <div className="absolute right-0 mt-5 w-80 bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_50px_100px_-15px_rgba(0,0,0,0.15)] p-5 z-20 animate-in fade-in zoom-in-95">
-                          <div className="p-6 mb-5 bg-slate-50/80 rounded-[2rem] border border-slate-100">
-                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Authorized Node</p>
-                             <p className="text-base font-black text-slate-900 truncate tracking-tight mb-4">{user.username}</p>
-                             <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                          <div className={`p-6 mb-5 rounded-[2rem] border ${user.isAdmin ? 'bg-indigo-900 border-indigo-800 text-white' : 'bg-slate-50/80 border-slate-100'}`}>
+                             <p className={`text-[8px] font-black uppercase tracking-widest mb-1 ${user.isAdmin ? 'text-indigo-300' : 'text-slate-400'}`}>
+                               {user.isAdmin ? 'Super Administrator' : 'Authorized Node'}
+                             </p>
+                             <p className={`text-base font-black truncate tracking-tight mb-4 ${user.isAdmin ? 'text-white' : 'text-slate-900'}`}>{user.username}</p>
+                             <div className={`flex items-center justify-between pt-4 border-t ${user.isAdmin ? 'border-indigo-800' : 'border-slate-200'}`}>
                                 <div className="flex items-center gap-2">
                                   <span className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                                  <span className="text-[9px] font-black text-slate-500 uppercase">Active Now</span>
+                                  <span className={`text-[9px] font-black uppercase ${user.isAdmin ? 'text-indigo-200' : 'text-slate-500'}`}>Secure Connection</span>
                                 </div>
-                                <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">PARTNER</span>
+                                <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${user.isAdmin ? 'bg-white/10 text-white border-white/20' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
+                                  {user.isAdmin ? 'ADMIN' : 'PARTNER'}
+                                </span>
                              </div>
                           </div>
-                          
                           <div className="space-y-1">
-                            {authLinks.slice(0, 5).map(link => (
+                            {finalAuthLinks.map(link => (
                               <button 
                                 key={link.id} 
                                 onClick={() => handleNavClick(link.id)} 
@@ -184,9 +195,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                               </button>
                             ))}
                           </div>
-
                           <div className="h-px bg-slate-100 my-5 mx-3"></div>
-                          
                           <button 
                             onClick={onLogout} 
                             className="w-full text-left px-5 py-4 rounded-2xl hover:bg-red-50 flex items-center gap-4 text-red-500 transition-colors"
@@ -205,19 +214,18 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
         </div>
       </nav>
 
-      {/* Mobile Context Sidebar */}
+      {/* Mobile Drawer */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-[200]">
           <div 
             className="fixed inset-0 bg-slate-950/40 backdrop-blur-md animate-in fade-in" 
             onClick={() => setIsMobileMenuOpen(false)}
           ></div>
-          
-          <div className="fixed top-4 left-4 bottom-4 w-[85%] max-w-sm bg-white shadow-2xl flex flex-col animate-in slide-in-from-left-8 duration-500 rounded-[3rem] border border-slate-100">
+          <div className="fixed top-4 left-4 bottom-4 w-[85%] max-w-sm bg-white shadow-2xl flex flex-col animate-in slide-in-from-left-8 duration-500 rounded-[3rem] border border-slate-100 overflow-hidden">
              <div className="p-10 flex items-center justify-between border-b border-slate-50">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl flex items-center justify-center shadow-lg">
-                    <i className="fa-solid fa-coins text-white text-lg"></i>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${user.isAdmin ? 'bg-indigo-900' : 'bg-indigo-600'}`}>
+                    <i className={`fa-solid ${user.isAdmin ? 'fa-shield-halved' : 'fa-coins'} text-white text-lg`}></i>
                   </div>
                   <span className="text-2xl font-black text-slate-900 tracking-tighter">AdsPredia</span>
                 </div>
@@ -230,22 +238,39 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
              </div>
 
              <div className="flex-grow overflow-y-auto p-8 space-y-10">
-               {user.isLoggedIn && (
-                 <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-3xl">
+               {user.isLoggedIn ? (
+                 <div className={`rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-3xl ${user.isAdmin ? 'bg-indigo-950' : 'bg-slate-900'}`}>
                     <div className="relative z-10">
-                      <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-3">Your Assets</p>
+                      <p className={`text-[9px] font-black uppercase tracking-[0.3em] mb-3 ${user.isAdmin ? 'text-indigo-300' : 'text-indigo-400'}`}>
+                        {user.isAdmin ? 'Admin Inventory' : 'Your Assets'}
+                      </p>
                       <div className="flex items-baseline gap-3 mb-8">
                          <p className="text-5xl font-black tracking-tighter tabular-nums">{user.coins.toLocaleString()}</p>
                          <span className="text-[11px] opacity-40 uppercase font-black">Coins</span>
                       </div>
                       <button 
-                        onClick={() => handleNavClick('wallet')}
-                        className="w-full py-5 bg-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-500/30 active:scale-95"
+                        onClick={() => handleNavClick(user.isAdmin ? 'admin' : 'wallet')}
+                        className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 ${user.isAdmin ? 'bg-indigo-600 text-white shadow-indigo-900/50' : 'bg-indigo-600 shadow-indigo-500/30'}`}
                       >
-                        Deposit Units
+                        {user.isAdmin ? 'Access Ledger' : 'Deposit Units'}
                       </button>
                     </div>
                     <i className="fa-solid fa-vault absolute -right-8 -bottom-8 text-8xl text-white/5 rotate-12"></i>
+                 </div>
+               ) : (
+                 <div className="px-2">
+                    <button 
+                      onClick={() => handleNavClick('login')} 
+                      className="group relative w-full h-16 bg-slate-900 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] hover:bg-indigo-600 transition-all duration-300 active:scale-95 overflow-hidden flex items-center justify-center gap-4 mb-6"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                      </span>
+                      <span className="relative z-10">Get Started Now</span>
+                      <i className="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                    </button>
                  </div>
                )}
 
@@ -286,6 +311,14 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
           </div>
         </div>
       )}
+      
+      <style>{`
+        @keyframes shimmer {
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </>
   );
 };

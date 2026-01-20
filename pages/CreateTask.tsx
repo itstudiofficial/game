@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { TaskType } from '../types';
 
@@ -26,8 +27,8 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
 
-  // Economic Policy: 2,500 Coins = $1.00
-  const COIN_RATE = 2500;
+  // Updated Policy: 3,000 Coins = $1.00
+  const COIN_RATE = 3000;
   const totalCost = formData.reward * formData.totalWorkers;
   const isBalanceEnough = userCoins >= totalCost;
 
@@ -63,7 +64,6 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
     <div className="pt-28 pb-20 min-h-screen bg-slate-50">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8">
         
-        {/* Hub Header */}
         <div className="mb-12 max-w-3xl">
           <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-indigo-100 shadow-sm">
             <i className="fa-solid fa-satellite-dish"></i>
@@ -78,12 +78,10 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* Main Deployment Form */}
           <div className="lg:col-span-8">
             <div className="bg-white rounded-[4rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] border border-slate-100 p-10 md:p-16">
               <form onSubmit={handleInitialSubmit} className="space-y-12">
                 
-                {/* Section: Identity & Link */}
                 <div className="space-y-10">
                   <div className="grid grid-cols-1 gap-10">
                     <div className="space-y-4">
@@ -115,7 +113,6 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                   </div>
                 </div>
 
-                {/* Section: Logic & Reward */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="space-y-4">
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Modality</label>
@@ -158,7 +155,6 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                   </div>
                 </div>
 
-                {/* Section: Detailed Directives */}
                 <div className="space-y-4">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Operational Protocol (Instructions)</label>
                   <textarea 
@@ -177,10 +173,9 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                   <div className="relative z-10 text-center sm:text-left">
                     <h4 className="text-[10px] font-black text-indigo-900 uppercase tracking-widest mb-1">AI Proof Enforcement</h4>
                     <p className="text-[11px] font-bold text-indigo-700/60 leading-relaxed">
-                      Every submission requires a visual snapshot. Our validation layer ensures honest engagement before rewards are disbursed.
+                      Every submission requires a visual snapshot. Our validation layer ensures honest engagement.
                     </p>
                   </div>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-200/10 rounded-full blur-3xl pointer-events-none"></div>
                 </div>
 
                 <button 
@@ -197,7 +192,6 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
             </div>
           </div>
 
-          {/* Cost Analysis Sidebar */}
           <div className="lg:col-span-4 space-y-8 sticky top-28">
             <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-3xl relative overflow-hidden">
               <div className="relative z-10">
@@ -234,30 +228,13 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                     }
                   </div>
                 </div>
-                
-                {!isBalanceEnough && (
-                  <button 
-                    onClick={() => navigateTo('wallet')}
-                    className="w-full mt-6 py-5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20 active:scale-95"
-                  >
-                    Control Vault <i className="fa-solid fa-arrow-right ml-2"></i>
-                  </button>
-                )}
               </div>
               <i className="fa-solid fa-vault absolute -right-12 -bottom-12 text-[15rem] text-white/5 rotate-12 pointer-events-none"></i>
-            </div>
-
-            <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Security Tip</h4>
-               <p className="text-xs font-medium text-slate-600 leading-relaxed">
-                 High rewards attract premium engagement. We recommend setting a competitive coin value to prioritize your campaign in the global feed.
-               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Audit Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-2xl animate-in fade-in duration-500">
           <div className="bg-white rounded-[4rem] w-full max-w-xl shadow-[0_60px_120px_-20px_rgba(0,0,0,0.5)] border border-slate-200/50 overflow-hidden animate-in zoom-in-95 duration-500">
@@ -284,19 +261,10 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                       <span className="text-[9px] font-black text-slate-400 uppercase">≈ ${(totalCost / COIN_RATE).toFixed(2)} USD</span>
                    </div>
                 </div>
-                <div className="flex justify-between items-center">
-                   <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Validation Logic</span>
-                   <span className="text-[9px] font-black text-emerald-600 uppercase bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">AI Screenshot Verified</span>
-                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <button 
-                  onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all"
-                >
-                  Adjust Specs
-                </button>
+                <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all">Adjust Specs</button>
                 <button 
                   onClick={handleFinalConfirm}
                   disabled={isDeploying}
@@ -304,7 +272,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                 >
                   {isDeploying ? (
                     <>
-                      <i className="fa-solid fa-spinner fa-spin"></i> Deploying Hub...
+                      <i className="fa-solid fa-spinner fa-spin"></i> Deploying...
                     </>
                   ) : 'Commit Deployment'}
                 </button>

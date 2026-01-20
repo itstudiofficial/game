@@ -19,8 +19,9 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const COIN_RATE = 2500;
-  const MIN_DEPOSIT = 5000;
+  // Policy: 3,000 Coins = $1.00
+  const COIN_RATE = 3000;
+  const MIN_DEPOSIT = 6000; // Increased to reflect new rate
   const MIN_WITHDRAWAL = 3000;
 
   const GATEWAY_DETAILS = {
@@ -93,7 +94,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
     <div className="pt-28 pb-20 min-h-screen bg-slate-50">
       <div className="max-w-[1600px] mx-auto px-6 md:px-12 space-y-12">
         
-        {/* Economic Header & Balance Vault */}
         <div className="bg-slate-900 rounded-[4rem] p-12 md:p-20 text-white shadow-3xl relative overflow-hidden group">
           <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-16">
             <div className="text-center lg:text-left">
@@ -116,7 +116,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
                  <div className="hidden sm:block h-12 w-px bg-white/10"></div>
                  <div className="text-left hidden sm:block">
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Exchange Protocol</p>
-                    <p className="text-xs font-black text-indigo-400">2,500 : 1.00 USD</p>
+                    <p className="text-xs font-black text-indigo-400">3,000 : 1.00 USD</p>
                  </div>
               </div>
             </div>
@@ -160,7 +160,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
               </div>
 
               <div className="px-8 md:px-24 pb-24 space-y-20">
-                {/* Protocol Selection */}
                 <div>
                   <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-12 text-center">Network Protocol Selection</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
@@ -186,7 +185,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
                   </div>
                 </div>
 
-                {/* Secure Gateway Instructions */}
                 <div className="bg-slate-900 p-12 md:p-16 rounded-[4rem] text-white relative overflow-hidden group shadow-2xl shadow-slate-200">
                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
                     <div className="space-y-6">
@@ -214,7 +212,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
                   </div>
                 </div>
 
-                {/* Operation Form */}
                 <form onSubmit={handleSubmitInitial} className="space-y-16">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-6">
@@ -325,7 +322,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, onAction, transactions }) => {
         )}
       </div>
 
-      {/* Secure Confirmation Overlay */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-3xl animate-in fade-in duration-500">
           <div className="bg-white rounded-[4rem] w-full max-w-2xl overflow-hidden shadow-[0_60px_120px_-20px_rgba(0,0,0,0.6)] animate-in zoom-in-95 duration-500 border border-slate-200/50">
