@@ -214,7 +214,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                             className="w-full text-left px-5 py-4 rounded-2xl hover:bg-red-50 flex items-center gap-4 text-red-500 transition-colors"
                           >
                             <i className="fa-solid fa-power-off w-5 text-center text-xs"></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">Logout</span>
                           </button>
                         </div>
                       </>
@@ -298,7 +298,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                     className="w-full py-6 rounded-2xl bg-white border border-red-100 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-4 shadow-sm"
                   >
                     <i className="fa-solid fa-power-off"></i>
-                    Terminate Session
+                    Logout
                   </button>
                </div>
              )}
