@@ -79,6 +79,10 @@ const App: React.FC = () => {
           return;
         }
         setUser(cloudUser);
+        // Also update local transactions if needed
+        const allGlobal = await storage.getAllGlobalTransactions();
+        const userTxs = allGlobal.filter(tx => tx.userId === idToSync);
+        setTransactions(userTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       }
     }
   }, [user.id, user.isLoggedIn, handleLogout]);
@@ -133,7 +137,7 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleTaskCompletion = (taskId: string, proofImage?: string, submissionTimestamp?: string) => {
+  const handleTaskCompletion = async (taskId: string, proofImage?: string, submissionTimestamp?: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
@@ -155,9 +159,12 @@ const App: React.FC = () => {
     };
     
     setUser(updatedUser);
-    storage.addTransaction(newTx);
+    await storage.setUser(updatedUser);
+    await storage.addTransaction(newTx);
     setTransactions(prev => [newTx, ...prev]);
-    alert(`Verification submission received. Admin will process shortly.`);
+    
+    alert(`Verification submission received. Redirecting to Dashboard.`);
+    navigateTo('dashboard');
   };
 
   const handleCreateTask = async (taskData: any) => {
@@ -310,7 +317,7 @@ const App: React.FC = () => {
         {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
         {currentPage === 'features' && <Features />}
         {currentPage === 'contact' && <Contact />}
-        {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={handleTaskCompletion} />}
+        {currentPage === 'tasks' && <Tasks user={user} tasks={tasks.filter(t => t.status === 'active')} onComplete={handleTaskCompletion} />}
         {currentPage === 'create' && <CreateTask onCreate={handleCreateTask} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
         {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}

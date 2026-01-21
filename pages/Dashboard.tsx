@@ -1,6 +1,6 @@
 
-import React, { useMemo } from 'react';
-import { User, Task, Transaction, TaskType } from '../types';
+import React, { useMemo, useState } from 'react';
+import { User, Task, Transaction } from '../types';
 
 interface DashboardProps {
   user: User;
@@ -11,6 +11,8 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
+  const [ledgerTab, setLedgerTab] = useState<'all' | 'pending' | 'verified'>('all');
+
   // Guard clause for non-logged in state
   if (!user || !user.isLoggedIn) {
     return (
@@ -37,13 +39,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
 
   const progressToNextDollar = ((earnings.total % COIN_RATE) / COIN_RATE) * 100;
 
-  // Recent Earnings List
-  const recentEarnings = useMemo(() => {
-    return transactions
-      .filter(tx => tx.type === 'earn')
+  // Filtered Earning Ledger
+  const ledgerList = useMemo(() => {
+    let filtered = transactions.filter(tx => tx.type === 'earn');
+    
+    if (ledgerTab === 'pending') {
+      filtered = filtered.filter(tx => tx.status === 'pending');
+    } else if (ledgerTab === 'verified') {
+      filtered = filtered.filter(tx => tx.status === 'success');
+    }
+    
+    return filtered
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 6);
-  }, [transactions]);
+      .slice(0, 10);
+  }, [transactions, ledgerTab]);
 
   // Analysis Data: Earnings by Category
   const categoryStats = useMemo(() => {
@@ -122,7 +131,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
                        <i className="fa-solid fa-coins text-yellow-500"></i>
                        {earnings.total.toLocaleString()} <span className="opacity-40 text-[10px]">COINS</span>
                      </div>
-                     <div className="px-5 py-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                     <div className={`px-5 py-3 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all ${earnings.pending > 0 ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 animate-pulse' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}`}>
                        Pending Vault: {earnings.pending.toLocaleString()}
                      </div>
                   </div>
@@ -196,26 +205,41 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
           </div>
         </div>
 
-        {/* RECENTLY EARNING SECTION */}
+        {/* OPERATIONAL LEDGER (Recently Earning) */}
         <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-8 md:p-12 border-b border-slate-50 flex justify-between items-center bg-slate-50/20">
+          <div className="p-8 md:p-12 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center bg-slate-50/20 gap-6">
              <div>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Recently Earning</h3>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Live yield from network operations</p>
+                <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Operational Ledger</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit of yield and verification status</p>
              </div>
-             <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-300 shadow-inner">
-                <i className="fa-solid fa-receipt text-xl"></i>
+             
+             <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+                {[
+                  { id: 'all', label: 'All Activity' },
+                  { id: 'pending', label: 'In Audit' },
+                  { id: 'verified', label: 'Verified' }
+                ].map(tab => (
+                  <button 
+                    key={tab.id} 
+                    onClick={() => setLedgerTab(tab.id as any)}
+                    className={`px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${ledgerTab === tab.id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
              </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
-             {recentEarnings.length === 0 ? (
-               <div className="col-span-full py-20 text-center">
-                  <i className="fa-solid fa-ghost text-4xl text-slate-100 mb-4"></i>
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No earning events detected in current epoch</p>
+             {ledgerList.length === 0 ? (
+               <div className="col-span-full py-32 text-center animate-in fade-in">
+                  <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-slate-100">
+                    <i className="fa-solid fa-receipt text-4xl"></i>
+                  </div>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No entries found for {ledgerTab} filter</p>
                </div>
              ) : (
-               recentEarnings.map((tx) => (
+               ledgerList.map((tx) => (
                  <div key={tx.id} className="p-8 hover:bg-slate-50/50 transition-all flex items-center justify-between group">
                     <div className="flex items-center gap-5">
                        <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">
@@ -229,10 +253,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[120px]">{tx.date.split(',')[0]}</p>
                        </div>
                     </div>
-                    <div className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border ${
-                       tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                    <div className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border transition-all ${
+                       tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse'
                     }`}>
-                       {tx.status}
+                       {tx.status === 'pending' ? 'Audit In-Progress' : 'Verified'}
                     </div>
                  </div>
                ))

@@ -135,7 +135,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <Logo className="h-full w-full" />
               </div>
               <h1 className="text-4xl font-black tracking-tighter mb-2 leading-none">
-                {view === 'register' ? 'Join Network' : 'Access Node'}
+                {view === 'register' ? 'Join Network' : 'Login Now'}
               </h1>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300 opacity-60">Verified AdsPredia Gateway</p>
             </div>

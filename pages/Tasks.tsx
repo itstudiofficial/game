@@ -1,13 +1,14 @@
 
 import React, { useState, useRef } from 'react';
-import { Task, TaskType } from '../types';
+import { Task, TaskType, User } from '../types';
 
 interface TasksProps {
+  user: User;
   tasks: Task[];
   onComplete: (taskId: string, proofImage?: string, timestamp?: string) => void;
 }
 
-const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
+const Tasks: React.FC<TasksProps> = ({ user, tasks, onComplete }) => {
   const [categoryFilter, setCategoryFilter] = useState<TaskType | 'All' | 'Pending' | 'Completed' | 'Rejected'>('All');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
@@ -22,16 +23,26 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
     { id: 'Websites', label: 'Web Traffic', icon: 'fa-globe' },
     { id: 'Apps', label: 'App Installs', icon: 'fa-mobile-screen' },
     { id: 'Social Media', label: 'Social Reach', icon: 'fa-share-nodes' },
-    { id: 'Pending', label: 'Pending Assets', icon: 'fa-clock-rotate-left' },
-    { id: 'Completed', label: 'Completed', icon: 'fa-check-double' },
-    { id: 'Rejected', label: 'Rejected', icon: 'fa-circle-xmark' }
+    { id: 'Pending', label: 'Pending Audit', icon: 'fa-clock-rotate-left' },
+    { id: 'Completed', label: 'Completed', icon: 'fa-check-double' }
   ];
 
   const filteredTasks = tasks.filter(t => {
-    if (categoryFilter === 'Pending') return t.status === 'pending';
-    if (categoryFilter === 'Completed') return t.status === 'completed';
-    if (categoryFilter === 'Rejected') return t.status === 'rejected';
+    const isSubmitted = user.completedTasks?.includes(t.id);
     
+    // Logic for Pending Filter: Show tasks user has submitted
+    if (categoryFilter === 'Pending') {
+      return isSubmitted && t.status !== 'completed';
+    }
+    
+    // Logic for Completed Filter: Show tasks user has successfully finished (global task status completed)
+    if (categoryFilter === 'Completed') {
+      return isSubmitted && t.status === 'completed';
+    }
+    
+    // Default Logic: Hide already submitted tasks from the general browsing pool
+    if (isSubmitted) return false;
+
     const categoryMatch = categoryFilter === 'All' || t.type === categoryFilter;
     return categoryMatch && t.status === 'active';
   });
@@ -94,10 +105,12 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
               Real-time Task Marketplace
             </div>
             <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none mb-4">
-              Active <span className="text-indigo-600">Tasks</span>
+              {categoryFilter === 'Pending' ? 'My Audits' : 'Active Tasks'}
             </h1>
             <p className="text-slate-500 font-medium text-lg leading-relaxed">
-              Monetize your digital engagement. Complete verified micro-tasks and scale your coin vault with guaranteed payouts.
+              {categoryFilter === 'Pending' 
+                ? 'Review your submitted tasks that are currently undergoing manual verification.' 
+                : 'Monetize your digital engagement. Complete verified micro-tasks and scale your coin vault.'}
             </p>
           </div>
 
@@ -178,7 +191,6 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                     <div className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border shadow-sm ${
                       task.status === 'active' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 
                       task.status === 'completed' ? 'bg-blue-50 text-blue-500 border-blue-100' :
-                      task.status === 'rejected' ? 'bg-red-50 text-red-500 border-red-100' :
                       'bg-amber-50 text-amber-600 border-amber-100'
                     }`}>
                       {task.status.toUpperCase()}
@@ -189,7 +201,6 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                       className={`h-full rounded-full transition-all duration-1000 shadow-sm ${
                         task.status === 'active' ? 'bg-indigo-600' : 
                         task.status === 'completed' ? 'bg-emerald-500' :
-                        task.status === 'rejected' ? 'bg-red-500' :
                         'bg-amber-500'
                       }`}
                       style={{ width: `${(task.completedCount / task.totalWorkers) * 100}%` }}
@@ -198,7 +209,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                   <button className={`w-full py-5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 ${
                     task.status === 'active' ? 'bg-slate-900 group-hover:bg-indigo-600 shadow-slate-200 group-hover:shadow-indigo-200' : 'bg-slate-400 cursor-not-allowed'
                   }`}>
-                    {task.status === 'active' ? 'Execute Task' : 'Audit Entry'} <i className="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    {user.completedTasks?.includes(task.id) ? 'Audit In Progress' : 'Execute Task'} <i className="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                   </button>
                 </div>
               </div>
@@ -277,12 +288,12 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                     </a>
                     <button 
                       onClick={() => setIsSubmittingProof(true)}
-                      disabled={selectedTask.status !== 'active'}
+                      disabled={selectedTask.status !== 'active' || user.completedTasks?.includes(selectedTask.id)}
                       className={`flex-1 py-5 md:py-6 font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest transition-all ${
-                        selectedTask.status === 'active' ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        selectedTask.status === 'active' && !user.completedTasks?.includes(selectedTask.id) ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
-                      Start Verification
+                      {user.completedTasks?.includes(selectedTask.id) ? 'Already Submitted' : 'Start Verification'}
                     </button>
                   </div>
                   <p className="text-center text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">
