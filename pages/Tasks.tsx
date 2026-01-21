@@ -8,7 +8,7 @@ interface TasksProps {
 }
 
 const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
-  const [categoryFilter, setCategoryFilter] = useState<TaskType | 'All' | 'Pending'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<TaskType | 'All' | 'Pending' | 'Completed' | 'Rejected'>('All');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -16,19 +16,22 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const categories: {id: TaskType | 'All' | 'Pending', label: string, icon: string}[] = [
+  const categories: {id: TaskType | 'All' | 'Pending' | 'Completed' | 'Rejected', label: string, icon: string}[] = [
     { id: 'All', label: 'All Tasks', icon: 'fa-layer-group' },
     { id: 'YouTube', label: 'Video Ops', icon: 'fa-youtube' },
     { id: 'Websites', label: 'Web Traffic', icon: 'fa-globe' },
     { id: 'Apps', label: 'App Installs', icon: 'fa-mobile-screen' },
     { id: 'Social Media', label: 'Social Reach', icon: 'fa-share-nodes' },
-    { id: 'Pending', label: 'Pending Assets', icon: 'fa-clock-rotate-left' }
+    { id: 'Pending', label: 'Pending Assets', icon: 'fa-clock-rotate-left' },
+    { id: 'Completed', label: 'Completed', icon: 'fa-check-double' },
+    { id: 'Rejected', label: 'Rejected', icon: 'fa-circle-xmark' }
   ];
 
   const filteredTasks = tasks.filter(t => {
-    if (categoryFilter === 'Pending') {
-      return t.status === 'pending';
-    }
+    if (categoryFilter === 'Pending') return t.status === 'pending';
+    if (categoryFilter === 'Completed') return t.status === 'completed';
+    if (categoryFilter === 'Rejected') return t.status === 'rejected';
+    
     const categoryMatch = categoryFilter === 'All' || t.type === categoryFilter;
     return categoryMatch && t.status === 'active';
   });
@@ -122,7 +125,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
              <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 text-slate-200">
                 <i className="fa-solid fa-box-open text-5xl"></i>
              </div>
-             <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest">No Active Deployments</h3>
+             <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest">No {categoryFilter} Assets Found</h3>
              <p className="text-slate-300 font-bold uppercase text-[10px] tracking-widest mt-2">Check back later or change your category filter</p>
           </div>
         ) : (
@@ -133,19 +136,32 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                 onClick={() => setSelectedTask(task)}
                 className="group bg-white rounded-[3rem] p-8 border border-slate-100 shadow-sm hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-500 cursor-pointer flex flex-col h-full overflow-hidden relative"
               >
-                <div className="flex justify-between items-start mb-10">
-                  <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-indigo-50 transition-colors">
+                {/* Visual Flair Background */}
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-all duration-700"></div>
+
+                <div className="flex justify-between items-start mb-10 relative z-10">
+                  <div className="w-14 h-14 bg-slate-50 rounded-[1.25rem] flex items-center justify-center text-xl group-hover:bg-indigo-50 transition-colors border border-slate-100">
                     <i className={`fa-solid ${getIcon(task.type)}`}></i>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-black text-slate-900 tracking-tighter leading-none">
-                      {task.reward}
+                  
+                  {/* High Visibility Reward Module */}
+                  <div className="flex flex-col items-end">
+                    <div className="px-5 py-3 bg-slate-900 rounded-[1.25rem] shadow-xl group-hover:bg-indigo-600 transition-all group-hover:scale-110 duration-500 flex items-center gap-3 border border-slate-800 group-hover:border-indigo-500">
+                      <i className="fa-solid fa-coins text-yellow-400 text-xs animate-pulse"></i>
+                      <span className="text-xl font-black text-white tabular-nums tracking-tighter">
+                        {task.reward}
+                      </span>
                     </div>
-                    <div className="text-[8px] font-black text-indigo-400 uppercase tracking-[0.2em] mt-1">Units Reward</div>
+                    <span className="text-[7px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2 mr-1">Unit Value</span>
                   </div>
                 </div>
 
-                <div className="flex-grow mb-8">
+                <div className="flex-grow mb-8 relative z-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest px-2 py-0.5 bg-indigo-50 rounded border border-indigo-100">
+                      {task.type}
+                    </span>
+                  </div>
                   <h3 className="text-xl font-black text-slate-900 tracking-tight mb-3 line-clamp-1 group-hover:text-indigo-600 transition-colors">
                     {task.title}
                   </h3>
@@ -154,34 +170,37 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                   </p>
                 </div>
 
-                <div className="pt-6 border-t border-slate-50 space-y-4">
+                <div className="pt-6 border-t border-slate-50 space-y-4 relative z-10">
                   <div className="flex justify-between items-end">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                       Slots: <span className="text-slate-900">{task.completedCount} / {task.totalWorkers}</span>
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                       Fleet: <span className="text-slate-900">{task.completedCount} / {task.totalWorkers}</span>
                     </div>
-                    <div className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${
-                      task.status === 'active' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                    <div className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border shadow-sm ${
+                      task.status === 'active' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 
+                      task.status === 'completed' ? 'bg-blue-50 text-blue-500 border-blue-100' :
+                      task.status === 'rejected' ? 'bg-red-50 text-red-500 border-red-100' :
+                      'bg-amber-50 text-amber-600 border-amber-100'
                     }`}>
-                      {task.status}
+                      {task.status.toUpperCase()}
                     </div>
                   </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
                     <div 
-                      className={`h-full rounded-full transition-all duration-700 shadow-sm ${
-                        task.status === 'active' ? 'bg-indigo-600' : 'bg-amber-500'
+                      className={`h-full rounded-full transition-all duration-1000 shadow-sm ${
+                        task.status === 'active' ? 'bg-indigo-600' : 
+                        task.status === 'completed' ? 'bg-emerald-500' :
+                        task.status === 'rejected' ? 'bg-red-500' :
+                        'bg-amber-500'
                       }`}
                       style={{ width: `${(task.completedCount / task.totalWorkers) * 100}%` }}
                     ></div>
                   </div>
-                  <button className={`w-full py-4 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    task.status === 'active' ? 'bg-slate-900 group-hover:bg-indigo-600' : 'bg-slate-400 cursor-not-allowed'
+                  <button className={`w-full py-5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 ${
+                    task.status === 'active' ? 'bg-slate-900 group-hover:bg-indigo-600 shadow-slate-200 group-hover:shadow-indigo-200' : 'bg-slate-400 cursor-not-allowed'
                   }`}>
-                    View Details
+                    {task.status === 'active' ? 'Execute Task' : 'Audit Entry'} <i className="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                   </button>
                 </div>
-                
-                {/* Visual Flair */}
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all"></div>
               </div>
             ))}
           </div>
@@ -228,13 +247,19 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                         <div className="text-xl md:text-3xl font-black">{selectedTask.reward} <span className="text-[8px] md:text-[10px] text-slate-500 uppercase">Coins</span></div>
                     </div>
                     <div className={`p-5 md:p-8 rounded-[1.75rem] md:rounded-[2rem] border ${
-                      selectedTask.status === 'active' ? 'bg-indigo-50 border-indigo-100' : 'bg-amber-50 border-amber-100'
+                      selectedTask.status === 'active' ? 'bg-indigo-50 border-indigo-100' : 
+                      selectedTask.status === 'completed' ? 'bg-emerald-50 border-emerald-100' :
+                      'bg-amber-50 border-amber-100'
                     }`}>
                         <div className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest mb-1 ${
-                          selectedTask.status === 'active' ? 'text-indigo-600' : 'text-amber-600'
+                          selectedTask.status === 'active' ? 'text-indigo-600' : 
+                          selectedTask.status === 'completed' ? 'text-emerald-600' :
+                          'text-amber-600'
                         }`}>Security Level</div>
                         <div className={`text-xl md:text-3xl font-black ${
-                          selectedTask.status === 'active' ? 'text-indigo-900' : 'text-amber-900'
+                          selectedTask.status === 'active' ? 'text-indigo-900' : 
+                          selectedTask.status === 'completed' ? 'text-emerald-900' :
+                          'text-amber-900'
                         }`}>{selectedTask.status.toUpperCase()}</div>
                     </div>
                   </div>
@@ -261,7 +286,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
                     </button>
                   </div>
                   <p className="text-center text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    {selectedTask.status === 'active' ? 'You must complete the action before submitting proof' : 'This task is awaiting administrative activation'}
+                    {selectedTask.status === 'active' ? 'You must complete the action before submitting proof' : 'This task entry is archived.'}
                   </p>
                 </div>
               ) : (

@@ -11,11 +11,11 @@ interface CreateTaskProps {
     description: string;
     link?: string;
   }) => void;
-  userCoins: number;
+  userDepositBalance?: number; // Only deposit balance is allowed
   navigateTo: (page: string) => void;
 }
 
-const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo }) => {
+const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userDepositBalance = 0, navigateTo }) => {
   const [formData, setFormData] = useState({
     title: '',
     link: '',
@@ -27,10 +27,10 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
 
-  // Updated Policy: 3,000 Coins = $1.00
-  const COIN_RATE = 3000;
+  // Updated Policy: 5,000 Coins = $1.00
+  const COIN_RATE = 5000;
   const totalCost = formData.reward * formData.totalWorkers;
-  const isBalanceEnough = userCoins >= totalCost;
+  const isBalanceEnough = userDepositBalance >= totalCost;
 
   const categories: {id: TaskType, icon: string}[] = [
     { id: 'YouTube', icon: 'fa-youtube' },
@@ -41,7 +41,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
 
   const handleInitialSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (totalCost > userCoins) return alert('Insufficient vault balance. Please inject coins first.');
+    if (!isBalanceEnough) return alert('Insufficient Deposit Balance. Campaigns can only be launched from deposited funds.');
     if (!formData.title || !formData.description || !formData.link) {
       return alert('Operational parameters incomplete. Title, Link, and Instructions are required.');
     }
@@ -73,7 +73,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
             Launch <span className="text-indigo-600">Campaign</span>
           </h1>
           <p className="text-slate-500 font-medium text-lg leading-relaxed">
-            Initialize high-precision micro-tasks. Define your target engagement and authorize the escrow allocation.
+            Initialize high-precision micro-tasks. Note: Only <b>Deposit Balance</b> can be used for advertising.
           </p>
         </div>
 
@@ -185,7 +185,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                     isBalanceEnough ? 'bg-slate-900 hover:bg-indigo-600 shadow-indigo-100' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}
                 >
-                  {isBalanceEnough ? 'Initialize Deployment Protocol' : 'Vault Liquidity Low'}
+                  {isBalanceEnough ? 'Launch Campaign Now' : 'Deposit Funds Required'}
                   <i className="fa-solid fa-paper-plane text-sm"></i>
                 </button>
               </form>
@@ -223,13 +223,20 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                   <i className={`fa-solid ${isBalanceEnough ? 'fa-check-double' : 'fa-circle-exclamation'} mt-1`}></i>
                   <div className="text-[10px] font-black uppercase tracking-widest leading-relaxed">
                     {isBalanceEnough 
-                      ? "Escrow coverage verified. Authorization ready."
-                      : `Inject ${(totalCost - userCoins).toLocaleString()} coins to authorize.`
+                      ? "Deposit coverage verified. Ready to launch."
+                      : `Inject ${(totalCost - userDepositBalance).toLocaleString()} coins via Deposit to launch.`
                     }
                   </div>
                 </div>
               </div>
               <i className="fa-solid fa-vault absolute -right-12 -bottom-12 text-[15rem] text-white/5 rotate-12 pointer-events-none"></i>
+            </div>
+            
+            <div className="p-8 bg-amber-50 rounded-[2.5rem] border border-amber-100 flex items-center gap-4">
+              <i className="fa-solid fa-circle-info text-amber-500 text-xl"></i>
+              <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase">
+                Campaigns must be funded via direct deposit. Earning balances cannot be used for advertising.
+              </p>
             </div>
           </div>
         </div>
@@ -274,7 +281,7 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userCoins, navigateTo
                     <>
                       <i className="fa-solid fa-spinner fa-spin"></i> Deploying...
                     </>
-                  ) : 'Commit Deployment'}
+                  ) : 'Launch Campaign Now'}
                 </button>
               </div>
             </div>

@@ -19,6 +19,7 @@ export interface User {
   username: string;
   email: string;
   coins: number;
+  depositBalance: number; // For creating tasks
   completedTasks: string[];
   createdTasks: string[];
   isLoggedIn: boolean;

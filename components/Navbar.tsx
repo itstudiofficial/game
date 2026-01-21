@@ -56,8 +56,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
       <nav 
         className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ease-in-out ${
           scrolled 
-            ? 'py-4 bg-white/70 backdrop-blur-3xl border-b border-slate-200/40 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.08)]' 
-            : 'py-8 bg-transparent'
+            ? 'py-4 bg-white/80 backdrop-blur-2xl border-b border-slate-200/40 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.08)]' 
+            : 'py-6 bg-white/40 backdrop-blur-md border-b border-white/20'
         }`}
       >
         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
@@ -85,7 +85,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                       Ads<span className="text-indigo-600">Predia</span>
                     </span>
                     <span className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-400 mt-1 block">
-                      {user.isAdmin ? 'Admin Network' : 'Security Earning'}
+                      {user.isAdmin ? 'Admin Network' : 'Verified Marketplace'}
                     </span>
                   </div>
                 </div>
@@ -93,7 +93,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center bg-slate-100/40 p-1.5 rounded-[1.75rem] border border-slate-200/30 backdrop-blur-sm overflow-x-auto no-scrollbar max-w-[50%] xl:max-w-none">
+            <div className="hidden lg:flex items-center bg-slate-900/5 p-1.5 rounded-[1.75rem] border border-slate-200/30 backdrop-blur-sm overflow-x-auto no-scrollbar max-w-[50%] xl:max-w-none">
               {currentLinks.map(link => (
                 <button
                   key={link.id}

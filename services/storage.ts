@@ -36,6 +36,8 @@ export const storage = {
       username: 'Guest', 
       email: '', 
       coins: 0, 
+      // Fix: Added missing depositBalance property
+      depositBalance: 0,
       completedTasks: [], 
       createdTasks: [], 
       isLoggedIn: false 
