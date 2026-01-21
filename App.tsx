@@ -25,13 +25,25 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [sessionConflict, setSessionConflict] = useState(false);
 
+  // Apply SEO Config on mount
+  useEffect(() => {
+    const applySEO = async () => {
+      const seo = await storage.getSEOConfig();
+      document.title = seo.siteTitle;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.setAttribute('content', seo.metaDescription);
+      const metaKeywords = document.querySelector('meta[name="keywords"]');
+      if (metaKeywords) metaKeywords.setAttribute('content', seo.keywords);
+    };
+    applySEO();
+  }, []);
+
   // Capture Referral from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const refCode = params.get('ref');
     if (refCode) {
       sessionStorage.setItem('pending_referral', refCode.toUpperCase());
-      // Clean URL for professional look
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -61,7 +73,6 @@ const App: React.FC = () => {
       const cloudUser = await storage.syncUserFromCloud(idToSync);
       if (cloudUser) {
         const localSessionId = localStorage.getItem('ct_user_session_id');
-        // Session validation pulse
         if (cloudUser.currentSessionId && localSessionId && cloudUser.currentSessionId !== localSessionId) {
           setSessionConflict(true);
           handleLogout();
@@ -92,8 +103,6 @@ const App: React.FC = () => {
 
   const handleLogin = async (userData: { id: string; username: string; email: string; isLoggedIn: boolean; isAdmin?: boolean; referredBy?: string }) => {
     const newSessionId = Math.random().toString(36).substr(2, 9);
-    
-    // ATOMIC RECOVERY: treating Cloud as absolute truth for returning users
     const cloudUser = await storage.syncUserFromCloud(userData.id);
     
     const updatedUser: User = {
@@ -103,7 +112,6 @@ const App: React.FC = () => {
       isLoggedIn: true,
       currentSessionId: newSessionId,
       isAdmin: userData.isAdmin || cloudUser?.isAdmin || false,
-      // Fixed Coin Persistence: Priority 1: Cloud Recovery, Priority 2: 0 (New User)
       coins: cloudUser?.coins ?? 0,
       depositBalance: cloudUser?.depositBalance ?? 0,
       referredBy: userData.referredBy || cloudUser?.referredBy || '',
@@ -114,8 +122,6 @@ const App: React.FC = () => {
     
     localStorage.setItem('ct_user_session_id', newSessionId);
     setUser(updatedUser);
-    
-    // Lock session into cloud immediately
     await storage.setUser(updatedUser);
     
     setCurrentPage(updatedUser.isAdmin ? 'admin' : 'dashboard');
@@ -152,6 +158,54 @@ const App: React.FC = () => {
     storage.addTransaction(newTx);
     setTransactions(prev => [newTx, ...prev]);
     alert(`Verification submission received. Admin will process shortly.`);
+  };
+
+  const handleCreateTask = async (taskData: any) => {
+    const totalCost = taskData.reward * taskData.totalWorkers;
+    if (user.depositBalance < totalCost) return alert('Insufficient Deposit Balance.');
+
+    const newTask: Task = {
+      id: `TASK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      ...taskData,
+      creatorId: user.id,
+      completedCount: 0,
+      status: 'pending'
+    };
+
+    const updatedUser: User = {
+      ...user,
+      depositBalance: user.depositBalance - totalCost,
+      createdTasks: [...(user.createdTasks || []), newTask.id]
+    };
+
+    const updatedTasks = [...tasks, newTask];
+    
+    setUser(updatedUser);
+    setTasks(updatedTasks);
+    
+    await storage.setUser(updatedUser);
+    storage.setTasks(updatedTasks);
+    
+    alert('Campaign submitted for review!');
+    navigateTo('my-campaigns');
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Are you sure you want to terminate this campaign? No refunds for remaining quota.')) return;
+    
+    await storage.deleteTaskFromCloud(taskId);
+    const updatedUser: User = {
+      ...user,
+      createdTasks: user.createdTasks.filter(id => id !== taskId)
+    };
+    setUser(updatedUser);
+    await storage.setUser(updatedUser);
+    alert('Campaign deleted.');
+  };
+
+  const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
+    await storage.updateTaskInCloud(taskId, updates);
+    alert('Campaign updated.');
   };
 
   const handleReferralClaim = async (referredUserId: string) => {
@@ -231,13 +285,13 @@ const App: React.FC = () => {
         {currentPage === 'features' && <Features />}
         {currentPage === 'contact' && <Contact />}
         {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={handleTaskCompletion} />}
-        {currentPage === 'create' && <CreateTask onCreate={() => {}} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
+        {currentPage === 'create' && <CreateTask onCreate={handleCreateTask} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
         {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
         {currentPage === 'login' && <Login onLogin={handleLogin} />}
         {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={() => {}} transactions={transactions} />}
         {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleReferralClaim} />}
-        {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
+        {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={handleDeleteTask} onUpdateTask={handleUpdateTask} />}
         {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
         {currentPage === 'admin' && user.isAdmin && <AdminPanel />}
       </main>

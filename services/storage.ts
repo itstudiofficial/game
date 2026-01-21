@@ -1,7 +1,7 @@
 
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, get, onValue, push, update } from 'firebase/database';
-import { User, Task, Transaction } from '../types';
+import { getDatabase, ref, set, get, onValue, push, update, remove } from 'firebase/database';
+import { User, Task, Transaction, SEOConfig } from '../types';
 
 const firebaseConfig = {
   databaseURL: "https://spreddd-d7d70-default-rtdb.firebaseio.com/",
@@ -16,12 +16,12 @@ const KEYS = {
   TASKS: 'tasks',
   TRANSACTIONS: 'transactions',
   USERS: 'users',
-  ALL_TRANSACTIONS: 'all_transactions'
+  ALL_TRANSACTIONS: 'all_transactions',
+  SEO: 'seo_config'
 };
 
 export const storage = {
   // Utility to create a safe Firebase key from a FULL email
-  // This ensures user@gmail.com and user@outlook.com are different
   sanitizeId: (email: string): string => {
     return email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
   },
@@ -80,6 +80,23 @@ export const storage = {
     localStorage.setItem(KEYS.TASKS, JSON.stringify(tasks));
     set(ref(db, KEYS.TASKS), tasks);
   },
+
+  updateTaskInCloud: async (taskId: string, updates: Partial<Task>) => {
+    const snapshot = await get(ref(db, KEYS.TASKS));
+    let tasks: Task[] = snapshot.exists() ? snapshot.val() : [];
+    const index = tasks.findIndex(t => t.id === taskId);
+    if (index !== -1) {
+      tasks[index] = { ...tasks[index], ...updates };
+      await set(ref(db, KEYS.TASKS), tasks);
+    }
+  },
+
+  deleteTaskFromCloud: async (taskId: string) => {
+    const snapshot = await get(ref(db, KEYS.TASKS));
+    let tasks: Task[] = snapshot.exists() ? snapshot.val() : [];
+    const updatedTasks = tasks.filter(t => t.id !== taskId);
+    await set(ref(db, KEYS.TASKS), updatedTasks);
+  },
   
   getTransactions: (): Transaction[] => {
     const data = localStorage.getItem(KEYS.TRANSACTIONS);
@@ -124,5 +141,20 @@ export const storage = {
         callback(data);
       }
     });
+  },
+
+  getSEOConfig: async (): Promise<SEOConfig> => {
+    const snapshot = await get(ref(db, KEYS.SEO));
+    if (snapshot.exists()) return snapshot.val();
+    return {
+      siteTitle: 'Ads Predia | Earn & Advertise',
+      metaDescription: 'A high-end micro-freelancing and advertising platform.',
+      keywords: 'earn money, micro tasks, advertising, freelancers',
+      ogImage: ''
+    };
+  },
+
+  setSEOConfig: async (config: SEOConfig) => {
+    await set(ref(db, KEYS.SEO), config);
   }
 };

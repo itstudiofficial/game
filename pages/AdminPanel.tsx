@@ -1,22 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
-import { User, Task, Transaction, TaskType } from '../types';
+import { User, Task, Transaction, TaskType, SEOConfig } from '../types';
 import { storage } from '../services/storage';
 
 const AdminPanel: React.FC = () => {
-  const [view, setView] = useState<'overview' | 'users' | 'history' | 'tasks' | 'finance' | 'reviews'>('overview');
+  const [view, setView] = useState<'overview' | 'users' | 'history' | 'tasks' | 'finance' | 'reviews' | 'seo'>('overview');
   const [users, setUsers] = useState<User[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [seo, setSeo] = useState<SEOConfig>({ siteTitle: '', metaDescription: '', keywords: '', ogImage: '' });
   const [loading, setLoading] = useState(true);
+  const [savingSeo, setSavingSeo] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
-  const [adjustingUser, setAdjustingUser] = useState<User | null>(null);
-  const [adjustmentAmount, setAdjustmentAmount] = useState<string>('');
-  const [adjustmentType, setAdjustmentType] = useState<'add' | 'subtract'>('add');
-
-  const MASTER_ADMIN_EMAIL = 'ehtesham@gmail.com';
 
   const fetchData = async () => {
     setLoading(true);
@@ -25,10 +22,12 @@ const AdminPanel: React.FC = () => {
       const uniqueUsers = Array.from(new Map(u.map(user => [user.id, user])).values());
       const t = await storage.getAllGlobalTransactions();
       const tasksData = storage.getTasks();
+      const seoData = await storage.getSEOConfig();
       
       setUsers(uniqueUsers);
       setTransactions(t.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       setTasks(tasksData);
+      setSeo(seoData);
     } catch (error) {
       console.error("Failed to sync system data:", error);
     } finally {
@@ -61,6 +60,25 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleSaveSEO = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSeo(true);
+    try {
+      await storage.setSEOConfig(seo);
+      alert('SEO Configuration synchronized globally.');
+    } catch (err) {
+      alert('Failed to update SEO.');
+    } finally {
+      setSavingSeo(false);
+    }
+  };
+
+  const handleTaskAction = async (taskId: string, status: 'active' | 'rejected') => {
+    await storage.updateTaskInCloud(taskId, { status });
+    await fetchData();
+    alert(`Task status updated to ${status}`);
+  };
+
   const filteredUsers = users.filter(u => 
     u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -89,6 +107,7 @@ const AdminPanel: React.FC = () => {
               { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro' },
               { id: 'tasks', label: 'Tasks', icon: 'fa-list-check' },
               { id: 'finance', label: 'Finance', icon: 'fa-wallet' },
+              { id: 'seo', label: 'SEO', icon: 'fa-search' },
               { id: 'history', label: 'Logs', icon: 'fa-clock' }
             ].map(tab => (
               <button key={tab.id} onClick={() => setView(tab.id as any)} className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${view === tab.id ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-white'}`}>
@@ -113,6 +132,53 @@ const AdminPanel: React.FC = () => {
                  <h4 className="text-4xl font-black text-slate-900 tracking-tighter">{s.val}</h4>
                </div>
              ))}
+           </div>
+        )}
+
+        {view === 'seo' && (
+           <div className="bg-white rounded-[3.5rem] p-12 md:p-16 border border-slate-200 shadow-sm animate-in fade-in duration-500">
+              <div className="mb-12">
+                 <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Search Engine Optimization</h2>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Manage global site metadata and discoverability</p>
+              </div>
+              
+              <form onSubmit={handleSaveSEO} className="space-y-10 max-w-4xl">
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Global Site Title</label>
+                    <input 
+                      type="text" 
+                      value={seo.siteTitle} 
+                      onChange={e => setSeo({...seo, siteTitle: e.target.value})} 
+                      className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
+                    />
+                 </div>
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Meta Description</label>
+                    <textarea 
+                      rows={3}
+                      value={seo.metaDescription} 
+                      onChange={e => setSeo({...seo, metaDescription: e.target.value})} 
+                      className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner resize-none" 
+                    />
+                 </div>
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Keywords (Comma Separated)</label>
+                    <input 
+                      type="text" 
+                      value={seo.keywords} 
+                      onChange={e => setSeo({...seo, keywords: e.target.value})} 
+                      className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
+                    />
+                 </div>
+                 <button 
+                  type="submit" 
+                  disabled={savingSeo}
+                  className="px-12 py-6 bg-slate-900 text-white font-black rounded-2xl uppercase text-[10px] tracking-widest hover:bg-indigo-600 transition-all flex items-center gap-4 disabled:opacity-50"
+                 >
+                   {savingSeo ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-cloud-arrow-up"></i>}
+                   Synchronize Meta Config
+                 </button>
+              </form>
            </div>
         )}
 
@@ -190,7 +256,32 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* Other views omitted for brevity as they remain consistent with the single session implementation */}
+        {view === 'tasks' && (
+           <div className="space-y-8 animate-in fade-in duration-500">
+              <div className="flex justify-between items-center px-4">
+                 <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Operational Task Audit</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {tasks.map(t => (
+                  <div key={t.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm hover:shadow-xl transition-all">
+                     <div className="flex justify-between items-start mb-6">
+                        <span className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border ${t.status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{t.status}</span>
+                        <div className="text-right">
+                           <div className="text-2xl font-black text-slate-900">{t.reward}</div>
+                           <p className="text-[8px] font-black text-slate-400 uppercase">Per Unit</p>
+                        </div>
+                     </div>
+                     <h4 className="text-lg font-black text-slate-900 mb-2">{t.title}</h4>
+                     <p className="text-xs text-slate-500 mb-6 line-clamp-2">{t.description}</p>
+                     <div className="flex gap-3">
+                        <button onClick={() => handleTaskAction(t.id, 'active')} className="flex-1 py-3 bg-indigo-600 text-white text-[9px] font-black uppercase rounded-xl hover:bg-indigo-500 transition-all">Approve</button>
+                        <button onClick={() => handleTaskAction(t.id, 'rejected')} className="flex-1 py-3 bg-rose-50 text-rose-600 text-[9px] font-black uppercase rounded-xl border border-rose-100 hover:bg-rose-600 hover:text-white transition-all">Reject</button>
+                     </div>
+                  </div>
+                ))}
+              </div>
+           </div>
+        )}
       </div>
 
       {selectedScreenshot && (

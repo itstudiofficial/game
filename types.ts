@@ -44,3 +44,10 @@ export interface Transaction {
   status: 'pending' | 'success' | 'failed';
   date: string;
 }
+
+export interface SEOConfig {
+  siteTitle: string;
+  metaDescription: string;
+  keywords: string;
+  ogImage: string;
+}
