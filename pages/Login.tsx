@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { storage } from '../services/storage';
+import Logo from '../components/Logo';
 
 interface LoginProps {
   onLogin: (userData: { id: string; username: string; email: string; isLoggedIn: boolean; isAdmin?: boolean; referredBy?: string }) => void;
@@ -123,8 +124,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="bg-white rounded-[3.5rem] shadow-[0_80px_160px_-40px_rgba(15,23,42,0.15)] border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-700">
           <div className="bg-slate-900 p-12 text-white text-center relative overflow-hidden">
             <div className="relative z-10">
-              <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                <i className={`fa-solid ${view === 'register' ? 'fa-user-plus' : 'fa-lock-open'} text-3xl text-slate-900`}></i>
+              <div className="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl p-4 overflow-hidden">
+                <Logo className="h-full w-full" />
               </div>
               <h1 className="text-4xl font-black tracking-tighter mb-2 leading-none">
                 {view === 'register' ? 'Join Network' : 'Access Node'}

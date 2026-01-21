@@ -17,10 +17,10 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
   
   const REFERRAL_REWARD = 50;
   
-  // Branded display link as requested
-  const displayLink = `adspredia/ref=${user.id.toUpperCase()}`;
-  // Functional link for actual browser resolution
-  const functionalLink = `${window.location.origin}/?ref=${user.id.toUpperCase()}`;
+  // Branded functional link using current origin
+  const baseUrl = window.location.origin;
+  const functionalLink = `${baseUrl}/?ref=${user.id.toUpperCase()}`;
+  const displayLink = functionalLink.replace(/^https?:\/\//, '');
   
   const shareMessage = `Unlock daily earnings with Ads Predia! Join via my partner link and get 50 coins instantly: ${functionalLink}`;
 
@@ -28,6 +28,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
     setLoading(true);
     try {
       const allUsers = await storage.getAllUsers();
+      // Filter users whose referredBy matches current user's sanitized ID
       const partners = allUsers.filter(u => 
         u.referredBy && u.referredBy.toUpperCase() === user.id.toUpperCase()
       );
@@ -114,7 +115,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
                   <div className={`flex-1 min-w-0 p-8 md:p-10 rounded-[2.5rem] border-2 border-dashed transition-all duration-500 flex items-center justify-center text-center shadow-inner ${
                     copied ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200 group-hover:border-indigo-400 group-hover:bg-white'
                   }`}>
-                    <span className={`font-mono text-base md:text-2xl font-black break-all transition-colors duration-500 ${
+                    <span className={`font-mono text-sm md:text-xl font-black break-all transition-colors duration-500 ${
                       copied ? 'text-emerald-600' : 'text-slate-700 group-hover:text-indigo-600'
                     }`}>
                       {displayLink}

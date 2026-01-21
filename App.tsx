@@ -25,6 +25,17 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [sessionConflict, setSessionConflict] = useState(false);
 
+  // Capture Referral from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref');
+    if (refCode) {
+      sessionStorage.setItem('pending_referral', refCode.toUpperCase());
+      // Clean URL for professional look
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   const handleLogout = useCallback(() => {
     const guestUser: User = {
       id: storage.getUserId(),
@@ -143,6 +154,33 @@ const App: React.FC = () => {
     alert(`Verification submission received. Admin will process shortly.`);
   };
 
+  const handleReferralClaim = async (referredUserId: string) => {
+    if (user.claimedReferrals?.includes(referredUserId)) return;
+
+    const reward = 50;
+    const newTx: Transaction = {
+      id: `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      userId: user.id,
+      username: user.username,
+      amount: reward,
+      type: 'referral_claim',
+      status: 'success',
+      method: `Referral Bonus: Partner ${referredUserId}`,
+      date: new Date().toLocaleString()
+    };
+
+    const updatedUser: User = {
+      ...user,
+      coins: (user.coins || 0) + reward,
+      claimedReferrals: [...(user.claimedReferrals || []), referredUserId]
+    };
+
+    setUser(updatedUser);
+    await storage.setUser(updatedUser);
+    await storage.addTransaction(newTx);
+    setTransactions(prev => [newTx, ...prev]);
+  };
+
   const handleWalletAction = async (type: 'deposit' | 'withdraw', amount: number, method: string, accountRef?: string) => {
     const newTx: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
@@ -198,7 +236,7 @@ const App: React.FC = () => {
         {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
         {currentPage === 'login' && <Login onLogin={handleLogin} />}
         {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={() => {}} transactions={transactions} />}
-        {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={() => {}} />}
+        {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleReferralClaim} />}
         {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
         {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
         {currentPage === 'admin' && user.isAdmin && <AdminPanel />}

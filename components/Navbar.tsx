@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import Logo from './Logo';
 
 interface NavbarProps {
   currentPage: string;
@@ -77,8 +78,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                 onClick={() => handleNavClick('home')}
               >
                 <div className="flex items-center bg-white pr-6 pl-2 py-2 rounded-2xl border border-slate-100 shadow-sm group-hover:shadow-md transition-all duration-300">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-all duration-500 group-hover:rotate-12 ${user.isAdmin ? 'bg-slate-900' : 'bg-gradient-to-br from-indigo-500 to-indigo-700'}`}>
-                    <i className={`fa-solid ${user.isAdmin ? 'fa-user-shield' : 'fa-shield-halved'} text-white text-base`}></i>
+                  <div className="h-10 w-10 overflow-hidden rounded-xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6">
+                    <Logo className="h-full w-full" />
                   </div>
                   <div className="ml-3">
                     <span className="text-xl font-black tracking-tighter text-slate-900 block leading-none">
@@ -226,8 +227,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
           <div className="fixed top-4 left-4 bottom-4 w-[85%] max-w-sm bg-white shadow-2xl flex flex-col animate-in slide-in-from-left-8 duration-500 rounded-[3rem] border border-slate-100 overflow-hidden">
              <div className="p-10 flex items-center justify-between border-b border-slate-50">
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${user.isAdmin ? 'bg-indigo-900' : 'bg-indigo-600'}`}>
-                    <i className={`fa-solid ${user.isAdmin ? 'fa-user-shield' : 'fa-shield-halved'} text-white text-lg`}></i>
+                  <div className="h-12 w-12 flex items-center justify-center">
+                    <Logo className="h-full w-full" />
                   </div>
                   <span className="text-2xl font-black text-slate-900 tracking-tighter">AdsPredia</span>
                 </div>

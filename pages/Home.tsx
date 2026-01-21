@@ -1,5 +1,6 @@
 
 import React from 'react';
+import Logo from '../components/Logo';
 
 const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({ onStart, isLoggedIn }) => {
   return (
@@ -40,7 +41,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
           <div className="flex flex-col items-center text-center">
             <div className="inline-flex items-center gap-4 px-6 py-3 rounded-full bg-white shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] border border-slate-100 mb-12 animate-in fade-in slide-in-from-top-6 duration-700">
               <div className="flex items-center gap-2">
-                <i className="fa-solid fa-shield-halved text-indigo-600 text-xs"></i>
+                <Logo className="h-5 w-5" />
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900">
                   Ads<span className="text-indigo-600">Predia</span>
                 </span>
@@ -88,7 +89,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
                 onClick={() => onStart(isLoggedIn ? 'create' : 'login')}
                 className="w-full sm:w-auto px-16 py-8 bg-white text-slate-900 border-2 border-slate-100 rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.4em] hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-5 shadow-xl shadow-slate-200/40"
               >
-                <i className="fa-solid fa-bullhorn text-indigo-600"></i>
+                <Logo className="h-6 w-6" />
                 Launch Campaign
               </button>
             </div>

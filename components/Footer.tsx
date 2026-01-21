@@ -1,5 +1,6 @@
 
 import React from 'react';
+import Logo from './Logo';
 
 interface FooterProps {
   setCurrentPage: (page: string) => void;
@@ -27,7 +28,7 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
           {/* Brand Column */}
           <div className="md:col-span-4">
             <div className="flex items-center mb-6 cursor-pointer" onClick={() => handleNavClick('home')}>
-              <i className="fa-solid fa-coins text-indigo-400 text-2xl mr-2"></i>
+              <Logo className="h-10 w-10 mr-3" />
               <span className="text-2xl font-black text-white tracking-tighter">Ads<span className="text-indigo-400">Predia</span></span>
             </div>
             <p className="text-sm leading-relaxed mb-8 max-w-sm">
