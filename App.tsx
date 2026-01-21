@@ -21,8 +21,13 @@ import { storage } from './services/storage';
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState<User>(storage.getUser());
-  const [tasks, setTasks] = useState<Task[]>(storage.getTasks());
+  const [tasks, setTasks] = useState<Task[]>(tasksData()); // Initial tasks data
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
+
+  // Helper for initial data if needed
+  function tasksData() {
+    return storage.getTasks();
+  }
 
   useEffect(() => {
     const handleUrlReferral = () => {
@@ -60,7 +65,8 @@ const App: React.FC = () => {
       depositBalance: user.isLoggedIn ? user.depositBalance : 0,
       referredBy: (userData.referredBy || '').toUpperCase().trim(),
       completedTasks: user.completedTasks || [],
-      createdTasks: user.createdTasks || []
+      createdTasks: user.createdTasks || [],
+      claimedReferrals: user.claimedReferrals || []
     };
     
     setUser(updatedUser);
@@ -73,12 +79,12 @@ const App: React.FC = () => {
       id: storage.getUserId(),
       username: 'Guest',
       email: '',
-      isLoggedIn: false,
-      isAdmin: false,
       coins: 0,
       depositBalance: 0,
       completedTasks: [],
-      createdTasks: []
+      createdTasks: [],
+      claimedReferrals: [],
+      isLoggedIn: false
     };
     setUser(guestUser);
     setCurrentPage('home');
@@ -126,6 +132,59 @@ const App: React.FC = () => {
     setTransactions([newTx, ...transactions]);
     alert('Campaign launched! Status: PENDING review.');
     setCurrentPage('my-campaigns');
+  };
+
+  const handleTaskCompletion = (taskId: string, submissionTimestamp?: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const newTx: Transaction = {
+      id: `SUB-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      userId: user.id,
+      username: user.username,
+      amount: task.reward,
+      type: 'earn',
+      status: 'pending',
+      method: `Proof: ${task.type}`,
+      date: submissionTimestamp || new Date().toLocaleString()
+    };
+
+    const updatedUser = {
+      ...user,
+      completedTasks: [...(user.completedTasks || []), taskId]
+    };
+    
+    setUser(updatedUser);
+    storage.addTransaction(newTx);
+    setTransactions([newTx, ...transactions]);
+    
+    alert(`Submission received at ${newTx.date}. Our audit team will verify your proof shortly.`);
+  };
+
+  const handleClaimReferral = (referredUserId: string) => {
+    const REFERRAL_REWARD = 50;
+    
+    const newTx: Transaction = {
+      id: `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      userId: user.id,
+      username: user.username,
+      amount: REFERRAL_REWARD,
+      type: 'referral_claim',
+      status: 'success',
+      method: `Partner Claim: ${referredUserId}`,
+      date: new Date().toLocaleString()
+    };
+
+    const updatedUser = {
+      ...user,
+      coins: user.coins + REFERRAL_REWARD,
+      claimedReferrals: [...(user.claimedReferrals || []), referredUserId]
+    };
+
+    setUser(updatedUser);
+    storage.addTransaction(newTx);
+    setTransactions([newTx, ...transactions]);
+    storage.setUser(updatedUser); // Force persistence
   };
 
   const handleWalletAction = (type: 'deposit' | 'withdraw', amount: number, method: string) => {
@@ -185,13 +244,13 @@ const App: React.FC = () => {
         {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
         {currentPage === 'features' && <Features />}
         {currentPage === 'contact' && <Contact />}
-        {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={(id) => { /* Logic */ }} />}
+        {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={handleTaskCompletion} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} />}
         {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={deleteTask} onUpdateTask={updateTask} />}
         {currentPage === 'login' && <Login onLogin={handleLogin} />}
         {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={handleSpinResult} transactions={transactions} />}
-        {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} />}
+        {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleClaimReferral} />}
         {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={deleteTask} onUpdateTask={updateTask} />}
         {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
         {currentPage === 'admin' && user.isAdmin && <AdminPanel />}

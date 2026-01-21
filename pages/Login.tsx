@@ -22,25 +22,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const pendingRef = sessionStorage.getItem('pending_referral');
     if (pendingRef) {
       setHasReferral(true);
+      setView('register');
     }
   }, []);
 
   const validateEmail = (emailStr: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
-  };
-
-  const handleResetPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateEmail(email)) {
-      setEmailError('Invalid email format detected.');
-      return;
-    }
-    setIsSubmitting(true);
-    // Simulate API call for password reset
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setResetSent(true);
-    }, 1500);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -49,44 +36,49 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     const pendingRef = sessionStorage.getItem('pending_referral') || '';
 
-    // Admin Credentials Check
-    if (view === 'login' && email === 'ehtesham@adspredia.site' && password === 'admin123') {
+    // Hard-Coded Authentic Admin Credentials Check
+    if (view === 'login' && email === 'ehtesham@gmail.com' && password === 'admin12') {
       setIsSubmitting(true);
       setTimeout(() => {
         onLogin({
-          username: 'Admin Ehtesham',
+          username: 'System Admin (Ehtesham)',
           email: email,
           isLoggedIn: true,
           isAdmin: true
         });
         setIsSubmitting(false);
-      }, 1500);
+      }, 1200);
       return;
     }
 
+    // Comprehensive Client-Side Validation
     if (view === 'register') {
-      if (!username || !email || !password) {
-        alert('Required parameters missing for account creation.');
+      if (!username.trim()) {
+        setEmailError('Please provide a display name.');
         return;
       }
-      if (!validateEmail(email)) {
-        setEmailError('Invalid email format detected.');
+      if (!email.trim() || !validateEmail(email)) {
+        setEmailError('A valid email identity is required for registration.');
         return;
       }
-    } else {
-      if (!email || !password) {
-        alert('Login credentials required.');
+      if (password.length < 6) {
+        setEmailError('Secret key must be at least 6 characters.');
         return;
       }
-      if (!validateEmail(email)) {
-        setEmailError('Invalid email format.');
+    } else if (view === 'login') {
+      if (!email.trim() || !validateEmail(email)) {
+        setEmailError('Please enter a valid email address.');
+        return;
+      }
+      if (!password) {
+        setEmailError('Security key is required.');
         return;
       }
     }
     
     setIsSubmitting(true);
     
-    // Simulating Secure API verification
+    // Standard User API Simulation
     setTimeout(() => {
       onLogin({
         username: view === 'register' ? username : email.split('@')[0],
@@ -99,235 +91,118 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }, 1500); 
   };
 
+  const handleResetPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateEmail(email)) {
+      setEmailError('Invalid email format detected.');
+      return;
+    }
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setResetSent(true);
+    }, 1500);
+  };
+
   const switchView = (newView: AuthView) => {
     setView(newView);
     setEmailError('');
     setResetSent(false);
     setIsSubmitting(false);
+    setUsername('');
+    setEmail('');
+    setPassword('');
   };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-4 bg-slate-50 overflow-hidden">
-      
-      {/* Dynamic Background Elements */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse"></div>
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[100px] -translate-y-1/4 translate-x-1/4"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[100px] translate-y-1/4 -translate-x-1/4"></div>
       </div>
 
       <div className="w-full max-w-xl relative z-10">
-        {hasReferral && (
+        {hasReferral && view === 'register' && (
           <div className="mb-6 flex justify-center animate-bounce">
             <div className="px-6 py-2 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 flex items-center gap-3">
               <i className="fa-solid fa-gift"></i>
-              Referral Link Active: +50 Coins pending
+              Referral Bonus Active: +50 Coins
             </div>
           </div>
         )}
 
         <div className="bg-white rounded-[3.5rem] shadow-[0_80px_160px_-40px_rgba(15,23,42,0.15)] border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-700">
-          
           <div className="bg-slate-900 p-12 md:p-16 text-white text-center relative overflow-hidden group">
             <div className="relative z-10">
-              <div className="w-20 h-20 md:w-24 md:h-24 bg-white rounded-[2rem] md:rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-3xl transform transition-all duration-700 group-hover:rotate-6 group-hover:scale-110">
-                <i className={`fa-solid ${
-                  view === 'register' ? 'fa-user-plus' : 
-                  view === 'forgot-password' ? 'fa-key-skeleton' : 'fa-lock-open'
-                } text-3xl md:text-4xl text-slate-900`}></i>
+              <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-3xl transition-all duration-700 group-hover:rotate-6">
+                <i className={`fa-solid ${view === 'register' ? 'fa-user-plus' : view === 'forgot-password' ? 'fa-key-skeleton' : 'fa-lock-open'} text-3xl text-slate-900`}></i>
               </div>
               <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-4">
-                {view === 'register' ? 'Create Account' : 
-                 view === 'forgot-password' ? 'Reset Password' : 'Welcome Back'}
+                {view === 'register' ? 'Signup' : view === 'forgot-password' ? 'Reset' : 'Login'}
               </h1>
-              <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-white/5 rounded-full border border-white/10 backdrop-blur-md">
-                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
-                <p className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] text-indigo-200">
-                  {view === 'register' ? 'Join our earning network' : 
-                   view === 'forgot-password' ? 'Security Recovery Protocol' : 'Authorized Access Required'}
-                </p>
-              </div>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-200 opacity-60">Authorized AdsPredia Node Access</p>
             </div>
-            
-            {/* Visual Flair */}
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]"></div>
-            <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl"></div>
+            <i className="fa-solid fa-shield absolute -right-10 -bottom-10 text-[15rem] text-white/5 rotate-12"></i>
           </div>
           
           <div className="p-8 md:p-16">
-            {view === 'forgot-password' ? (
-              <div className="space-y-8 animate-in slide-in-from-right-8 duration-500">
-                {!resetSent ? (
-                  <form onSubmit={handleResetPassword} className="space-y-8">
-                    <p className="text-slate-500 text-sm font-medium text-center leading-relaxed">
-                      Enter your email address. We will send you a secure link to reset your password.
-                    </p>
-                    <div className="space-y-3">
-                      <label htmlFor="reset-email" className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3 px-2">Email Address</label>
-                      <div className="relative group">
-                        <span className="absolute inset-y-0 left-0 pl-7 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
-                          <i className="fa-solid fa-envelope text-base"></i>
-                        </span>
-                        <input 
-                          id="reset-email"
-                          type="email" 
-                          disabled={isSubmitting}
-                          value={email}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            if (emailError) setEmailError('');
-                          }}
-                          placeholder="your@email.com" 
-                          className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl focus:ring-8 focus:ring-indigo-600/5 outline-none transition-all disabled:opacity-50 font-black text-slate-800 placeholder-slate-300 shadow-inner"
-                          required
-                        />
-                      </div>
-                      {emailError && <p className="text-red-500 text-[9px] font-black uppercase px-4">{emailError}</p>}
-                    </div>
-                    <button 
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full py-6 bg-slate-900 text-white font-black rounded-2xl hover:bg-indigo-600 transition-all shadow-xl flex items-center justify-center gap-4 uppercase tracking-widest text-[10px]"
-                    >
-                      {isSubmitting ? <i className="fa-solid fa-spinner fa-spin"></i> : 'Send Reset Link'}
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => switchView('login')}
-                      className="w-full text-center text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-slate-900 transition-colors"
-                    >
-                      Back to Login
-                    </button>
-                  </form>
-                ) : (
-                  <div className="text-center space-y-8 animate-in zoom-in duration-500">
-                    <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto text-3xl border border-emerald-100 shadow-sm">
-                      <i className="fa-solid fa-paper-plane"></i>
-                    </div>
-                    <div className="space-y-4">
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight">Email Dispatched</h3>
-                      <p className="text-slate-500 text-sm font-medium leading-relaxed">
-                        A secure recovery link has been sent to <span className="text-indigo-600 font-bold">{email}</span>. 
-                        Please check your inbox.
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => switchView('login')}
-                      className="w-full py-6 bg-slate-50 text-slate-900 border border-slate-200 font-black rounded-2xl hover:bg-white hover:shadow-lg transition-all text-[10px] uppercase tracking-widest"
-                    >
-                      Return to Login
-                    </button>
-                  </div>
-                )}
+            {view === 'forgot-password' && resetSent ? (
+              <div className="text-center py-10 animate-in zoom-in duration-500">
+                <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl border border-emerald-100 shadow-sm">
+                  <i className="fa-solid fa-paper-plane"></i>
+                </div>
+                <h3 className="text-xl font-black text-slate-900 mb-4 tracking-tight">Email Sent</h3>
+                <p className="text-sm font-bold text-slate-400 mb-10">Check your inbox for your secure reset link.</p>
+                <button onClick={() => switchView('login')} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Return to login</button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-500">
+              <form onSubmit={view === 'forgot-password' ? handleResetPassword : handleSubmit} className="space-y-8 animate-in fade-in duration-500">
                 <div className="space-y-6">
                   {view === 'register' && (
-                    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                      <label htmlFor="username" className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3 px-2">Full Name</label>
-                      <div className="relative group">
-                        <span className="absolute inset-y-0 left-0 pl-7 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
-                          <i className="fa-solid fa-id-card text-base"></i>
-                        </span>
-                        <input 
-                          id="username"
-                          type="text" 
-                          disabled={isSubmitting}
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          placeholder="e.g. John Doe" 
-                          className="w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl focus:ring-8 focus:ring-indigo-600/5 outline-none transition-all disabled:opacity-50 font-black text-slate-800 placeholder-slate-300 shadow-inner"
-                          required={view === 'register'}
-                        />
+                    <div className="animate-in slide-in-from-top-4 duration-300">
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3 px-2">Display Name</label>
+                      <div className="relative">
+                        <i className="fa-solid fa-user absolute left-6 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                        <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Full Name" className="w-full pl-14 pr-8 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl outline-none font-black text-slate-800 shadow-inner" required />
                       </div>
                     </div>
                   )}
-
                   <div>
-                    <label htmlFor="email" className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3 px-2">Email Address</label>
-                    <div className="relative group">
-                      <span className="absolute inset-y-0 left-0 pl-7 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
-                        <i className="fa-solid fa-envelope text-base"></i>
-                      </span>
-                      <input 
-                        id="email"
-                        type="email" 
-                        autoComplete="email"
-                        disabled={isSubmitting}
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          if (emailError) setEmailError('');
-                        }}
-                        placeholder="your@email.com" 
-                        className={`w-full pl-14 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl focus:ring-8 ${emailError ? 'focus:ring-red-500 border-red-100' : 'focus:ring-indigo-600/5'} outline-none transition-all disabled:opacity-50 font-black text-slate-800 placeholder-slate-300 shadow-inner`}
-                        required
-                      />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3 px-2">Email Address</label>
+                    <div className="relative">
+                      <i className="fa-solid fa-envelope absolute left-6 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" className="w-full pl-14 pr-8 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl outline-none font-black text-slate-800 shadow-inner" required />
                     </div>
-                    {emailError && (
-                      <p className="text-red-500 text-[9px] mt-3 font-black uppercase tracking-widest flex items-center px-4">
-                        <i className="fa-solid fa-triangle-exclamation mr-2"></i>
-                        {emailError}
-                      </p>
-                    )}
                   </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-3 px-2">
-                      <label htmlFor="password" className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Password</label>
-                      {view === 'login' && (
-                        <button 
-                          type="button" 
-                          onClick={() => switchView('forgot-password')}
-                          className="text-[9px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-700 transition-colors"
-                        >
-                          Forgot Password?
+                  {view !== 'forgot-password' && (
+                    <div className="animate-in slide-in-from-top-4 duration-300">
+                      <div className="flex justify-between px-2 mb-3">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Password</label>
+                        {view === 'login' && (
+                          <button type="button" onClick={() => switchView('forgot-password')} className="text-[9px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Forgot?</button>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <i className="fa-solid fa-key absolute left-6 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                        <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full pl-14 pr-14 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl outline-none font-black text-slate-800 shadow-inner" required />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-600 transition-colors">
+                          <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                         </button>
-                      )}
+                      </div>
                     </div>
-                    <div className="relative group">
-                      <span className="absolute inset-y-0 left-0 pl-7 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition-colors">
-                        <i className="fa-solid fa-key text-base"></i>
-                      </span>
-                      <input 
-                        id="password"
-                        type={showPassword ? "text" : "password"} 
-                        autoComplete={view === 'register' ? "new-password" : "current-password"}
-                        disabled={isSubmitting}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password" 
-                        className="w-full pl-14 pr-16 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-100 rounded-2xl focus:ring-8 focus:ring-indigo-600/5 outline-none transition-all disabled:opacity-50 font-black text-slate-800 placeholder-slate-300 shadow-inner"
-                        required
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-300 hover:text-indigo-600 transition-all"
-                      >
-                        <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'} text-lg`}></i>
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
-
-                <button 
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`group relative w-full py-6 bg-slate-900 text-white font-black rounded-2xl hover:bg-indigo-600 transition-all shadow-[0_30px_60px_-15px_rgba(15,23,42,0.3)] hover:shadow-indigo-500/40 flex items-center justify-center gap-5 transform active:scale-[0.98] ${isSubmitting ? 'opacity-70 cursor-wait' : ''}`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+                
+                {emailError && <p className="text-rose-500 text-[10px] font-black uppercase text-center bg-rose-50 py-3 rounded-xl border border-rose-100 animate-in shake-in duration-300">{emailError}</p>}
+                
+                <button type="submit" disabled={isSubmitting} className="w-full py-6 bg-slate-900 text-white font-black rounded-2xl hover:bg-indigo-600 transition-all shadow-xl flex items-center justify-center gap-4 uppercase tracking-[0.4em] text-[10px] active:scale-95 disabled:opacity-50">
                   {isSubmitting ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin text-lg"></i>
-                      <span className="text-[10px] uppercase tracking-[0.4em]">{view === 'register' ? 'Creating Account...' : 'Logging in...'}</span>
-                    </>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                  ) : view === 'register' ? (
+                    <>Create Account <i className="fa-solid fa-chevron-right"></i></>
+                  ) : view === 'forgot-password' ? (
+                    <>Reset Password <i className="fa-solid fa-paper-plane"></i></>
                   ) : (
-                    <>
-                      <span className="text-[10px] uppercase tracking-[0.4em]">{view === 'register' ? 'Sign Up' : 'Login'}</span>
-                      <i className="fa-solid fa-arrow-right text-indigo-400 group-hover:translate-x-1.5 transition-transform"></i>
-                    </>
+                    <>Login <i className="fa-solid fa-lock-open"></i></>
                   )}
                 </button>
               </form>
@@ -335,27 +210,31 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <div className="p-10 text-center bg-slate-50/50 border-t border-slate-100">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-              {view === 'register' ? 'Already have an account?' : 'Need an account?'} 
-              <button 
-                type="button"
-                onClick={() => !isSubmitting && switchView(view === 'register' ? 'login' : 'register')}
-                className="text-indigo-600 font-black ml-3 hover:text-indigo-800 transition-colors focus:outline-none border-b border-indigo-100 pb-0.5"
-              >
-                {view === 'register' ? 'Login' : 'Sign Up'}
-              </button>
-            </p>
+            {view === 'login' ? (
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Don't have an account?{' '}
+                <button onClick={() => switchView('register')} className="text-indigo-600 hover:underline">Signup Now</button>
+              </p>
+            ) : (
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Already registered?{' '}
+                <button onClick={() => switchView('login')} className="text-indigo-600 hover:underline">Login Here</button>
+              </p>
+            )}
           </div>
         </div>
+        
+        <div className="mt-10 flex items-center justify-center gap-8 opacity-40">
+           <div className="flex items-center gap-2">
+             <i className="fa-solid fa-circle-check text-[10px] text-emerald-500"></i>
+             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">SSL Encrypted</span>
+           </div>
+           <div className="flex items-center gap-2">
+             <i className="fa-solid fa-shield-halved text-[10px] text-indigo-500"></i>
+             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Secure Protocol</span>
+           </div>
+        </div>
       </div>
-      
-      <style>{`
-        @keyframes shimmer {
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
     </div>
   );
 };

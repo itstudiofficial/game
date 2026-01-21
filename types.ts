@@ -22,6 +22,7 @@ export interface User {
   depositBalance: number; // For creating tasks
   completedTasks: string[];
   createdTasks: string[];
+  claimedReferrals?: string[]; // IDs of users whose referral bonus has been claimed
   isLoggedIn: boolean;
   isAdmin?: boolean;
   lastSpinTimestamp?: number;
@@ -35,7 +36,7 @@ export interface Transaction {
   userId: string;
   username?: string;
   amount: number;
-  type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin';
+  type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin' | 'referral_claim';
   method?: string;
   status: 'pending' | 'success' | 'failed';
   date: string;
