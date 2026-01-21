@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { User, Task, Transaction } from '../types';
+import { User, Task, Transaction, TaskType } from '../types';
 
 interface DashboardProps {
   user: User;
@@ -11,7 +11,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
-  // Guard clause for non-logged in state to prevent "not showing" issues
+  // Guard clause for non-logged in state
   if (!user || !user.isLoggedIn) {
     return (
       <div className="pt-40 pb-20 flex flex-col items-center justify-center text-center px-6">
@@ -37,6 +37,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
 
   const progressToNextDollar = ((earnings.total % COIN_RATE) / COIN_RATE) * 100;
 
+  // Recent Earnings List
+  const recentEarnings = useMemo(() => {
+    return transactions
+      .filter(tx => tx.type === 'earn')
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 6);
+  }, [transactions]);
+
   // Analysis Data: Earnings by Category
   const categoryStats = useMemo(() => {
     const counts: Record<string, number> = { 'YouTube': 0, 'Websites': 0, 'Apps': 0, 'Social Media': 0 };
@@ -49,8 +57,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
     return counts;
   }, [transactions]);
 
-  // Explicitly cast Object.values to number[] to satisfy Math.max typing requirements
   const maxCatValue = Math.max(...(Object.values(categoryStats) as number[]), 1);
+
+  const getCategoryIcon = (methodStr: string = '') => {
+    if (methodStr.includes('YouTube')) return 'fa-youtube text-rose-500';
+    if (methodStr.includes('Websites')) return 'fa-globe text-indigo-500';
+    if (methodStr.includes('Apps')) return 'fa-mobile-screen text-emerald-500';
+    if (methodStr.includes('Social Media')) return 'fa-share-nodes text-blue-500';
+    return 'fa-coins text-amber-500';
+  };
 
   return (
     <div className="pt-24 pb-20 min-h-screen bg-slate-50">
@@ -178,6 +193,54 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
              <div className="mt-10 pt-6 border-t border-slate-50 text-center">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Analysis synchronized with global ledger</p>
              </div>
+          </div>
+        </div>
+
+        {/* RECENTLY EARNING SECTION */}
+        <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-8 md:p-12 border-b border-slate-50 flex justify-between items-center bg-slate-50/20">
+             <div>
+                <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Recently Earning</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Live yield from network operations</p>
+             </div>
+             <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-300 shadow-inner">
+                <i className="fa-solid fa-receipt text-xl"></i>
+             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+             {recentEarnings.length === 0 ? (
+               <div className="col-span-full py-20 text-center">
+                  <i className="fa-solid fa-ghost text-4xl text-slate-100 mb-4"></i>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No earning events detected in current epoch</p>
+               </div>
+             ) : (
+               recentEarnings.map((tx) => (
+                 <div key={tx.id} className="p-8 hover:bg-slate-50/50 transition-all flex items-center justify-between group">
+                    <div className="flex items-center gap-5">
+                       <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">
+                          <i className={`fa-solid ${getCategoryIcon(tx.method)}`}></i>
+                       </div>
+                       <div>
+                          <div className="flex items-center gap-2 mb-1">
+                             <span className="text-lg font-black text-slate-900 tabular-nums">+{tx.amount.toLocaleString()}</span>
+                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Coins</span>
+                          </div>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[120px]">{tx.date.split(',')[0]}</p>
+                       </div>
+                    </div>
+                    <div className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border ${
+                       tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                    }`}>
+                       {tx.status}
+                    </div>
+                 </div>
+               ))
+             )}
+          </div>
+          
+          <div className="p-6 bg-slate-50 text-center border-t border-slate-100">
+             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Verification managed by AI-Node Cluster-07</span>
           </div>
         </div>
 
