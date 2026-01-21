@@ -148,7 +148,7 @@ const App: React.FC = () => {
       amount: task.reward,
       type: 'earn',
       status: 'pending',
-      method: `Proof: ${task.type}`,
+      method: `Task: ${task.title} | ${task.type}`,
       proofImage: proofImage,
       date: submissionTimestamp || new Date().toLocaleString()
     };
@@ -317,7 +317,7 @@ const App: React.FC = () => {
         {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
         {currentPage === 'features' && <Features />}
         {currentPage === 'contact' && <Contact />}
-        {currentPage === 'tasks' && <Tasks user={user} tasks={tasks.filter(t => t.status === 'active')} onComplete={handleTaskCompletion} />}
+        {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={handleTaskCompletion} />}
         {currentPage === 'create' && <CreateTask onCreate={handleCreateTask} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
         {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
         {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
