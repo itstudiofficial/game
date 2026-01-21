@@ -47,19 +47,29 @@ export const storage = {
   setUser: async (user: User) => {
     localStorage.setItem(KEYS.USER, JSON.stringify(user));
     if (user.isLoggedIn) {
-      // Logic to prevent regular users from claiming Admin flag in cloud
       const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
-      
-      // If the user is the hardcoded admin, use a fixed stable ID or mark explicitly
       if (user.email.toLowerCase().trim() === 'ehtesham@gmail.com') {
         const adminUpdates = { ...user, isAdmin: true };
         await set(cloudRef, adminUpdates);
       } else {
-        // Force isAdmin to false for any other user attempt to prevent privilege escalation
-        const standardUser = { ...user, isAdmin: false };
+        // Prevent normal users from writing isAdmin: true
+        const currentData = await get(cloudRef);
+        const isAdmin = currentData.exists() ? currentData.val().isAdmin : false;
+        const standardUser = { ...user, isAdmin: isAdmin };
         await set(cloudRef, standardUser);
       }
     }
+  },
+
+  syncUserFromCloud: async (userId: string): Promise<User | null> => {
+    const cloudRef = ref(db, `${KEYS.USERS}/${userId}`);
+    const snapshot = await get(cloudRef);
+    if (snapshot.exists()) {
+      const cloudData = snapshot.val();
+      localStorage.setItem(KEYS.USER, JSON.stringify(cloudData));
+      return cloudData;
+    }
+    return null;
   },
   
   getTasks: (): Task[] => {
@@ -117,9 +127,8 @@ export const storage = {
   },
 
   updateUserInCloud: async (userId: string, updates: Partial<User>) => {
-    // Admin flag protection during updates
     if (updates.isAdmin !== undefined) {
-      delete updates.isAdmin; // Never allow updates to change admin status via standard update path
+      delete updates.isAdmin;
     }
     await update(ref(db, `${KEYS.USERS}/${userId}`), updates);
   },

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -21,13 +21,26 @@ import { storage } from './services/storage';
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState<User>(storage.getUser());
-  const [tasks, setTasks] = useState<Task[]>(tasksData()); // Initial tasks data
+  const [tasks, setTasks] = useState<Task[]>(storage.getTasks());
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
 
-  // Helper for initial data if needed
-  function tasksData() {
-    return storage.getTasks();
-  }
+  const refreshUserBalance = useCallback(async () => {
+    if (user.isLoggedIn) {
+      const updatedUser = await storage.syncUserFromCloud(user.id);
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+    }
+  }, [user.id, user.isLoggedIn]);
+
+  // Poll for balance updates every 30 seconds when logged in
+  useEffect(() => {
+    if (user.isLoggedIn) {
+      refreshUserBalance();
+      const interval = setInterval(refreshUserBalance, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user.isLoggedIn, refreshUserBalance]);
 
   useEffect(() => {
     const handleUrlReferral = () => {
@@ -57,16 +70,18 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = async (userData: { username: string; email?: string; isLoggedIn: boolean, isAdmin?: boolean, referredBy?: string }) => {
+    const cloudUser = await storage.syncUserFromCloud(userData.email?.split('@')[0] || userData.username);
+    
     const updatedUser: User = {
       ...user,
       ...userData,
       isLoggedIn: true,
-      coins: user.isLoggedIn ? user.coins : 0,
-      depositBalance: user.isLoggedIn ? user.depositBalance : 0,
+      coins: cloudUser?.coins ?? user.coins,
+      depositBalance: cloudUser?.depositBalance ?? user.depositBalance,
       referredBy: (userData.referredBy || '').toUpperCase().trim(),
-      completedTasks: user.completedTasks || [],
-      createdTasks: user.createdTasks || [],
-      claimedReferrals: user.claimedReferrals || []
+      completedTasks: cloudUser?.completedTasks || [],
+      createdTasks: cloudUser?.createdTasks || [],
+      claimedReferrals: cloudUser?.claimedReferrals || []
     };
     
     setUser(updatedUser);
@@ -157,13 +172,11 @@ const App: React.FC = () => {
     setUser(updatedUser);
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
-    
-    alert(`Submission received at ${newTx.date}. Our audit team will verify your proof shortly.`);
+    alert(`Submission received. Our audit team will verify your proof shortly.`);
   };
 
   const handleClaimReferral = (referredUserId: string) => {
     const REFERRAL_REWARD = 50;
-    
     const newTx: Transaction = {
       id: `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
       userId: user.id,
@@ -174,20 +187,18 @@ const App: React.FC = () => {
       method: `Partner Claim: ${referredUserId}`,
       date: new Date().toLocaleString()
     };
-
     const updatedUser = {
       ...user,
       coins: user.coins + REFERRAL_REWARD,
       claimedReferrals: [...(user.claimedReferrals || []), referredUserId]
     };
-
     setUser(updatedUser);
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
-    storage.setUser(updatedUser); // Force persistence
+    storage.setUser(updatedUser);
   };
 
-  const handleWalletAction = (type: 'deposit' | 'withdraw', amount: number, method: string) => {
+  const handleWalletAction = async (type: 'deposit' | 'withdraw', amount: number, method: string) => {
     const newTx: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
       userId: user.id,
@@ -201,7 +212,9 @@ const App: React.FC = () => {
     if (type === 'withdraw') {
       if (amount < 5000) return alert('Minimum withdrawal is 5,000 coins ($1.00)');
       if (user.coins < amount) return alert('Insufficient earning balance.');
-      setUser({ ...user, coins: user.coins - amount });
+      const updatedUser = { ...user, coins: user.coins - amount };
+      setUser(updatedUser);
+      await storage.setUser(updatedUser);
     }
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
@@ -218,23 +231,11 @@ const App: React.FC = () => {
       status: 'success',
       date: new Date().toLocaleString()
     };
-    setUser({ ...user, coins: user.coins + reward });
+    const updatedUser = { ...user, coins: user.coins + reward };
+    setUser(updatedUser);
     storage.addTransaction(newTx);
     setTransactions([newTx, ...transactions]);
-  };
-
-  const deleteTask = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this campaign?')) {
-      const updatedTasks = tasks.filter(t => t.id !== id);
-      setTasks(updatedTasks);
-      storage.setTasks(updatedTasks);
-    }
-  };
-
-  const updateTask = (id: string, data: Partial<Task>) => {
-    const updatedTasks = tasks.map(t => t.id === id ? { ...t, ...data } : t);
-    setTasks(updatedTasks);
-    storage.setTasks(updatedTasks);
+    storage.setUser(updatedUser);
   };
 
   return (
@@ -246,12 +247,12 @@ const App: React.FC = () => {
         {currentPage === 'contact' && <Contact />}
         {currentPage === 'tasks' && <Tasks tasks={tasks.filter(t => t.status === 'active')} onComplete={handleTaskCompletion} />}
         {currentPage === 'create' && <CreateTask onCreate={createTask} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
-        {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} />}
-        {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={deleteTask} onUpdateTask={updateTask} />}
+        {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} onRefresh={refreshUserBalance} />}
+        {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
         {currentPage === 'login' && <Login onLogin={handleLogin} />}
         {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={handleSpinResult} transactions={transactions} />}
         {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleClaimReferral} />}
-        {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={deleteTask} onUpdateTask={updateTask} />}
+        {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
         {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
         {currentPage === 'admin' && user.isAdmin && <AdminPanel />}
       </main>

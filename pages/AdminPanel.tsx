@@ -16,24 +16,19 @@ const AdminPanel: React.FC = () => {
   const [adjustmentAmount, setAdjustmentAmount] = useState<string>('');
   const [adjustmentType, setAdjustmentType] = useState<'add' | 'subtract'>('add');
 
-  // Task Creation State
-  const [newTaskData, setNewTaskData] = useState({
-    title: '',
-    description: '',
-    link: '',
-    type: 'YouTube' as TaskType,
-    reward: 10,
-    totalWorkers: 100,
-    status: 'active' as const
-  });
+  const MASTER_ADMIN_EMAIL = 'ehtesham@gmail.com';
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const u = await storage.getAllUsers();
+      // Deduplicate users by ID to ensure only one instance of the admin/user shows up
+      const uniqueUsers = Array.from(new Map(u.map(user => [user.id, user])).values());
+      
       const t = await storage.getAllGlobalTransactions();
       const tasksData = storage.getTasks();
-      setUsers(u);
+      
+      setUsers(uniqueUsers);
       setTransactions(t.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       setTasks(tasksData);
     } catch (error) {
@@ -58,6 +53,12 @@ const AdminPanel: React.FC = () => {
       ...newTaskData,
       creatorId: 'ADMIN-CORE',
       completedCount: 0,
+      status: 'active',
+      reward: newTaskData.reward,
+      title: newTaskData.title,
+      type: newTaskData.type,
+      description: newTaskData.description,
+      totalWorkers: newTaskData.totalWorkers
     };
     const updatedTasks = [task, ...tasks];
     storage.setTasks(updatedTasks);
@@ -73,6 +74,16 @@ const AdminPanel: React.FC = () => {
     });
     alert('Global Campaign deployed successfully.');
   };
+
+  const [newTaskData, setNewTaskData] = useState({
+    title: '',
+    description: '',
+    link: '',
+    type: 'YouTube' as TaskType,
+    reward: 10,
+    totalWorkers: 100,
+    status: 'active' as const
+  });
 
   const handleDeleteTask = (taskId: string) => {
     if (window.confirm('Permanently remove this campaign?')) {
@@ -117,6 +128,10 @@ const AdminPanel: React.FC = () => {
   };
 
   const toggleUserBan = async (user: User) => {
+    if (user.email.toLowerCase() === MASTER_ADMIN_EMAIL) {
+      alert("Unauthorized: The Master Admin account cannot be restricted.");
+      return;
+    }
     const newStatus = user.status === 'banned' ? 'active' : 'banned';
     if (window.confirm(`Are you sure you want to ${newStatus === 'banned' ? 'BAN' : 'UNBAN'} ${user.username}?`)) {
       await storage.updateUserInCloud(user.id, { status: newStatus });
@@ -211,7 +226,6 @@ const AdminPanel: React.FC = () => {
                ) : (
                  transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').map(tx => (
                    <div key={tx.id} className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all">
-                      {/* Screenshot Preview */}
                       <div 
                         onClick={() => setSelectedScreenshot('https://placehold.co/800x1200/slate/white?text=User+Proof+Snapshot')} 
                         className="w-full md:w-56 h-72 bg-slate-50 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative group"
@@ -261,18 +275,75 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
+        {view === 'users' && (
+           <div className="bg-white rounded-[3.5rem] border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-6 duration-500">
+             <div className="p-10 border-b border-slate-100 bg-slate-50/30 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Authorized Network Directory</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Unique user entities detected: {users.length}</p>
+                </div>
+                <input type="text" placeholder="Search by name/email..." className="w-full md:w-96 bg-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none border border-slate-200 focus:border-indigo-400 shadow-sm" onChange={e => setSearchQuery(e.target.value)} />
+             </div>
+             <div className="divide-y divide-slate-100">
+               {filteredUsers.length === 0 ? (
+                 <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">No matching entities found</div>
+               ) : (
+                 filteredUsers.map(u => {
+                   const isMasterAdmin = u.email.toLowerCase() === MASTER_ADMIN_EMAIL;
+                   return (
+                     <div key={u.id} className={`p-8 flex flex-col md:flex-row items-center justify-between hover:bg-slate-50/50 transition-all group gap-6 ${isMasterAdmin ? 'bg-indigo-50/30' : ''}`}>
+                        <div className="flex items-center gap-6">
+                           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-lg ${isMasterAdmin ? 'bg-indigo-600' : u.status === 'banned' ? 'bg-rose-500' : 'bg-slate-900'}`}>
+                             {u.username.charAt(0)}
+                           </div>
+                           <div>
+                              <div className="flex flex-wrap items-center gap-3">
+                                <p className="font-black text-slate-900 text-lg tracking-tight">{u.username}</p>
+                                {isMasterAdmin ? (
+                                  <span className="px-2 py-0.5 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow-sm">Root Authority</span>
+                                ) : u.status === 'banned' ? (
+                                  <span className="px-2 py-0.5 bg-rose-100 text-rose-600 text-[8px] font-black uppercase rounded border border-rose-200">Suspended</span>
+                                ) : (
+                                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-600 text-[8px] font-black uppercase rounded border border-emerald-200">Active Node</span>
+                                )}
+                              </div>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{u.email}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-6 md:gap-10 ml-auto md:ml-0">
+                           <div className="text-right">
+                              <p className="text-xl font-black text-slate-900 tabular-nums">{u.coins.toLocaleString()}</p>
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Unit Balance</p>
+                           </div>
+                           {!isMasterAdmin && (
+                             <div className="flex gap-3">
+                                <button onClick={() => setAdjustingUser(u)} className="px-5 py-3 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg">Adjust Balance</button>
+                                <button onClick={() => toggleUserBan(u)} className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 ${u.status === 'banned' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border border-emerald-100' : 'bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-100'}`}>
+                                  {u.status === 'banned' ? 'Restore Access' : 'Restrict'}
+                                </button>
+                             </div>
+                           )}
+                        </div>
+                     </div>
+                   );
+                 })
+               )}
+             </div>
+           </div>
+        )}
+
         {view === 'finance' && (
           <div className="space-y-12 animate-in fade-in duration-500">
             <div className="px-4">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Financial Operations</h2>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Manage incoming liquidity and outgoing payouts</p>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Financial Operations Hub</h2>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Manage incoming liquidity and payout fulfillment</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               {/* Deposit Section */}
               <div className="bg-white rounded-[4rem] border border-slate-200 overflow-hidden shadow-sm">
                 <div className="p-10 border-b border-slate-100 bg-emerald-50/30 flex justify-between items-center">
-                  <h3 className="text-xl font-black text-emerald-900 uppercase tracking-tighter">Incoming Deposit Requests</h3>
+                  <h3 className="text-xl font-black text-emerald-900 uppercase tracking-tighter">Secure Deposit Queue</h3>
                   <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
                     <i className="fa-solid fa-arrow-down-long"></i>
                   </div>
@@ -310,7 +381,7 @@ const AdminPanel: React.FC = () => {
               {/* Withdrawal Section */}
               <div className="bg-white rounded-[4rem] border border-slate-200 overflow-hidden shadow-sm">
                 <div className="p-10 border-b border-slate-100 bg-indigo-50/30 flex justify-between items-center">
-                  <h3 className="text-xl font-black text-indigo-900 uppercase tracking-tighter">Pending Withdrawal Claims</h3>
+                  <h3 className="text-xl font-black text-indigo-900 uppercase tracking-tighter">Payout Fulfillment Queue</h3>
                   <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
                     <i className="fa-solid fa-arrow-up-long"></i>
                   </div>
@@ -348,54 +419,8 @@ const AdminPanel: React.FC = () => {
           </div>
         )}
 
-        {view === 'users' && (
-           <div className="bg-white rounded-[3.5rem] border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-6 duration-500">
-             <div className="p-10 border-b border-slate-100 bg-slate-50/30 flex flex-col md:flex-row justify-between items-center gap-6">
-                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Users Directory</h3>
-                <input type="text" placeholder="Search by name/email..." className="w-full md:w-96 bg-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none border border-slate-200 focus:border-indigo-400" onChange={e => setSearchQuery(e.target.value)} />
-             </div>
-             <div className="divide-y divide-slate-100">
-               {filteredUsers.length === 0 ? (
-                 <div className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">No active users found</div>
-               ) : (
-                 filteredUsers.map(u => (
-                   <div key={u.id} className="p-8 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                      <div className="flex items-center gap-6">
-                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black ${u.status === 'banned' ? 'bg-rose-500' : 'bg-slate-900'}`}>
-                           {u.username.charAt(0)}
-                         </div>
-                         <div>
-                            <div className="flex items-center gap-3">
-                              <p className="font-black text-slate-900 text-lg">{u.username}</p>
-                              {u.status === 'banned' && (
-                                <span className="px-2 py-0.5 bg-rose-100 text-rose-600 text-[8px] font-black uppercase rounded border border-rose-200">Banned</span>
-                              )}
-                            </div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{u.email}</p>
-                         </div>
-                      </div>
-                      <div className="flex items-center gap-6 md:gap-10">
-                         <div className="text-right">
-                            <p className="text-xl font-black text-slate-900">{u.coins.toLocaleString()}</p>
-                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Unit Balance</p>
-                         </div>
-                         <div className="flex gap-3">
-                            <button onClick={() => setAdjustingUser(u)} className="px-5 py-3 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all">Adjust Balance</button>
-                            <button onClick={() => toggleUserBan(u)} className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${u.status === 'banned' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white' : 'bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white'}`}>
-                              {u.status === 'banned' ? 'Unban' : 'Ban'}
-                            </button>
-                         </div>
-                      </div>
-                   </div>
-                 ))
-               )}
-             </div>
-           </div>
-        )}
-
         {view === 'tasks' && (
           <div className="space-y-12 animate-in fade-in duration-500">
-            {/* Create Task Form */}
             <div className="bg-white p-12 rounded-[3.5rem] border border-slate-200 shadow-sm">
               <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-10">Deploy New Market Task</h3>
               <form onSubmit={handleCreateCampaign} className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -434,7 +459,6 @@ const AdminPanel: React.FC = () => {
               </form>
             </div>
 
-            {/* List Active Tasks */}
             <div className="bg-white rounded-[3.5rem] border border-slate-200 overflow-hidden shadow-sm">
               <div className="p-10 border-b border-slate-100 bg-slate-50/30">
                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Active Network Tasks</h3>
@@ -489,7 +513,6 @@ const AdminPanel: React.FC = () => {
         )}
       </div>
 
-      {/* Screenshot Lightbox Overlay */}
       {selectedScreenshot && (
         <div 
           className="fixed inset-0 z-[200] bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300"
@@ -503,12 +526,10 @@ const AdminPanel: React.FC = () => {
               >
                 <i className="fa-solid fa-xmark"></i>
               </button>
-              <p className="text-center text-white/40 text-[10px] font-black uppercase tracking-[0.4em] mt-8">Audit Mode: High Fidelity View</p>
            </div>
         </div>
       )}
 
-      {/* Balance Adjust Modal */}
       {adjustingUser && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-300">
            <div className="bg-white w-full max-w-xl rounded-[4rem] p-12 shadow-2xl animate-in zoom-in-95 duration-300">
