@@ -4,7 +4,7 @@ import { User, Task, Transaction, TaskType, SEOConfig } from '../types';
 import { storage } from '../services/storage';
 
 interface AdminPanelProps {
-  initialView?: 'overview' | 'users' | 'history' | 'tasks' | 'finance' | 'reviews' | 'seo';
+  initialView?: 'overview' | 'users' | 'history' | 'tasks' | 'finance' | 'reviews' | 'seo' | 'create-task';
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => {
@@ -16,6 +16,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const [loading, setLoading] = useState(true);
   const [savingSeo, setSavingSeo] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // New Task Form State
+  const [newTaskData, setNewTaskData] = useState({
+    title: '',
+    link: '',
+    type: 'YouTube' as TaskType,
+    reward: 10,
+    totalWorkers: 100,
+    description: ''
+  });
+  const [isDeploying, setIsDeploying] = useState(false);
   
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
 
@@ -94,6 +105,46 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     alert(`Task status updated to ${status}`);
   };
 
+  const handleAdminCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskData.title || !newTaskData.description || !newTaskData.link) {
+      return alert('All fields are required for deployment.');
+    }
+    
+    setIsDeploying(true);
+    const adminUser = storage.getUser();
+    
+    const newTask: Task = {
+      id: `SYS-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      ...newTaskData,
+      creatorId: adminUser.id,
+      completedCount: 0,
+      status: 'active'
+    };
+
+    try {
+      const currentTasks = storage.getTasks();
+      const updatedTasks = [...currentTasks, newTask];
+      storage.setTasks(updatedTasks);
+      
+      alert('System Task deployed successfully!');
+      setNewTaskData({
+        title: '',
+        link: '',
+        type: 'YouTube',
+        reward: 10,
+        totalWorkers: 100,
+        description: ''
+      });
+      setView('tasks');
+      await fetchData();
+    } catch (error) {
+      alert('Failed to deploy system task.');
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
   const filteredUsers = users.filter(u => 
     u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
     u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -121,7 +172,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
               { id: 'overview', label: 'Overview', icon: 'fa-chart-pie' },
               { id: 'users', label: 'Users', icon: 'fa-users' },
               { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro' },
-              { id: 'tasks', label: 'Tasks', icon: 'fa-list-check' },
+              { id: 'create-task', label: 'New Task', icon: 'fa-plus' },
+              { id: 'tasks', label: 'Audit', icon: 'fa-list-check' },
               { id: 'finance', label: 'Finance', icon: 'fa-wallet' },
               { id: 'seo', label: 'SEO', icon: 'fa-search' },
               { id: 'history', label: 'Logs', icon: 'fa-clock' }
@@ -209,6 +261,113 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                  </table>
               </div>
            </div>
+        )}
+
+        {view === 'create-task' && (
+          <div className="bg-white rounded-[3.5rem] p-12 md:p-16 border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-500">
+            <div className="flex justify-between items-start mb-12">
+              <div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Deploy System Asset</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Initialize verified network tasks</p>
+              </div>
+              <div className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-[10px] font-black uppercase tracking-widest">
+                Admin Privilege: 0 Cost
+              </div>
+            </div>
+
+            <form onSubmit={handleAdminCreateTask} className="space-y-10 max-w-5xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Task Name (Visible to Users)</label>
+                  <input 
+                    type="text" 
+                    value={newTaskData.title}
+                    onChange={e => setNewTaskData({...newTaskData, title: e.target.value})}
+                    placeholder="e.g. Subscribe to Spredia TV" 
+                    className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner focus:ring-2 focus:ring-indigo-100" 
+                    required
+                  />
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Destination Link</label>
+                  <input 
+                    type="url" 
+                    value={newTaskData.link}
+                    onChange={e => setNewTaskData({...newTaskData, link: e.target.value})}
+                    placeholder="https://youtube.com/..." 
+                    className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner focus:ring-2 focus:ring-indigo-100" 
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Task Modality</label>
+                  <select 
+                    value={newTaskData.type}
+                    onChange={e => setNewTaskData({...newTaskData, type: e.target.value as TaskType})}
+                    className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner focus:ring-2 focus:ring-indigo-100 appearance-none"
+                  >
+                    <option value="YouTube">YouTube</option>
+                    <option value="Websites">Websites</option>
+                    <option value="Apps">Apps</option>
+                    <option value="Social Media">Social Media</option>
+                  </select>
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Reward (Coins)</label>
+                  <input 
+                    type="number" 
+                    value={newTaskData.reward}
+                    onChange={e => setNewTaskData({...newTaskData, reward: parseInt(e.target.value) || 0})}
+                    className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner focus:ring-2 focus:ring-indigo-100" 
+                    required
+                  />
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Slot Quota (Workers)</label>
+                  <input 
+                    type="number" 
+                    value={newTaskData.totalWorkers}
+                    onChange={e => setNewTaskData({...newTaskData, totalWorkers: parseInt(e.target.value) || 0})}
+                    className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner focus:ring-2 focus:ring-indigo-100" 
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Operator Instructions</label>
+                <textarea 
+                  rows={4} 
+                  value={newTaskData.description}
+                  onChange={e => setNewTaskData({...newTaskData, description: e.target.value})}
+                  placeholder="Explicit steps for the user..." 
+                  className="w-full px-8 py-6 bg-slate-50 border-none rounded-[2rem] font-bold text-slate-800 outline-none shadow-inner focus:ring-2 focus:ring-indigo-100 resize-none leading-relaxed" 
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-6 pt-6">
+                 <div className="flex items-center gap-6 px-10 py-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="text-right">
+                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">System Escrow</p>
+                       <p className="text-sm font-black text-slate-900">{(newTaskData.reward * newTaskData.totalWorkers).toLocaleString()} Coins</p>
+                    </div>
+                    <i className="fa-solid fa-calculator text-slate-200"></i>
+                 </div>
+                 <button 
+                  type="submit" 
+                  disabled={isDeploying}
+                  className="px-16 py-6 bg-slate-900 text-white font-black rounded-2xl uppercase text-[10px] tracking-[0.3em] hover:bg-indigo-600 transition-all flex items-center gap-4 shadow-xl active:scale-95 disabled:opacity-50"
+                 >
+                   {isDeploying ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-paper-plane"></i>}
+                   Propagate Task
+                 </button>
+              </div>
+            </form>
+          </div>
         )}
 
         {view === 'finance' && (
