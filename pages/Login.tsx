@@ -69,7 +69,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           email: lowercaseEmail,
           isLoggedIn: true,
           // Updated admin check
-          isAdmin: existingUser.isAdmin || lowercaseEmail === 'admin@adspredia.site',
+          isAdmin: existingUser.isAdmin || lowercaseEmail === 'ehtesham@adspredia.site',
           referredBy: existingUser.referredBy
         });
       } else if (view === 'register') {
@@ -101,7 +101,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           email: lowercaseEmail,
           isLoggedIn: true,
           // Updated admin check
-          isAdmin: lowercaseEmail === 'admin@adspredia.site',
+          isAdmin: lowercaseEmail === 'ehtesham@adspredia.site',
           referredBy: pendingRef
         });
       }

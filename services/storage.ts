@@ -56,7 +56,7 @@ export const storage = {
     if (user.isLoggedIn) {
       const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
       // Updated admin email check
-      const isAdmin = user.email.toLowerCase().trim() === 'admin@adspredia.site' ? true : (user.isAdmin || false);
+      const isAdmin = user.email.toLowerCase().trim() === 'ehtesham@adspredia.site' ? true : (user.isAdmin || false);
       const userToSave = { ...user, isAdmin };
       
       // Update the user record
