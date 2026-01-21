@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Transaction } from '../types';
 
 interface WalletProps {
   coins: number;
   depositBalance?: number;
-  onAction: (type: 'deposit' | 'withdraw', amount: number, method: string) => void;
+  onAction: (type: 'deposit' | 'withdraw', amount: number, method: string, accountRef?: string, proofImage?: string) => void;
   transactions: Transaction[];
   onRefresh?: () => void;
 }
@@ -15,9 +15,11 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('Easypaisa');
   const [account, setAccount] = useState('');
+  const [proofImage, setProofImage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const COIN_RATE = 5000;
   const MIN_DEPOSIT = 5000; 
@@ -29,21 +31,21 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
       icon: 'fa-mobile-screen-button', 
       color: 'text-emerald-500', 
       bg: 'bg-emerald-50',
-      step: activeTab === 'deposit' ? 'Transfer to this number via Easypaisa, then paste TxID below.' : 'Enter your 11-digit Easypaisa number below.'
+      step: activeTab === 'deposit' ? 'Transfer to this number via Easypaisa, then paste TxID and upload screenshot below.' : 'Enter your 11-digit Easypaisa number below.'
     },
     'USDT': { 
       address: 'TWFfb9ewKRbtSz8qTitr2fJpyRPQWtKj2U', 
       icon: 'fa-brands fa-ethereum', 
       color: 'text-indigo-500', 
       bg: 'bg-indigo-50',
-      step: activeTab === 'deposit' ? 'Transfer TRC20 USDT, then paste TxID/Hash below.' : 'Enter your TRC20 USDT Wallet Address below.'
+      step: activeTab === 'deposit' ? 'Transfer TRC20 USDT, then paste TxID/Hash and upload screenshot below.' : 'Enter your TRC20 USDT Wallet Address below.'
     },
     'Payeer': { 
       address: 'P1061557241', 
       icon: 'fa-wallet', 
       color: 'text-blue-500', 
       bg: 'bg-blue-50',
-      step: activeTab === 'deposit' ? 'Transfer to this Payeer account, then paste Order ID below.' : 'Enter your Payeer Account ID (PXXXXX) below.'
+      step: activeTab === 'deposit' ? 'Transfer to this Payeer account, then paste Order ID and upload screenshot below.' : 'Enter your Payeer Account ID (PXXXXX) below.'
     }
   };
 
@@ -53,12 +55,25 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) return alert('Image size must be less than 5MB.');
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProofImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmitInitial = (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseInt(amount);
     if (activeTab === 'deposit') {
       if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Min deposit: ${MIN_DEPOSIT.toLocaleString()} coins ($1.00)`);
       if (!account) return alert('Transaction Ref / TxID is required.');
+      if (!proofImage) return alert('Please upload a screenshot of your payment proof.');
     } else {
       if (isNaN(val) || val < MIN_WITHDRAWAL) return alert(`Min withdrawal: ${MIN_WITHDRAWAL.toLocaleString()} coins ($1.00)`);
       if (val > coins) return alert('Insufficient main balance.');
@@ -70,9 +85,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
   const confirmAction = async () => {
     setIsProcessing(true);
     try {
-      await onAction(activeTab, parseInt(amount), method);
+      await onAction(activeTab, parseInt(amount), method, account, proofImage || undefined);
       setAmount('');
       setAccount('');
+      setProofImage(null);
       setShowConfirmModal(false);
     } catch (err) {
       alert('Error processing request.');
@@ -80,6 +96,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
       setIsProcessing(false);
     }
   };
+
+  const walletHistory = transactions
+    .filter(tx => tx.type === 'deposit' || tx.type === 'withdraw')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div className="pt-28 pb-20 min-h-screen bg-slate-50">
@@ -97,7 +117,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-12">
           {/* Balance Cards */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-3xl relative overflow-hidden group">
@@ -128,8 +148,8 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
              <div className="p-10 md:p-16">
                  <div className="animate-in fade-in duration-500">
                    <div className="flex bg-slate-50 p-2 rounded-[2rem] border border-slate-200 mb-12">
-                      <button onClick={() => { setActiveTab('deposit'); setAccount(''); }} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'deposit' ? 'bg-white text-emerald-600 shadow-lg' : 'text-slate-400'}`}>Deposit Funds</button>
-                      <button onClick={() => { setActiveTab('withdraw'); setAccount(''); }} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-lg' : 'text-slate-400'}`}>Withdraw Profits</button>
+                      <button onClick={() => { setActiveTab('deposit'); setAccount(''); setProofImage(null); }} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'deposit' ? 'bg-white text-emerald-600 shadow-lg' : 'text-slate-400'}`}>Deposit Funds</button>
+                      <button onClick={() => { setActiveTab('withdraw'); setAccount(''); setProofImage(null); }} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-lg' : 'text-slate-400'}`}>Withdraw Profits</button>
                    </div>
 
                    <form onSubmit={handleSubmitInitial} className="space-y-10">
@@ -174,18 +194,46 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                          </div>
                       </div>
 
-                      <div className="space-y-4">
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">
-                           {activeTab === 'deposit' ? 'Proof of Payment (TxID / ID)' : 'Your Withdrawal Details'}
-                         </label>
-                         <input 
-                           type="text" 
-                           required 
-                           value={account} 
-                           onChange={e => setAccount(e.target.value)} 
-                           placeholder={activeTab === 'deposit' ? "Paste Transaction ID here" : `Enter your ${method} Account/Wallet Address`} 
-                           className="w-full px-8 py-6 bg-slate-50 border-none rounded-3xl font-black text-slate-900 focus:ring-4 focus:ring-indigo-600/5 transition-all shadow-inner" 
-                         />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">
+                             {activeTab === 'deposit' ? 'TxID / Order ID' : 'Your Account Details'}
+                           </label>
+                           <input 
+                             type="text" 
+                             required 
+                             value={account} 
+                             onChange={e => setAccount(e.target.value)} 
+                             placeholder={activeTab === 'deposit' ? "Paste ID here" : `Enter your ${method} details`} 
+                             className="w-full px-8 py-6 bg-slate-50 border-none rounded-3xl font-black text-slate-900 focus:ring-4 focus:ring-indigo-600/5 transition-all shadow-inner" 
+                           />
+                        </div>
+
+                        {activeTab === 'deposit' && (
+                          <div className="space-y-4">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Payment Screenshot Proof</label>
+                             <div 
+                                onClick={() => fileInputRef.current?.click()}
+                                className={`h-[72px] bg-slate-50 rounded-3xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${proofImage ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 hover:border-indigo-400'}`}
+                             >
+                                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                                {proofImage ? (
+                                   <div className="flex items-center gap-3">
+                                      <i className="fa-solid fa-circle-check text-emerald-500"></i>
+                                      <span className="text-[10px] font-black text-emerald-600 uppercase">Screenshot Attached</span>
+                                      <button type="button" onClick={(e) => { e.stopPropagation(); setProofImage(null); }} className="text-slate-400 hover:text-rose-500 transition-colors">
+                                         <i className="fa-solid fa-trash-can"></i>
+                                      </button>
+                                   </div>
+                                ) : (
+                                   <div className="flex items-center gap-3 text-slate-400">
+                                      <i className="fa-solid fa-camera"></i>
+                                      <span className="text-[10px] font-black uppercase">Upload Image Proof</span>
+                                   </div>
+                                )}
+                             </div>
+                          </div>
+                        )}
                       </div>
 
                       <button type="submit" className={`w-full py-8 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.4em] shadow-2xl transition-all active:scale-95 ${activeTab === 'deposit' ? 'bg-emerald-600 shadow-emerald-100 hover:bg-emerald-500' : 'bg-slate-900 shadow-slate-100 hover:bg-indigo-600'}`}>
@@ -194,6 +242,113 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                    </form>
                  </div>
              </div>
+          </div>
+        </div>
+
+        {/* History Section */}
+        <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <div className="p-8 md:p-14 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+             <div>
+                <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter uppercase">Vault History</h3>
+                <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit of your financial movements</p>
+             </div>
+             <div className="w-10 h-10 md:w-14 md:h-14 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-slate-300 shadow-inner">
+                <i className="fa-solid fa-clock-rotate-left text-lg md:text-xl"></i>
+             </div>
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
+             <table className="w-full text-left">
+                <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                   <tr>
+                      <th className="px-10 py-6">Reference ID</th>
+                      <th className="px-6 py-6">Type</th>
+                      <th className="px-6 py-6">Method</th>
+                      <th className="px-6 py-6">Amount</th>
+                      <th className="px-6 py-6">Status</th>
+                      <th className="px-10 py-6 text-right">Date</th>
+                   </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                   {walletHistory.length === 0 ? (
+                      <tr>
+                         <td colSpan={6} className="px-10 py-20 text-center">
+                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-200">
+                               <i className="fa-solid fa-receipt text-3xl"></i>
+                            </div>
+                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No transactions detected in ledger</p>
+                         </td>
+                      </tr>
+                   ) : (
+                      walletHistory.map(tx => (
+                         <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-10 py-6 font-mono text-[10px] text-indigo-600 font-black">{tx.id.toUpperCase()}</td>
+                            <td className="px-6 py-6">
+                               <span className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border ${tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                                  {tx.type}
+                               </span>
+                            </td>
+                            <td className="px-6 py-6 text-xs font-black text-slate-600">{tx.method}</td>
+                            <td className={`px-6 py-6 font-black text-sm ${tx.type === 'deposit' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                               {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toLocaleString()} <span className="text-[9px] opacity-40 uppercase">Coins</span>
+                            </td>
+                            <td className="px-6 py-6">
+                               <div className="flex items-center gap-2">
+                                  <span className={`w-1.5 h-1.5 rounded-full ${tx.status === 'success' ? 'bg-emerald-500' : tx.status === 'failed' ? 'bg-rose-500' : 'bg-amber-500'}`}></span>
+                                  <span className={`text-[9px] font-black uppercase tracking-widest ${tx.status === 'success' ? 'text-emerald-600' : tx.status === 'failed' ? 'text-rose-600' : 'text-amber-600'}`}>
+                                     {tx.status}
+                                  </span>
+                               </div>
+                            </td>
+                            <td className="px-10 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">{tx.date}</td>
+                         </tr>
+                      ))
+                   )}
+                </tbody>
+             </table>
+          </div>
+
+          <div className="md:hidden p-6 space-y-6">
+             {walletHistory.length === 0 ? (
+                <div className="py-20 text-center">
+                   <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-200">
+                      <i className="fa-solid fa-receipt text-3xl"></i>
+                   </div>
+                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No transactions detected</p>
+                </div>
+             ) : (
+                walletHistory.map(tx => (
+                   <div key={tx.id} className="bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                      <div className="flex justify-between items-start">
+                         <div className="space-y-1">
+                            <span className={`px-2 py-0.5 text-[7px] font-black rounded-md uppercase tracking-widest border ${tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                               {tx.type}
+                            </span>
+                            <div className="font-mono text-[9px] text-indigo-600 font-black">ID: {tx.id.toUpperCase()}</div>
+                         </div>
+                         <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${tx.status === 'success' ? 'bg-emerald-500' : tx.status === 'failed' ? 'bg-rose-500' : 'bg-amber-500'}`}></span>
+                            <span className={`text-[8px] font-black uppercase tracking-widest ${tx.status === 'success' ? 'text-emerald-600' : tx.status === 'failed' ? 'text-rose-600' : 'text-amber-600'}`}>
+                               {tx.status}
+                            </span>
+                         </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-end">
+                         <div>
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Amount</p>
+                            <h4 className={`text-xl font-black ${tx.type === 'deposit' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                               {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toLocaleString()} <span className="text-[9px] opacity-40 uppercase">Coins</span>
+                            </h4>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{tx.method}</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{tx.date.split(',')[0]}</p>
+                         </div>
+                      </div>
+                   </div>
+                ))
+             )}
           </div>
         </div>
       </div>
@@ -216,12 +371,18 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                     <span className="text-slate-900">{method}</span>
                  </div>
                  <div className="pt-4 border-t border-slate-200">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{activeTab === 'deposit' ? 'Ref ID' : 'Account'}</p>
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{activeTab === 'deposit' ? 'TxID' : 'Account'}</p>
                    <p className="text-sm font-bold text-indigo-600 break-all">{account}</p>
                  </div>
+                 {proofImage && (
+                    <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Image Proof</span>
+                       <span className="text-xs font-bold text-emerald-600">Attached</span>
+                    </div>
+                 )}
               </div>
               <div className="flex gap-4">
-                 <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                 <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">Adjust</button>
                  <button onClick={confirmAction} disabled={isProcessing} className="flex-[2] py-6 bg-slate-900 text-white font-black rounded-3xl text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 active:scale-95">
                     {isProcessing ? <i className="fa-solid fa-spinner fa-spin"></i> : 'Execute Request'}
                  </button>

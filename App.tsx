@@ -260,7 +260,7 @@ const App: React.FC = () => {
     setTransactions(prev => [newTx, ...prev]);
   };
 
-  const handleWalletAction = async (type: 'deposit' | 'withdraw', amount: number, method: string, accountRef?: string) => {
+  const handleWalletAction = async (type: 'deposit' | 'withdraw', amount: number, method: string, accountRef?: string, proofImage?: string) => {
     const newTx: Transaction = {
       id: Math.random().toString(36).substr(2, 9),
       userId: user.id,
@@ -269,6 +269,7 @@ const App: React.FC = () => {
       type: type,
       method: method,
       account: accountRef,
+      proofImage: proofImage,
       status: 'pending',
       date: new Date().toLocaleString()
     };
