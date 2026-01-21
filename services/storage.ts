@@ -36,7 +36,6 @@ export const storage = {
       username: 'Guest', 
       email: '', 
       coins: 0, 
-      // Fix: Added missing depositBalance property
       depositBalance: 0,
       completedTasks: [], 
       createdTasks: [], 
@@ -48,7 +47,18 @@ export const storage = {
   setUser: async (user: User) => {
     localStorage.setItem(KEYS.USER, JSON.stringify(user));
     if (user.isLoggedIn) {
-      await set(ref(db, `${KEYS.USERS}/${user.id}`), user);
+      // Logic to prevent regular users from claiming Admin flag in cloud
+      const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
+      
+      // If the user is the hardcoded admin, use a fixed stable ID or mark explicitly
+      if (user.email.toLowerCase().trim() === 'ehtesham@gmail.com') {
+        const adminUpdates = { ...user, isAdmin: true };
+        await set(cloudRef, adminUpdates);
+      } else {
+        // Force isAdmin to false for any other user attempt to prevent privilege escalation
+        const standardUser = { ...user, isAdmin: false };
+        await set(cloudRef, standardUser);
+      }
     }
   },
   
@@ -79,7 +89,6 @@ export const storage = {
   getReferralCount: async (userId: string): Promise<number> => {
     try {
       const usersRef = ref(db, KEYS.USERS);
-      // Case-insensitive check: we store IDs as they are, usually uppercase
       const referralQuery = query(usersRef, orderByChild('referredBy'), equalTo(userId.toUpperCase()));
       const snapshot = await get(referralQuery);
       if (snapshot.exists()) {
@@ -108,6 +117,10 @@ export const storage = {
   },
 
   updateUserInCloud: async (userId: string, updates: Partial<User>) => {
+    // Admin flag protection during updates
+    if (updates.isAdmin !== undefined) {
+      delete updates.isAdmin; // Never allow updates to change admin status via standard update path
+    }
     await update(ref(db, `${KEYS.USERS}/${userId}`), updates);
   },
 

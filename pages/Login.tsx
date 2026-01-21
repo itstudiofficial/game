@@ -35,23 +35,36 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setEmailError('');
 
     const pendingRef = sessionStorage.getItem('pending_referral') || '';
+    const lowercaseEmail = email.toLowerCase().trim();
 
-    // Hard-Coded Authentic Admin Credentials Check
-    if (view === 'login' && email === 'ehtesham@gmail.com' && password === 'admin12') {
-      setIsSubmitting(true);
-      setTimeout(() => {
-        onLogin({
-          username: 'System Admin (Ehtesham)',
-          email: email,
-          isLoggedIn: true,
-          isAdmin: true
-        });
-        setIsSubmitting(false);
-      }, 1200);
+    // STRICT SINGLE-ENTRY ADMIN VALIDATION
+    // This block ensures that only the specific ehtesham@gmail.com account can ever gain Admin privileges.
+    if (view === 'login' && lowercaseEmail === 'ehtesham@gmail.com') {
+      if (password === 'admin12') {
+        setIsSubmitting(true);
+        setTimeout(() => {
+          onLogin({
+            username: 'System Admin (Ehtesham)',
+            email: lowercaseEmail,
+            isLoggedIn: true,
+            isAdmin: true // Singular Admin Authority Granted
+          });
+          setIsSubmitting(false);
+        }, 1200);
+        return;
+      } else {
+        setEmailError('Invalid Administrative Credentials.');
+        return;
+      }
+    }
+
+    // Block standard users from attempting to register or login with the protected admin email
+    if (lowercaseEmail === 'ehtesham@gmail.com' && view === 'register') {
+      setEmailError('This administrative identity is protected and cannot be registered.');
       return;
     }
 
-    // Comprehensive Client-Side Validation
+    // Comprehensive Client-Side Validation for standard users
     if (view === 'register') {
       if (!username.trim()) {
         setEmailError('Please provide a display name.');
@@ -78,13 +91,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     
     setIsSubmitting(true);
     
-    // Standard User API Simulation
+    // Standard User Authentication Simulation
     setTimeout(() => {
       onLogin({
         username: view === 'register' ? username : email.split('@')[0],
         email: email,
         isLoggedIn: true,
-        isAdmin: false,
+        isAdmin: false, // Standard users can never be admins
         referredBy: pendingRef 
       });
       setIsSubmitting(false);
