@@ -68,13 +68,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           username: existingUser.username,
           email: lowercaseEmail,
           isLoggedIn: true,
-          isAdmin: existingUser.isAdmin || lowercaseEmail === 'ehtesham@gmail.com',
+          // Updated admin check
+          isAdmin: existingUser.isAdmin || lowercaseEmail === 'admin@adspredia.site',
           referredBy: existingUser.referredBy
         });
       } else if (view === 'register') {
         // Enforce: No duplicate Gmails
         if (userId) {
-          setEmailError('This Gmail is already registered. Please login.');
+          setEmailError('This email is already registered. Please login.');
           setIsSubmitting(false);
           return;
         }
@@ -99,7 +100,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           username: username.trim(),
           email: lowercaseEmail,
           isLoggedIn: true,
-          isAdmin: lowercaseEmail === 'ehtesham@gmail.com',
+          // Updated admin check
+          isAdmin: lowercaseEmail === 'admin@adspredia.site',
           referredBy: pendingRef
         });
       }
@@ -148,8 +150,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </div>
               )}
               <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Gmail Address</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@gmail.com" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-slate-800 shadow-inner focus:ring-2 focus:ring-indigo-100" required />
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Email Address</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@adspredia.site" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-slate-800 shadow-inner focus:ring-2 focus:ring-indigo-100" required />
               </div>
               <div className="space-y-2">
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Secure Password</label>
