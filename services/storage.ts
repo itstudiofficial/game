@@ -1,6 +1,6 @@
 
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set, get, onValue, push, update, query, orderByChild, equalTo } from 'firebase/database';
+import { getDatabase, ref, set, get, onValue, push, update } from 'firebase/database';
 import { User, Task, Transaction } from '../types';
 
 const firebaseConfig = {
@@ -20,6 +20,12 @@ const KEYS = {
 };
 
 export const storage = {
+  // Utility to create a safe Firebase key from a FULL email
+  // This ensures user@gmail.com and user@outlook.com are different
+  sanitizeId: (email: string): string => {
+    return email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+  },
+
   getUserId: (): string => {
     let id = localStorage.getItem('ap_local_id');
     if (!id) {
@@ -48,16 +54,9 @@ export const storage = {
     localStorage.setItem(KEYS.USER, JSON.stringify(user));
     if (user.isLoggedIn) {
       const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
-      if (user.email.toLowerCase().trim() === 'ehtesham@gmail.com') {
-        const adminUpdates = { ...user, isAdmin: true };
-        await set(cloudRef, adminUpdates);
-      } else {
-        // Prevent normal users from writing isAdmin: true
-        const currentData = await get(cloudRef);
-        const isAdmin = currentData.exists() ? currentData.val().isAdmin : false;
-        const standardUser = { ...user, isAdmin: isAdmin };
-        await set(cloudRef, standardUser);
-      }
+      const isAdmin = user.email.toLowerCase().trim() === 'ehtesham@gmail.com' ? true : (user.isAdmin || false);
+      const userToSave = { ...user, isAdmin };
+      await set(cloudRef, userToSave);
     }
   },
 
@@ -96,20 +95,6 @@ export const storage = {
     await set(ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`), tx);
   },
 
-  getReferralCount: async (userId: string): Promise<number> => {
-    try {
-      const usersRef = ref(db, KEYS.USERS);
-      const referralQuery = query(usersRef, orderByChild('referredBy'), equalTo(userId.toUpperCase()));
-      const snapshot = await get(referralQuery);
-      if (snapshot.exists()) {
-        return Object.keys(snapshot.val()).length;
-      }
-    } catch (e) {
-      console.error("Referral fetch error:", e);
-    }
-    return 0;
-  },
-
   getAllUsers: async (): Promise<User[]> => {
     const snapshot = await get(ref(db, KEYS.USERS));
     const data = snapshot.val();
@@ -127,9 +112,6 @@ export const storage = {
   },
 
   updateUserInCloud: async (userId: string, updates: Partial<User>) => {
-    if (updates.isAdmin !== undefined) {
-      delete updates.isAdmin;
-    }
     await update(ref(db, `${KEYS.USERS}/${userId}`), updates);
   },
 

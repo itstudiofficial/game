@@ -4,7 +4,7 @@ import { Task, TaskType } from '../types';
 
 interface TasksProps {
   tasks: Task[];
-  onComplete: (taskId: string, timestamp?: string) => void;
+  onComplete: (taskId: string, proofImage?: string, timestamp?: string) => void;
 }
 
 const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
@@ -74,7 +74,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks, onComplete }) => {
     
     setTimeout(() => {
       if (selectedTask) {
-        onComplete(selectedTask.id, submissionTimestamp);
+        onComplete(selectedTask.id, previewImage, submissionTimestamp);
       }
       handleCloseModal();
     }, 2000);

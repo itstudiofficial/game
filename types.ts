@@ -19,16 +19,17 @@ export interface User {
   username: string;
   email: string;
   coins: number;
-  depositBalance: number; // For creating tasks
+  depositBalance: number; 
   completedTasks: string[];
   createdTasks: string[];
-  claimedReferrals?: string[]; // IDs of users whose referral bonus has been claimed
+  claimedReferrals?: string[]; 
   isLoggedIn: boolean;
   isAdmin?: boolean;
   lastSpinTimestamp?: number;
   dailySpinsCount?: number;
   status?: 'active' | 'banned';
   referredBy?: string;
+  currentSessionId?: string; // New field for single session enforcement
 }
 
 export interface Transaction {
@@ -38,6 +39,8 @@ export interface Transaction {
   amount: number;
   type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin' | 'referral_claim';
   method?: string;
+  account?: string; 
+  proofImage?: string; 
   status: 'pending' | 'success' | 'failed';
   date: string;
 }
