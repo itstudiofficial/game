@@ -43,23 +43,26 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       return;
     }
 
-    // This unique ID is derived from the FULL Gmail address
-    const userId = storage.sanitizeId(lowercaseEmail);
     const pendingRef = sessionStorage.getItem('pending_referral') || '';
 
     try {
-      // Direct Cloud Probe
-      const existingUser = await storage.syncUserFromCloud(userId);
+      // Find User ID by Email
+      const userId = await storage.getUserIdByEmail(lowercaseEmail);
 
       if (view === 'login') {
-        if (!existingUser) {
-          // As requested: Specific error for missing accounts
+        if (!userId) {
           setEmailError('Account not found please create account');
           setIsSubmitting(false);
           return;
         }
 
-        // Logic for returning users
+        const existingUser = await storage.syncUserFromCloud(userId);
+        if (!existingUser) {
+          setEmailError('Account data synchronization failed.');
+          setIsSubmitting(false);
+          return;
+        }
+
         onLogin({
           id: userId,
           username: existingUser.username,
@@ -70,7 +73,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         });
       } else if (view === 'register') {
         // Enforce: No duplicate Gmails
-        if (existingUser) {
+        if (userId) {
           setEmailError('This Gmail is already registered. Please login.');
           setIsSubmitting(false);
           return;
@@ -88,9 +91,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           return;
         }
 
-        // Register new identity
+        // Use the current random session ID for the new account
+        const newUserId = storage.getUserId();
+
         onLogin({
-          id: userId,
+          id: newUserId,
           username: username.trim(),
           email: lowercaseEmail,
           isLoggedIn: true,

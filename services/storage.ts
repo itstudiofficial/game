@@ -17,19 +17,20 @@ const KEYS = {
   TRANSACTIONS: 'transactions',
   USERS: 'users',
   ALL_TRANSACTIONS: 'all_transactions',
-  SEO: 'seo_config'
+  SEO: 'seo_config',
+  EMAIL_LOOKUP: 'email_to_id'
 };
 
 export const storage = {
-  // Utility to create a safe Firebase key from a FULL email
-  sanitizeId: (email: string): string => {
+  // Utility to create a safe Firebase key from a email
+  sanitizeEmail: (email: string): string => {
     return email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
   },
 
   getUserId: (): string => {
     let id = localStorage.getItem('ap_local_id');
     if (!id) {
-      id = 'UID-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+      id = 'ID-' + Math.random().toString(36).substr(2, 6).toUpperCase();
       localStorage.setItem('ap_local_id', id);
     }
     return id;
@@ -56,8 +57,23 @@ export const storage = {
       const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
       const isAdmin = user.email.toLowerCase().trim() === 'ehtesham@gmail.com' ? true : (user.isAdmin || false);
       const userToSave = { ...user, isAdmin };
+      
+      // Update the user record
       await set(cloudRef, userToSave);
+      
+      // Update email lookup mapping
+      if (user.email) {
+        const emailKey = storage.sanitizeEmail(user.email);
+        await set(ref(db, `${KEYS.EMAIL_LOOKUP}/${emailKey}`), user.id);
+      }
     }
+  },
+
+  // Get User ID by Email
+  getUserIdByEmail: async (email: string): Promise<string | null> => {
+    const emailKey = storage.sanitizeEmail(email);
+    const snapshot = await get(ref(db, `${KEYS.EMAIL_LOOKUP}/${emailKey}`));
+    return snapshot.exists() ? snapshot.val() : null;
   },
 
   syncUserFromCloud: async (userId: string): Promise<User | null> => {

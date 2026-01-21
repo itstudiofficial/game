@@ -38,10 +38,10 @@ const App: React.FC = () => {
     applySEO();
   }, []);
 
-  // Capture Referral from URL
+  // Capture Referral from URL - Supports both 'ref' and 'id'
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const refCode = params.get('ref');
+    const refCode = params.get('id') || params.get('ref');
     if (refCode) {
       sessionStorage.setItem('pending_referral', refCode.toUpperCase());
       window.history.replaceState({}, document.title, window.location.pathname);

@@ -11,7 +11,6 @@ interface WalletProps {
 }
 
 const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, transactions, onRefresh }) => {
-  const [view, setView] = useState<'transact' | 'history'>('transact');
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('Easypaisa');
@@ -75,7 +74,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
       setAmount('');
       setAccount('');
       setShowConfirmModal(false);
-      setView('history'); 
     } catch (err) {
       alert('Error processing request.');
     } finally {
@@ -127,13 +125,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
 
           {/* Interaction Area */}
           <div className="lg:col-span-8 bg-white rounded-[4rem] border border-slate-200 shadow-sm overflow-hidden">
-             <div className="flex border-b border-slate-100">
-                <button onClick={() => setView('transact')} className={`flex-1 py-8 font-black text-[10px] uppercase tracking-widest transition-all ${view === 'transact' ? 'bg-white text-indigo-600 border-b-2 border-indigo-600' : 'bg-slate-50/50 text-slate-400'}`}>Transact</button>
-                <button onClick={() => setView('history')} className={`flex-1 py-8 font-black text-[10px] uppercase tracking-widest transition-all ${view === 'history' ? 'bg-white text-indigo-600 border-b-2 border-indigo-600' : 'bg-slate-50/50 text-slate-400'}`}>History</button>
-             </div>
-
              <div className="p-10 md:p-16">
-               {view === 'transact' ? (
                  <div className="animate-in fade-in duration-500">
                    <div className="flex bg-slate-50 p-2 rounded-[2rem] border border-slate-200 mb-12">
                       <button onClick={() => { setActiveTab('deposit'); setAccount(''); }} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'deposit' ? 'bg-white text-emerald-600 shadow-lg' : 'text-slate-400'}`}>Deposit Funds</button>
@@ -201,34 +193,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                       </button>
                    </form>
                  </div>
-               ) : (
-                 <div className="space-y-4 animate-in slide-in-from-right-8 duration-500">
-                    {transactions.length === 0 ? (
-                      <div className="py-20 text-center">
-                         <i className="fa-solid fa-receipt text-5xl text-slate-100 mb-6"></i>
-                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No activity found</p>
-                      </div>
-                    ) : (
-                      transactions.map(tx => (
-                        <div key={tx.id} className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex items-center justify-between group">
-                           <div className="flex items-center gap-6">
-                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl shadow-sm border ${tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
-                                <i className={`fa-solid ${tx.type === 'deposit' ? 'fa-circle-arrow-down' : 'fa-circle-arrow-up'}`}></i>
-                              </div>
-                              <div>
-                                 <p className="font-black text-slate-900 text-lg tracking-tight uppercase">{tx.type}</p>
-                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{tx.date}</p>
-                              </div>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-xl font-black text-slate-900 tabular-nums">{tx.amount.toLocaleString()} <span className="text-[10px] opacity-40">Coins</span></p>
-                              <span className={`px-3 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest border shadow-sm ${tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : tx.status === 'failed' ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>{tx.status}</span>
-                           </div>
-                        </div>
-                      ))
-                    )}
-                 </div>
-               )}
              </div>
           </div>
         </div>

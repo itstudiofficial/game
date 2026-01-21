@@ -17,9 +17,10 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
   
   const REFERRAL_REWARD = 50;
   
-  // Branded functional link using current origin
+  // Branded functional link using current origin and 'id' parameter
   const baseUrl = window.location.origin;
-  const functionalLink = `${baseUrl}/?ref=${user.id.toUpperCase()}`;
+  const partnerId = user.id.toUpperCase();
+  const functionalLink = `${baseUrl}/?id=${partnerId}`;
   const displayLink = functionalLink.replace(/^https?:\/\//, '');
   
   const shareMessage = `Unlock daily earnings with Ads Predia! Join via my partner link and get 50 coins instantly: ${functionalLink}`;
@@ -28,7 +29,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
     setLoading(true);
     try {
       const allUsers = await storage.getAllUsers();
-      // Filter users whose referredBy matches current user's sanitized ID
+      // Filter users whose referredBy matches current user's ID
       const partners = allUsers.filter(u => 
         u.referredBy && u.referredBy.toUpperCase() === user.id.toUpperCase()
       );
@@ -106,7 +107,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
               <div className="flex justify-between items-center mb-10 px-4">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <i className="fa-solid fa-fingerprint text-indigo-500"></i>
-                  Global Referral ID Link
+                  Global Partner ID: <span className="text-indigo-600 font-mono">{partnerId}</span>
                 </h3>
               </div>
               
@@ -129,7 +130,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
                     }`}
                   >
                     <i className={`fa-solid ${copied ? 'fa-check-double scale-150 animate-bounce' : 'fa-copy'}`}></i>
-                    <span className="relative z-10">{copied ? 'SYNCED' : 'COPY NOW'}</span>
+                    <span className="relative z-10">{copied ? 'SYNCED' : 'COPY LINK'}</span>
                   </button>
                 </div>
               </div>

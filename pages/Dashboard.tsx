@@ -49,7 +49,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
     return counts;
   }, [transactions]);
 
-  // Fix: Explicitly cast Object.values to number[] to satisfy Math.max typing requirements for line 52
+  // Explicitly cast Object.values to number[] to satisfy Math.max typing requirements
   const maxCatValue = Math.max(...(Object.values(categoryStats) as number[]), 1);
 
   return (
@@ -168,7 +168,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
                           cat === 'Websites' ? 'bg-indigo-500' : 
                           cat === 'Apps' ? 'bg-emerald-500' : 'bg-blue-500'
                         }`}
-                        // Fix: Explicitly cast val to number to resolve arithmetic operation type error on line 170
                         style={{ width: `${((val as number) / maxCatValue) * 100}%` }}
                       ></div>
                     </div>
@@ -182,98 +181,36 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
           </div>
         </div>
 
-        {/* Activity Feed and Secondary Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-           {/* Recent Activity Ledger */}
-           <div className="lg:col-span-8 bg-white rounded-[3.5rem] border border-slate-200/60 shadow-sm overflow-hidden">
-              <div className="p-10 border-b border-slate-50 flex justify-between items-center">
-                 <div>
-                    <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Recent Activity</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit of your latest network operations</p>
-                 </div>
-                 <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300">
-                    <i className="fa-solid fa-receipt text-xl"></i>
-                 </div>
-              </div>
-              
-              <div className="divide-y divide-slate-50">
-                 {transactions.length === 0 ? (
-                   <div className="p-20 text-center">
-                      <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-200">
-                        <i className="fa-solid fa-ghost text-3xl"></i>
-                      </div>
-                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No activity found in vault</p>
-                   </div>
-                 ) : (
-                   transactions.slice(0, 6).map((tx) => (
-                     <div key={tx.id} className="p-8 flex items-center justify-between hover:bg-slate-50 transition-all group">
-                        <div className="flex items-center gap-6">
-                           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg border shadow-sm transition-transform group-hover:scale-110 ${
-                             tx.type === 'earn' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                             tx.type === 'withdraw' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
-                             'bg-slate-50 text-slate-600 border-slate-100'
-                           }`}>
-                             <i className={`fa-solid ${
-                               tx.type === 'earn' ? 'fa-circle-dollar-to-slot' : 
-                               tx.type === 'withdraw' ? 'fa-paper-plane' : 'fa-receipt'
-                             }`}></i>
-                           </div>
-                           <div>
-                              <div className="text-base font-black text-slate-900 tracking-tight flex items-center gap-3">
-                                {tx.type.toUpperCase()} 
-                                <span className="text-[8px] px-2 py-0.5 bg-slate-100 rounded text-slate-400">{tx.id}</span>
-                              </div>
-                              <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">{tx.date}</div>
-                           </div>
-                        </div>
-                        <div className="text-right">
-                           <div className={`text-xl font-black tracking-tighter tabular-nums ${tx.type === 'earn' ? 'text-emerald-600' : 'text-slate-900'}`}>
-                              {tx.type === 'earn' ? '+' : '-'}{tx.amount.toLocaleString()}
-                           </div>
-                           <div className={`text-[8px] font-black uppercase tracking-widest mt-1 ${
-                             tx.status === 'success' ? 'text-emerald-500' : 
-                             tx.status === 'pending' ? 'text-amber-500' : 'text-rose-500'
-                           }`}>
-                             {tx.status}
-                           </div>
-                        </div>
-                     </div>
-                   ))
-                 )}
-              </div>
-           </div>
+        {/* System Stats Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-indigo-600 rounded-[3rem] p-10 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group cursor-pointer">
+               <div className="relative z-10">
+                  <h4 className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Yield Optimizer</h4>
+                  <p className="text-xl font-black mb-6 leading-tight">Complete 5 more high-value tasks to unlock Tier 2 rewards.</p>
+                  <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-white/20 transition-all">
+                     Upgrade Node <i className="fa-solid fa-arrow-right"></i>
+                  </div>
+               </div>
+               <i className="fa-solid fa-rocket absolute -right-6 -bottom-6 text-9xl text-white/5 -rotate-12 transition-transform group-hover:scale-110"></i>
+            </div>
 
-           {/* Performance Tips & Quick Actions */}
-           <div className="lg:col-span-4 space-y-8">
-              <div className="bg-indigo-600 rounded-[3rem] p-10 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group cursor-pointer">
-                 <div className="relative z-10">
-                    <h4 className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Yield Optimizer</h4>
-                    <p className="text-xl font-black mb-6 leading-tight">Complete 5 more high-value tasks to unlock Tier 2 rewards.</p>
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-white/20 transition-all">
-                       Upgrade Node <i className="fa-solid fa-arrow-right"></i>
-                    </div>
-                 </div>
-                 <i className="fa-solid fa-rocket absolute -right-6 -bottom-6 text-9xl text-white/5 -rotate-12 transition-transform group-hover:scale-110"></i>
-              </div>
-
-              <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
-                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">System Stats</h4>
-                 <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Security Pulse</span>
-                       <span className="text-[10px] font-black text-emerald-500 uppercase">Strong</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Network Latency</span>
-                       <span className="text-[10px] font-black text-slate-900 uppercase">24ms</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Affiliate Count</span>
-                       <span className="text-[10px] font-black text-indigo-600 uppercase">{user.claimedReferrals?.length || 0} Nodes</span>
-                    </div>
-                 </div>
-              </div>
-           </div>
+            <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
+               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">System Stats</h4>
+               <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Security Pulse</span>
+                     <span className="text-[10px] font-black text-emerald-500 uppercase">Strong</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Network Latency</span>
+                     <span className="text-[10px] font-black text-slate-900 uppercase">24ms</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Affiliate Count</span>
+                     <span className="text-[10px] font-black text-indigo-600 uppercase">{user.claimedReferrals?.length || 0} Nodes</span>
+                  </div>
+               </div>
+            </div>
         </div>
       </div>
       
