@@ -35,10 +35,11 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
 
   const adminLinks = [
     { name: 'Admin Hub', id: 'admin-overview', icon: 'fa-user-shield' },
+    { name: 'New Task', id: 'admin-create-task', icon: 'fa-plus' },
     { name: 'Users', id: 'admin-users', icon: 'fa-users' },
     { name: 'Reviews', id: 'admin-reviews', icon: 'fa-camera-retro' },
     { name: 'Tasks Audit', id: 'admin-tasks', icon: 'fa-list-check' },
-    { name: 'Finance', id: 'admin-finance', icon: 'fa-wallet-pennied' },
+    { name: 'Finance', id: 'admin-finance', icon: 'fa-wallet' },
     { name: 'SEO', id: 'admin-seo', icon: 'fa-search' },
     { name: 'Global Logs', id: 'admin-history', icon: 'fa-clock' },
   ];
@@ -61,6 +62,25 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     setIsUserMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const renderMobileLink = (link: { name: string, id: string, icon: string }) => (
+    <button
+      key={link.id}
+      onClick={() => handleNavClick(link.id)}
+      className={`w-full text-left px-8 py-4 rounded-[1.5rem] flex items-center gap-6 transition-all ${
+        currentPage === link.id 
+          ? 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50' 
+          : 'text-slate-600 hover:bg-slate-50'
+      }`}
+    >
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+        currentPage === link.id ? 'bg-white text-indigo-600 shadow-sm' : 'bg-slate-100 text-slate-400'
+      }`}>
+        <i className={`fa-solid ${link.icon} text-[10px]`}></i>
+      </div>
+      <span className="text-[10px] font-black uppercase tracking-widest">{link.name}</span>
+    </button>
+  );
 
   return (
     <>
@@ -251,48 +271,49 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
              </div>
 
              <div className="flex-grow overflow-y-auto p-8 space-y-10">
-               {!user.isLoggedIn && (
-                 <div className="px-2">
-                    <button 
-                      onClick={() => handleNavClick('login')} 
-                      className="group relative w-full h-16 bg-slate-900 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] hover:bg-indigo-600 transition-all duration-300 active:scale-95 overflow-hidden flex items-center justify-center gap-4 mb-6"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                      </span>
-                      <span className="relative z-10">Get Started Now</span>
-                      <i className="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
-                    </button>
+               {!user.isLoggedIn ? (
+                 <div className="space-y-6">
+                    <div className="px-2">
+                       <button 
+                         onClick={() => handleNavClick('login')} 
+                         className="group relative w-full h-16 bg-slate-900 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.3em] shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] hover:bg-indigo-600 transition-all duration-300 active:scale-95 overflow-hidden flex items-center justify-center gap-4 mb-6"
+                       >
+                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+                         <span className="relative z-10">Get Started Now</span>
+                         <i className="fa-solid fa-chevron-right text-[10px] group-hover:translate-x-1 transition-transform"></i>
+                       </button>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-6">Navigation</p>
+                      {publicLinks.map(link => renderMobileLink(link))}
+                    </div>
+                 </div>
+               ) : (
+                 <div className="space-y-10">
+                    {/* Admin Section in Mobile Drawer */}
+                    {user.isAdmin && (
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-4 ml-6 flex items-center gap-3">
+                           <i className="fa-solid fa-shield-halved"></i>
+                           Admin Protocol
+                        </p>
+                        {adminLinks.map(link => renderMobileLink(link))}
+                        <div className="h-px bg-slate-50 my-6 mx-6"></div>
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-6">
+                         {user.isAdmin ? 'Operator Node' : 'Main Dashboard'}
+                       </p>
+                       {authLinks.map(link => renderMobileLink(link))}
+                    </div>
                  </div>
                )}
-
-               <div className="space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 ml-6">Main System</p>
-                  {currentLinks.map(link => (
-                    <button
-                      key={link.id}
-                      onClick={() => handleNavClick(link.id)}
-                      className={`w-full text-left px-8 py-5 rounded-[1.75rem] flex items-center gap-6 transition-all ${
-                        currentPage === link.id 
-                          ? 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50' 
-                          : 'text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-                        currentPage === link.id ? 'bg-white text-indigo-600 shadow-sm' : 'bg-slate-100 text-slate-400'
-                      }`}>
-                        <i className={`fa-solid ${link.icon} text-sm`}></i>
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-widest">{link.name}</span>
-                    </button>
-                  ))}
-               </div>
              </div>
 
-             {user.isLoggedIn && (
-               <div className="p-10 bg-slate-50/50 rounded-b-[3rem]">
+             <div className="p-10 bg-slate-50/50 rounded-b-[3rem]">
+               {user.isLoggedIn ? (
                   <button 
                     onClick={onLogout} 
                     className="w-full py-6 rounded-2xl bg-white border border-red-100 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-4 shadow-sm"
@@ -300,8 +321,16 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                     <i className="fa-solid fa-power-off"></i>
                     Logout
                   </button>
-               </div>
-             )}
+               ) : (
+                  <button 
+                    onClick={() => handleNavClick('login')} 
+                    className="w-full py-6 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-colors flex items-center justify-center gap-4 shadow-sm"
+                  >
+                    <i className="fa-solid fa-user"></i>
+                    Partner Login
+                  </button>
+               )}
+             </div>
           </div>
         </div>
       )}
