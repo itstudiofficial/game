@@ -38,7 +38,7 @@ const App: React.FC = () => {
     applySEO();
   }, []);
 
-  // Capture Referral from URL - Supports both 'ref' and 'id'
+  // Capture Referral from URL - Supports both 'id' and 'ref'
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const refCode = params.get('id') || params.get('ref');
@@ -124,7 +124,7 @@ const App: React.FC = () => {
     setUser(updatedUser);
     await storage.setUser(updatedUser);
     
-    setCurrentPage(updatedUser.isAdmin ? 'admin' : 'dashboard');
+    setCurrentPage(updatedUser.isAdmin ? 'admin-overview' : 'dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -196,7 +196,7 @@ const App: React.FC = () => {
     await storage.deleteTaskFromCloud(taskId);
     const updatedUser: User = {
       ...user,
-      createdTasks: user.createdTasks.filter(id => id !== taskId)
+      createdTasks: (user.createdTasks || []).filter(id => id !== taskId)
     };
     setUser(updatedUser);
     await storage.setUser(updatedUser);
@@ -227,6 +227,31 @@ const App: React.FC = () => {
       ...user,
       coins: (user.coins || 0) + reward,
       claimedReferrals: [...(user.claimedReferrals || []), referredUserId]
+    };
+
+    setUser(updatedUser);
+    await storage.setUser(updatedUser);
+    await storage.addTransaction(newTx);
+    setTransactions(prev => [newTx, ...prev]);
+  };
+
+  const handleSpinReward = async (reward: number, cost: number) => {
+    if (!user.isLoggedIn) return;
+    
+    const newTx: Transaction = {
+      id: `SPIN-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+      userId: user.id,
+      username: user.username,
+      amount: reward,
+      type: 'spin',
+      status: 'success',
+      method: `Daily Spin Reward`,
+      date: new Date().toLocaleString()
+    };
+
+    const updatedUser: User = {
+      ...user,
+      coins: (user.coins || 0) + reward - cost
     };
 
     setUser(updatedUser);
@@ -289,11 +314,11 @@ const App: React.FC = () => {
         {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
         {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
         {currentPage === 'login' && <Login onLogin={handleLogin} />}
-        {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={() => {}} transactions={transactions} />}
+        {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={handleSpinReward} transactions={transactions} />}
         {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleReferralClaim} />}
-        {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={handleDeleteTask} onUpdateTask={handleUpdateTask} />}
+        {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={handleDeleteTask} onUpdateTask={handleUpdateTask} onNavigate={navigateTo} />}
         {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
-        {currentPage === 'admin' && user.isAdmin && <AdminPanel />}
+        {currentPage.startsWith('admin') && user.isAdmin && <AdminPanel initialView={currentPage.split('-')[1] as any} />}
       </main>
       <Footer setCurrentPage={navigateTo} isLoggedIn={user.isLoggedIn} />
     </div>

@@ -33,6 +33,16 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     { name: 'Profile', id: 'profile', icon: 'fa-user-gear' },
   ];
 
+  const adminLinks = [
+    { name: 'Admin Hub', id: 'admin-overview', icon: 'fa-user-shield' },
+    { name: 'Users', id: 'admin-users', icon: 'fa-users' },
+    { name: 'Reviews', id: 'admin-reviews', icon: 'fa-camera-retro' },
+    { name: 'Tasks Audit', id: 'admin-tasks', icon: 'fa-list-check' },
+    { name: 'Finance', id: 'admin-finance', icon: 'fa-wallet-pennied' },
+    { name: 'SEO', id: 'admin-seo', icon: 'fa-search' },
+    { name: 'Global Logs', id: 'admin-history', icon: 'fa-clock' },
+  ];
+
   const publicLinks = [
     { name: 'Home', id: 'home', icon: 'fa-house' },
     { name: 'Features', id: 'features', icon: 'fa-layer-group' },
@@ -40,7 +50,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
   ];
 
   const finalAuthLinks = user.isAdmin 
-    ? [{ name: 'Admin', id: 'admin', icon: 'fa-user-shield' }, ...authLinks]
+    ? [...adminLinks, ...authLinks]
     : authLinks;
 
   const currentLinks = user.isLoggedIn ? finalAuthLinks : publicLinks;
@@ -94,7 +104,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center bg-slate-900/5 p-1.5 rounded-[1.75rem] border border-slate-200/30 backdrop-blur-sm overflow-x-auto no-scrollbar max-w-[50%] xl:max-w-none">
+            <div className="hidden lg:flex items-center bg-slate-900/5 p-1.5 rounded-[1.75rem] border border-slate-200/30 backdrop-blur-sm overflow-x-auto no-scrollbar max-w-[65%] xl:max-w-none">
               {currentLinks.map(link => (
                 <button
                   key={link.id}
@@ -139,7 +149,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
               ) : (
                 <div className="flex items-center gap-4">
                   <div 
-                    onClick={() => handleNavClick(user.isAdmin ? 'admin' : 'wallet')}
+                    onClick={() => handleNavClick(user.isAdmin ? 'admin-overview' : 'wallet')}
                     className={`flex items-center gap-5 pl-6 pr-2.5 py-2.5 rounded-[1.5rem] cursor-pointer transition-all border shadow-2xl group ${user.isAdmin ? 'bg-indigo-900 border-indigo-800' : 'bg-slate-900 border-slate-800 shadow-indigo-100/10'}`}
                   >
                     <div className="flex flex-col">

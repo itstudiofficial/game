@@ -3,8 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { User, Task, Transaction, TaskType, SEOConfig } from '../types';
 import { storage } from '../services/storage';
 
-const AdminPanel: React.FC = () => {
-  const [view, setView] = useState<'overview' | 'users' | 'history' | 'tasks' | 'finance' | 'reviews' | 'seo'>('overview');
+interface AdminPanelProps {
+  initialView?: 'overview' | 'users' | 'history' | 'tasks' | 'finance' | 'reviews' | 'seo';
+}
+
+const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => {
+  const [view, setView] = useState(initialView);
   const [users, setUsers] = useState<User[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -14,6 +18,11 @@ const AdminPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
+
+  // Sync internal view with prop updates
+  useEffect(() => {
+    setView(initialView);
+  }, [initialView]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -60,6 +69,12 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleUserStatus = async (userId: string, status: 'active' | 'banned') => {
+    await storage.updateUserInCloud(userId, { status });
+    await fetchData();
+    alert(`User node ${status === 'active' ? 'activated' : 'decommissioned'}.`);
+  };
+
   const handleSaveSEO = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingSeo(true);
@@ -81,7 +96,8 @@ const AdminPanel: React.FC = () => {
 
   const filteredUsers = users.filter(u => 
     u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+    u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-black uppercase tracking-[0.3em] text-slate-400">Syncing Admin Hub...</div>;
@@ -132,6 +148,171 @@ const AdminPanel: React.FC = () => {
                  <h4 className="text-4xl font-black text-slate-900 tracking-tighter">{s.val}</h4>
                </div>
              ))}
+           </div>
+        )}
+
+        {view === 'users' && (
+           <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+              <div className="p-10 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
+                 <div>
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Network Directory</h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Manage authorized operator nodes</p>
+                 </div>
+                 <div className="relative w-full md:w-96">
+                    <i className="fa-solid fa-search absolute left-6 top-1/2 -translate-y-1/2 text-slate-300"></i>
+                    <input 
+                      type="text" 
+                      placeholder="Search by ID or Email..." 
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="w-full pl-14 pr-6 py-4 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
+                    />
+                 </div>
+              </div>
+              <div className="overflow-x-auto">
+                 <table className="w-full text-left">
+                    <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                       <tr>
+                          <th className="px-10 py-6">Operator</th>
+                          <th className="px-6 py-6">ID Node</th>
+                          <th className="px-6 py-6">Vault (Main)</th>
+                          <th className="px-6 py-6">Escrow (Dep)</th>
+                          <th className="px-6 py-6">Status</th>
+                          <th className="px-10 py-6 text-right">Actions</th>
+                       </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                       {filteredUsers.map(u => (
+                         <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-10 py-6">
+                               <div className="font-black text-slate-900">{u.username}</div>
+                               <div className="text-[10px] text-slate-400 lowercase">{u.email}</div>
+                            </td>
+                            <td className="px-6 py-6 font-mono text-xs text-indigo-600">{u.id}</td>
+                            <td className="px-6 py-6 font-black text-slate-900">{u.coins.toLocaleString()}</td>
+                            <td className="px-6 py-6 font-black text-slate-500">{u.depositBalance.toLocaleString()}</td>
+                            <td className="px-6 py-6">
+                               <span className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border ${u.status === 'banned' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                 {u.status || 'active'}
+                               </span>
+                            </td>
+                            <td className="px-10 py-6 text-right">
+                               {u.status === 'banned' ? (
+                                 <button onClick={() => handleUserStatus(u.id, 'active')} className="text-emerald-500 hover:text-emerald-700 transition-colors text-xs font-black uppercase tracking-widest">Restore</button>
+                               ) : (
+                                 <button onClick={() => handleUserStatus(u.id, 'banned')} className="text-rose-500 hover:text-rose-700 transition-colors text-xs font-black uppercase tracking-widest">Suspend</button>
+                               )}
+                            </td>
+                         </tr>
+                       ))}
+                    </tbody>
+                 </table>
+              </div>
+           </div>
+        )}
+
+        {view === 'finance' && (
+           <div className="space-y-12 animate-in fade-in duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="bg-slate-900 p-10 rounded-[3rem] text-white">
+                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">Pending Withdrawals</p>
+                    <h3 className="text-5xl font-black tabular-nums">
+                       {transactions.filter(tx => tx.type === 'withdraw' && tx.status === 'pending').length}
+                    </h3>
+                 </div>
+                 <div className="bg-white p-10 rounded-[3rem] border border-slate-200">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Active Deposit Tickets</p>
+                    <h3 className="text-5xl font-black tabular-nums">
+                       {transactions.filter(tx => tx.type === 'deposit' && tx.status === 'pending').length}
+                    </h3>
+                 </div>
+              </div>
+
+              <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                 <div className="p-10 border-b border-slate-50">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Financial Queue</h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Audit all liquidity requests</p>
+                 </div>
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                       <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          <tr>
+                             <th className="px-10 py-6">Transaction</th>
+                             <th className="px-6 py-6">Method</th>
+                             <th className="px-6 py-6">Ref/Account</th>
+                             <th className="px-6 py-6">Amount</th>
+                             <th className="px-10 py-6 text-right">Status</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-slate-50">
+                          {transactions.filter(tx => tx.type === 'deposit' || tx.type === 'withdraw').map(tx => (
+                            <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
+                               <td className="px-10 py-6">
+                                  <div className="font-black text-slate-900 uppercase tracking-tighter text-xs">{tx.type}</div>
+                                  <div className="text-[9px] text-slate-400 uppercase font-black">{tx.date}</div>
+                               </td>
+                               <td className="px-6 py-6 text-xs font-bold text-slate-600">{tx.method}</td>
+                               <td className="px-6 py-6 font-mono text-xs text-indigo-600 max-w-[150px] truncate">{tx.account || 'N/A'}</td>
+                               <td className={`px-6 py-6 font-black ${tx.type === 'deposit' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                  {tx.amount.toLocaleString()}
+                               </td>
+                               <td className="px-10 py-6 text-right">
+                                  {tx.status === 'pending' ? (
+                                    <div className="flex justify-end gap-3">
+                                       <button onClick={() => handleAuditSubmission(tx, 'success')} className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[8px] font-black uppercase tracking-widest">Pay</button>
+                                       <button onClick={() => handleAuditSubmission(tx, 'failed')} className="px-4 py-2 bg-rose-50 text-rose-600 rounded-xl text-[8px] font-black uppercase tracking-widest border border-rose-100">Reject</button>
+                                    </div>
+                                  ) : (
+                                    <span className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border ${tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                                       {tx.status}
+                                    </span>
+                                  )}
+                               </td>
+                            </tr>
+                          ))}
+                       </tbody>
+                    </table>
+                 </div>
+              </div>
+           </div>
+        )}
+
+        {view === 'history' && (
+           <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+              <div className="p-10 border-b border-slate-50">
+                 <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Global Ledger</h2>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Every network movement recorded</p>
+              </div>
+              <div className="overflow-x-auto">
+                 <table className="w-full text-left">
+                    <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                       <tr>
+                          <th className="px-10 py-6">Event ID</th>
+                          <th className="px-6 py-6">Operator</th>
+                          <th className="px-6 py-6">Type</th>
+                          <th className="px-6 py-6">Delta</th>
+                          <th className="px-10 py-6 text-right">Timestamp</th>
+                       </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                       {transactions.map(tx => (
+                         <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-10 py-6 font-mono text-[10px] text-slate-400">{tx.id}</td>
+                            <td className="px-6 py-6 font-black text-slate-900 text-xs">{tx.username || 'Ghost Node'}</td>
+                            <td className="px-6 py-6">
+                               <span className="px-2 py-0.5 bg-slate-100 rounded text-[8px] font-black uppercase tracking-widest text-slate-500">
+                                  {tx.type.replace('_', ' ')}
+                               </span>
+                            </td>
+                            <td className={`px-6 py-6 font-black text-xs ${tx.type === 'withdraw' || tx.type === 'spend' ? 'text-rose-600' : 'text-emerald-600'}`}>
+                               {tx.type === 'withdraw' || tx.type === 'spend' ? '-' : '+'}{tx.amount.toLocaleString()}
+                            </td>
+                            <td className="px-10 py-6 text-right text-[10px] font-bold text-slate-400">{tx.date}</td>
+                         </tr>
+                       ))}
+                    </tbody>
+                 </table>
+              </div>
            </div>
         )}
 
