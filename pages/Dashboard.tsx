@@ -26,7 +26,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
     );
   }
 
-  const COIN_RATE = 5000;
+  // Economic Policy Update: 2,000 Coins = $1.00
+  const COIN_RATE = 2000;
   const earnings = useMemo(() => {
     const total = user.coins || 0;
     const usd = (total / COIN_RATE).toFixed(2);

@@ -22,9 +22,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const COIN_RATE = 5000;
-  const MIN_DEPOSIT = 5000; 
-  const MIN_WITHDRAWAL = 5000;
+  // Economic Policy Update: 2,000 Coins = $1.00
+  const COIN_RATE = 2000;
+  const MIN_DEPOSIT = 2000; 
+  const MIN_WITHDRAWAL = 2000;
 
   const GATEWAY_DETAILS = {
     'Easypaisa': { 
@@ -205,7 +206,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                          <div className="space-y-4">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Amount (Coins)</label>
                             <div className="relative">
-                               <input type="number" placeholder="5,000+" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-8 py-6 bg-slate-50 border-none rounded-3xl font-black text-2xl text-slate-900 focus:ring-4 focus:ring-indigo-600/5 transition-all shadow-inner" />
+                               <input type="number" placeholder={`${MIN_WITHDRAWAL.toLocaleString()}+`} value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-8 py-6 bg-slate-50 border-none rounded-3xl font-black text-2xl text-slate-900 focus:ring-4 focus:ring-indigo-600/5 transition-all shadow-inner" />
                                <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">≈ ${(parseInt(amount) || 0) / COIN_RATE} USD</span>
                             </div>
                          </div>

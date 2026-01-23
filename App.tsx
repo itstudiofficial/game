@@ -284,7 +284,8 @@ const App: React.FC = () => {
       date: new Date().toLocaleString()
     };
     if (type === 'withdraw') {
-      if (amount < 5000) return alert('Min withdrawal: 5,000 coins.');
+      // Economic Policy Update: 2,000 Coins Min
+      if (amount < 2000) return alert('Min withdrawal: 2,000 coins.');
       if (user.coins < amount) return alert('Insufficient vault balance.');
       const updatedUser = { ...user, coins: user.coins - amount };
       setUser(updatedUser);

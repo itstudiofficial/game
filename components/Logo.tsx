@@ -13,22 +13,22 @@ const Logo: React.FC<LogoProps> = ({ className = "w-10 h-10" }) => {
       xmlns="http://www.w3.org/2000/svg" 
       className={className}
     >
-      {/* Left part of 'A' (Dark Blue) */}
+      {/* Left part of 'A' (Slate 800) */}
       <path 
         d="M200 70L30 310H130L200 70Z" 
-        fill="#003B5C" 
+        fill="#1E293B" 
       />
-      {/* Right/Middle part of 'A' and curve (Teal) */}
+      {/* Right/Middle part of 'A' and curve (Indigo 600) */}
       <path 
         d="M200 70L370 310C320 250 250 150 200 70Z" 
-        fill="#00ADBB" 
+        fill="#2563EB" 
       />
-      {/* The 'D' shape (Dark Blue) */}
+      {/* The 'D' shape (Slate 800) */}
       <path 
         fillRule="evenodd" 
         clipRule="evenodd" 
         d="M300 100V310H360C440 310 460 250 460 205C460 160 440 100 360 100H300ZM340 135H360C410 135 425 170 425 205C425 240 410 275 360 275H340V135Z" 
-        fill="#003B5C" 
+        fill="#1E293B" 
       />
     </svg>
   );

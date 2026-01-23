@@ -89,7 +89,20 @@ export const storage = {
     return null;
   },
   
-  getTasks: (): Task[] => {
+  // FIX: Updated to fetch directly from cloud if requested for Admin Panel consistency
+  getTasks: async (): Promise<Task[]> => {
+    try {
+      const snapshot = await get(ref(db, KEYS.TASKS));
+      if (snapshot.exists()) {
+        const cloudTasks = storage.ensureArray<Task>(snapshot.val());
+        localStorage.setItem(KEYS.TASKS, JSON.stringify(cloudTasks));
+        return cloudTasks;
+      }
+    } catch (error) {
+      console.error("Cloud task fetch error:", error);
+    }
+    
+    // Fallback to local storage
     const data = localStorage.getItem(KEYS.TASKS);
     try {
       const parsed = data ? JSON.parse(data) : [];

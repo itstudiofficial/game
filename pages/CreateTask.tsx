@@ -27,8 +27,8 @@ const CreateTask: React.FC<CreateTaskProps> = ({ onCreate, userDepositBalance = 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
 
-  // Updated Policy: 5,000 Coins = $1.00
-  const COIN_RATE = 5000;
+  // Updated Policy: 2,000 Coins = $1.00
+  const COIN_RATE = 2000;
   const totalCost = formData.reward * formData.totalWorkers;
   const isBalanceEnough = userDepositBalance >= totalCost;
 

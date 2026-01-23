@@ -28,7 +28,7 @@ const TermsConditions: React.FC = () => {
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-4">3. Financial Protocol</h2>
               <ul className="list-disc pl-5 text-slate-600 space-y-3 font-medium">
                 <li>Coins have no real-world value outside of the Ads Predia marketplace and withdrawal system.</li>
-                <li>The minimum withdrawal is 5,000 coins ($1.00 USD).</li>
+                <li>The minimum withdrawal is 2,000 coins ($1.00 USD).</li>
                 <li>Deposits used for advertising campaigns are non-refundable once the campaign has been initialized.</li>
               </ul>
             </section>
