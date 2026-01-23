@@ -29,9 +29,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
   ];
 
   const availableTasks = useMemo(() => {
-    // Defensive check to ensure tasks is an array
     const safeTasks = Array.isArray(tasks) ? tasks : [];
-    
     return safeTasks.filter(t => {
       if (!t) return false;
       const isSubmitted = user.completedTasks?.includes(t.id);
@@ -43,7 +41,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
   const userHistoryItems = useMemo(() => {
     const safeTransactions = Array.isArray(transactions) ? transactions : [];
-    
     return safeTransactions
       .filter(tx => tx && tx.type === 'earn' && tx.userId === user.id)
       .filter(tx => {
@@ -53,14 +50,20 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, user.id, historyFilter]);
 
-  const compressImage = (base64Str: string): Promise<string> => {
-    return new Promise((resolve) => {
+  /**
+   * Memory-efficient image compression for mobile.
+   * Uses Object URLs to avoid string overhead before final JPEG creation.
+   */
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
       const img = new Image();
-      img.src = base64Str;
+      const objectUrl = URL.createObjectURL(file);
+      
       img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
+        const MAX_WIDTH = 1000; // Sufficient for verification, easier on mobile memory
+        const MAX_HEIGHT = 1000;
         let width = img.width;
         let height = img.height;
 
@@ -75,16 +78,26 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
             height = MAX_HEIGHT;
           }
         }
+        
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.7));
+          resolve(canvas.toDataURL('image/jpeg', 0.6)); // Balanced compression
         } else {
-          resolve(base64Str);
+          reject(new Error('Failed to create canvas context'));
         }
       };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Failed to load image into memory'));
+      };
+      
+      img.src = objectUrl;
     });
   };
 
@@ -95,20 +108,26 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         alert("File size exceeds 25MB. Please choose a smaller image.");
         return;
       }
+      
       setIsCompressing(true);
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const compressed = await compressImage(reader.result as string);
+      try {
+        const compressed = await compressImage(file);
         setPreviewImage(compressed);
+      } catch (error) {
+        console.error("Compression error:", error);
+        alert("There was an error processing your screenshot. Please try a different image.");
+      } finally {
         setIsCompressing(false);
-      };
-      reader.readAsDataURL(file);
+        // Clear input value so same file can be selected again
+        if (e.target) e.target.value = '';
+      }
     }
   };
 
   const handleFinalSubmit = () => {
     if (!previewImage) return alert("Please upload a screenshot proof first.");
     setIsUploading(true);
+    // Simulate server synchronization
     setTimeout(() => {
       if (selectedTask) onComplete(selectedTask.id, previewImage, new Date().toLocaleString());
       handleCloseModal();
