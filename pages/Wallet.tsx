@@ -16,6 +16,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
   const [method, setMethod] = useState('Easypaisa');
   const [account, setAccount] = useState('');
   const [proofImage, setProofImage] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,19 +50,57 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
     }
   };
 
+  const compressImage = (base64Str: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        } else {
+          resolve(base64Str);
+        }
+      };
+    });
+  };
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) return alert('Image size must be less than 5MB.');
+      if (file.size > 25 * 1024 * 1024) return alert('File exceeds 25MB limit.');
+      setIsCompressing(true);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setProofImage(reader.result as string);
+      reader.onloadend = async () => {
+        const compressed = await compressImage(reader.result as string);
+        setProofImage(compressed);
+        setIsCompressing(false);
       };
       reader.readAsDataURL(file);
     }
@@ -118,7 +157,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-12">
-          {/* Balance Cards */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-3xl relative overflow-hidden group">
                <div className="relative z-10">
@@ -143,7 +181,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
             </div>
           </div>
 
-          {/* Interaction Area */}
           <div className="lg:col-span-8 bg-white rounded-[4rem] border border-slate-200 shadow-sm overflow-hidden">
              <div className="p-10 md:p-16">
                  <div className="animate-in fade-in duration-500">
@@ -213,15 +250,20 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                           <div className="space-y-4">
                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Payment Screenshot Proof</label>
                              <div 
-                                onClick={() => fileInputRef.current?.click()}
-                                className={`h-[72px] bg-slate-50 rounded-3xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${proofImage ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 hover:border-indigo-400'}`}
+                                onClick={() => !isCompressing && fileInputRef.current?.click()}
+                                className={`h-[72px] bg-slate-50 rounded-3xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${isCompressing ? 'opacity-50 cursor-wait' : ''} ${proofImage ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 hover:border-indigo-400'}`}
                              >
                                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-                                {proofImage ? (
+                                {isCompressing ? (
+                                   <div className="flex items-center gap-3">
+                                      <i className="fa-solid fa-circle-notch fa-spin text-indigo-500"></i>
+                                      <span className="text-[10px] font-black text-indigo-600 uppercase">Optimizing Proof...</span>
+                                   </div>
+                                ) : proofImage ? (
                                    <div className="flex items-center gap-3">
                                       <i className="fa-solid fa-circle-check text-emerald-500"></i>
-                                      <span className="text-[10px] font-black text-emerald-600 uppercase">Screenshot Attached</span>
-                                      <button type="button" onClick={(e) => { e.stopPropagation(); setProofImage(null); }} className="text-slate-400 hover:text-rose-500 transition-colors">
+                                      <span className="text-[10px] font-black text-emerald-600 uppercase">Screenshot Optimized</span>
+                                      <button type="button" onClick={(e) => { e.stopPropagation(); setProofImage(null); }} className="text-slate-400 hover:text-rose-500 transition-colors ml-4">
                                          <i className="fa-solid fa-trash-can"></i>
                                       </button>
                                    </div>
@@ -232,11 +274,12 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                                    </div>
                                 )}
                              </div>
+                             <p className="px-4 text-[8px] font-black text-slate-400 uppercase tracking-widest">Supports up to 25MB (Auto-compressed for mobile)</p>
                           </div>
                         )}
                       </div>
 
-                      <button type="submit" className={`w-full py-8 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.4em] shadow-2xl transition-all active:scale-95 ${activeTab === 'deposit' ? 'bg-emerald-600 shadow-emerald-100 hover:bg-emerald-500' : 'bg-slate-900 shadow-slate-100 hover:bg-indigo-600'}`}>
+                      <button type="submit" disabled={isCompressing} className={`w-full py-8 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.4em] shadow-2xl transition-all active:scale-95 ${activeTab === 'deposit' ? 'bg-emerald-600 shadow-emerald-100 hover:bg-emerald-500' : 'bg-slate-900 shadow-slate-100 hover:bg-indigo-600'} ${isCompressing ? 'opacity-50' : ''}`}>
                         Initialize {activeTab} Request
                       </button>
                    </form>
@@ -245,7 +288,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
           </div>
         </div>
 
-        {/* History Section */}
         <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
           <div className="p-8 md:p-14 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
              <div>
@@ -307,49 +349,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                 </tbody>
              </table>
           </div>
-
-          <div className="md:hidden p-6 space-y-6">
-             {walletHistory.length === 0 ? (
-                <div className="py-20 text-center">
-                   <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-200">
-                      <i className="fa-solid fa-receipt text-3xl"></i>
-                   </div>
-                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No transactions detected</p>
-                </div>
-             ) : (
-                walletHistory.map(tx => (
-                   <div key={tx.id} className="bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4 animate-in slide-in-from-bottom-2 duration-300">
-                      <div className="flex justify-between items-start">
-                         <div className="space-y-1">
-                            <span className={`px-2 py-0.5 text-[7px] font-black rounded-md uppercase tracking-widest border ${tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                               {tx.type}
-                            </span>
-                            <div className="font-mono text-[9px] text-indigo-600 font-black">ID: {tx.id.toUpperCase()}</div>
-                         </div>
-                         <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${tx.status === 'success' ? 'bg-emerald-500' : tx.status === 'failed' ? 'bg-rose-500' : 'bg-amber-500'}`}></span>
-                            <span className={`text-[8px] font-black uppercase tracking-widest ${tx.status === 'success' ? 'text-emerald-600' : tx.status === 'failed' ? 'text-rose-600' : 'text-amber-600'}`}>
-                               {tx.status}
-                            </span>
-                         </div>
-                      </div>
-                      
-                      <div className="flex justify-between items-end">
-                         <div>
-                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Amount</p>
-                            <h4 className={`text-xl font-black ${tx.type === 'deposit' ? 'text-emerald-600' : 'text-slate-900'}`}>
-                               {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toLocaleString()} <span className="text-[9px] opacity-40 uppercase">Coins</span>
-                            </h4>
-                         </div>
-                         <div className="text-right">
-                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{tx.method}</p>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{tx.date.split(',')[0]}</p>
-                         </div>
-                      </div>
-                   </div>
-                ))
-             )}
-          </div>
         </div>
       </div>
 
@@ -374,12 +373,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{activeTab === 'deposit' ? 'TxID' : 'Account'}</p>
                    <p className="text-sm font-bold text-indigo-600 break-all">{account}</p>
                  </div>
-                 {proofImage && (
-                    <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
-                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Image Proof</span>
-                       <span className="text-xs font-bold text-emerald-600">Attached</span>
-                    </div>
-                 )}
               </div>
               <div className="flex gap-4">
                  <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">Adjust</button>
