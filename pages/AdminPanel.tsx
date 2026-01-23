@@ -65,7 +65,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
   const totalCoinsInCirculation = useMemo(() => users.reduce((acc, u) => acc + (u.coins || 0), 0), [users]);
   const totalDepositBalance = useMemo(() => users.reduce((acc, u) => acc + (u.depositBalance || 0), 0), [users]);
-  const pendingAudits = useMemo(() => transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length, [transactions]);
+  
+  // FIX: dashboard stats now include all pending operations
+  const pendingTaskAudits = useMemo(() => transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length, [transactions]);
+  const pendingFinanceAudits = useMemo(() => transactions.filter(tx => (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length, [transactions]);
+  const totalAuditQueue = pendingTaskAudits + pendingFinanceAudits;
+  
   const pendingTasksCount = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
 
   const filteredUsers = useMemo(() => {
@@ -227,10 +232,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
             {[
               { id: 'overview', label: 'Dashboard', icon: 'fa-chart-pie' },
               { id: 'users', label: 'Users', icon: 'fa-users' },
-              { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro' },
+              { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro', badge: pendingTaskAudits },
               { id: 'create-task', label: 'New Task', icon: 'fa-plus' },
               { id: 'tasks', label: 'Audit', icon: 'fa-list-check', badge: pendingTasksCount },
-              { id: 'finance', label: 'Finance', icon: 'fa-wallet' },
+              { id: 'finance', label: 'Finance', icon: 'fa-wallet', badge: pendingFinanceAudits },
               { id: 'seo', label: 'SEO', icon: 'fa-search' },
               { id: 'history', label: 'Logs', icon: 'fa-clock' }
             ].map(tab => (
@@ -250,7 +255,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 animate-in fade-in duration-700">
              {[
                { label: 'Network Nodes', val: users.length, icon: 'fa-users', color: 'indigo' },
-               { label: 'Audit Queue', val: pendingAudits, icon: 'fa-clock', color: 'rose' },
+               { label: 'Audit Queue', val: totalAuditQueue, icon: 'fa-clock', color: 'rose' },
                { label: 'Market Escrow', val: totalDepositBalance.toLocaleString(), icon: 'fa-shield', color: 'emerald' },
                { label: 'Coin Velocity', val: totalCoinsInCirculation.toLocaleString(), icon: 'fa-coins', color: 'amber' }
              ].map((s, i) => (
@@ -448,6 +453,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                   <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Audit Verification Queue</h2>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Validate submitted assets for manual credit release</p>
                </div>
+               <button onClick={fetchData} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+                  <i className="fa-solid fa-sync"></i> Refresh Queue
+               </button>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
@@ -522,7 +530,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                   <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Financial Command Center</h2>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manage network inflow and liquidity requests</p>
                </div>
-               <div className="flex gap-4">
+               <div className="flex gap-4 items-center">
+                  <button onClick={fetchData} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm mr-4">
+                     <i className="fa-solid fa-sync"></i> Sync Vault Data
+                  </button>
                   <div className="bg-emerald-50 px-6 py-3 rounded-2xl border border-emerald-100">
                     <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Pending Inflow</p>
                     <p className="text-xl font-black text-emerald-700 tabular-nums">
@@ -761,7 +772,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                     <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Universal Event Logs</h2>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Real-time recording of all node operations</p>
                  </div>
-                 <i className="fa-solid fa-list-ul text-slate-100 text-3xl"></i>
+                 <button onClick={fetchData} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+                    <i className="fa-solid fa-sync"></i> Refresh Logs
+                 </button>
               </div>
               <div className="overflow-x-auto">
                  <table className="w-full text-left">

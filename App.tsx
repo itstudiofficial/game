@@ -24,9 +24,18 @@ import { storage } from './services/storage';
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState<User>(storage.getUser());
-  const [tasks, setTasks] = useState<Task[]>(storage.getTasks());
+  const [tasks, setTasks] = useState<Task[]>([]); // Initialize empty, will be populated by storage/subscription
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [sessionConflict, setSessionConflict] = useState(false);
+
+  // Initial Task Load
+  useEffect(() => {
+    const loadInitialTasks = async () => {
+      const initialTasks = await storage.getTasks();
+      setTasks(initialTasks);
+    };
+    loadInitialTasks();
+  }, []);
 
   // Apply SEO Config on mount
   useEffect(() => {
@@ -283,15 +292,18 @@ const App: React.FC = () => {
       status: 'pending',
       date: new Date().toLocaleString()
     };
+    
     if (type === 'withdraw') {
-      // Economic Policy Update: 2,000 Coins Min
       if (amount < 2000) return alert('Min withdrawal: 2,000 coins.');
       if (user.coins < amount) return alert('Insufficient vault balance.');
       const updatedUser = { ...user, coins: user.coins - amount };
       setUser(updatedUser);
       await storage.setUser(updatedUser);
     }
-    storage.addTransaction(newTx);
+    
+    // FIX: Added await to ensure transaction is successfully written to Firebase
+    // This ensures it appears in the Admin Panel immediately after completion.
+    await storage.addTransaction(newTx);
     setTransactions(prev => [newTx, ...prev]);
     alert(`${type.toUpperCase()} request initialized.`);
   };
