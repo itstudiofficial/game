@@ -36,7 +36,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     setLoading(true);
     try {
       const u = await storage.getAllUsers();
-      // Filter out nulls and ensure user has an ID before processing
       const validUsers = u.filter(user => user && user.id);
       const uniqueUsers = Array.from(new Map(validUsers.map(user => [user.id, user])).values());
       
@@ -63,7 +62,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const totalDepositBalance = useMemo(() => users.reduce((acc, u) => acc + (u.depositBalance || 0), 0), [users]);
   const pendingAudits = useMemo(() => transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length, [transactions]);
 
-  // Robust filtering logic to prevent crashes on null fields
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
       const search = searchQuery.toLowerCase();
@@ -298,7 +296,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         )}
 
         {view === 'create-task' && (
-          <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-500">
+          <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700">
             <div className="flex justify-between items-start mb-12">
               <div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">System Asset Deployment</h2>
@@ -373,15 +371,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                  </div>
                ) : (
                  transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').map(tx => (
-                   <div key={tx.id} className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all group">
+                   <div key={tx.id} className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all group overflow-hidden">
                       <div 
                         onClick={() => tx.proofImage && setSelectedScreenshot(tx.proofImage)} 
-                        className="w-full md:w-56 h-72 bg-slate-50 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative"
+                        className="w-full md:w-56 h-72 bg-slate-900 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative shrink-0"
                       >
                          {tx.proofImage ? (
-                           <img src={tx.proofImage} alt="Proof" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                           <img src={tx.proofImage} alt="Proof" className="w-full h-full object-contain transition-transform group-hover:scale-110" />
                          ) : (
-                           <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                           <div className="w-full h-full flex flex-col items-center justify-center text-slate-600">
                              <i className="fa-solid fa-image-slash text-4xl mb-4"></i>
                              <span className="text-[8px] font-black uppercase tracking-widest">No Visual Proof</span>
                            </div>
@@ -391,21 +389,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                          </div>
                       </div>
 
-                      <div className="flex-1 flex flex-col justify-between">
+                      <div className="flex-1 flex flex-col justify-between min-w-0">
                          <div className="space-y-6">
                             <div className="flex justify-between items-start">
-                               <div>
-                                  <h4 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2">{tx.username || 'Ghost Node'}</h4>
+                               <div className="min-w-0">
+                                  <h4 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2 truncate">{tx.username || 'Ghost Node'}</h4>
                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{tx.date}</p>
                                </div>
-                               <div className="text-right">
+                               <div className="text-right shrink-0">
                                   <div className="text-2xl font-black text-indigo-600 tabular-nums">+{tx.amount}</div>
                                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">COIN DELTA</p>
                                </div>
                             </div>
                             <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Target Asset Context:</span>
-                               <p className="text-[11px] font-bold text-slate-700 leading-relaxed">{tx.method || 'Unknown Task Submission'}</p>
+                               <p className="text-[11px] font-bold text-slate-700 leading-relaxed truncate">{tx.method || 'Unknown Task Submission'}</p>
                             </div>
                          </div>
                          <div className="flex gap-4 mt-8">
@@ -430,7 +428,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           </div>
         )}
 
-        {/* Other views remain consistent with the improved robust filtering patterns... */}
         {view === 'tasks' && (
            <div className="space-y-8 animate-in fade-in duration-500">
               <div className="flex justify-between items-center px-4">
@@ -536,14 +533,19 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
       {selectedScreenshot && (
         <div 
-          className="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-300"
+          className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300 overflow-y-auto"
           onClick={() => setSelectedScreenshot(null)}
         >
-           <div className="relative max-w-6xl max-h-[90vh] shadow-[0_80px_160px_-40px_rgba(0,0,0,0.5)]">
-              <img src={selectedScreenshot} alt="Full Proof" className="w-full h-full object-contain rounded-3xl border border-white/10" />
-              <button onClick={() => setSelectedScreenshot(null)} className="absolute -top-14 right-0 w-12 h-12 bg-white/10 rounded-full text-white flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md">
-                <i className="fa-solid fa-xmark text-xl"></i>
-              </button>
+           <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center pointer-events-none">
+              <div className="relative w-full h-full flex items-center justify-center pointer-events-auto">
+                 <img src={selectedScreenshot} alt="Full Proof" className="max-w-full max-h-full object-contain rounded-xl md:rounded-3xl border border-white/10 shadow-2xl" />
+                 <button 
+                   onClick={(e) => { e.stopPropagation(); setSelectedScreenshot(null); }} 
+                   className="absolute -top-12 md:-top-16 right-0 w-12 h-12 bg-white/10 rounded-full text-white flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md pointer-events-auto shadow-xl"
+                 >
+                   <i className="fa-solid fa-xmark text-xl"></i>
+                 </button>
+              </div>
            </div>
         </div>
       )}

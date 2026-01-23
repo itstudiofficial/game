@@ -18,6 +18,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
   const [isUploading, setIsUploading] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [viewingHistoryScreenshot, setViewingHistoryScreenshot] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const marketCategories: {id: TaskType | 'All', label: string, icon: string}[] = [
@@ -50,10 +51,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, user.id, historyFilter]);
 
-  /**
-   * Memory-efficient image compression for mobile.
-   * Uses Object URLs to avoid string overhead before final JPEG creation.
-   */
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -62,8 +59,8 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1000; // Sufficient for verification, easier on mobile memory
-        const MAX_HEIGHT = 1000;
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1600;
         let width = img.width;
         let height = img.height;
 
@@ -86,7 +83,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.6)); // Balanced compression
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
         } else {
           reject(new Error('Failed to create canvas context'));
         }
@@ -115,10 +112,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         setPreviewImage(compressed);
       } catch (error) {
         console.error("Compression error:", error);
-        alert("There was an error processing your screenshot. Please try a different image.");
+        alert("Error processing screenshot. Ensure it is a valid image file.");
       } finally {
         setIsCompressing(false);
-        // Clear input value so same file can be selected again
         if (e.target) e.target.value = '';
       }
     }
@@ -127,7 +123,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
   const handleFinalSubmit = () => {
     if (!previewImage) return alert("Please upload a screenshot proof first.");
     setIsUploading(true);
-    // Simulate server synchronization
     setTimeout(() => {
       if (selectedTask) onComplete(selectedTask.id, previewImage, new Date().toLocaleString());
       handleCloseModal();
@@ -289,10 +284,13 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ref: {tx.id.toUpperCase()}</span>
                        {tx.proofImage && (
-                          <div className="flex items-center gap-2 text-indigo-500">
+                          <button 
+                            onClick={() => setViewingHistoryScreenshot(tx.proofImage || null)}
+                            className="flex items-center gap-2 text-indigo-500 hover:text-indigo-700 transition-colors"
+                          >
                              <i className="fa-solid fa-camera text-xs"></i>
-                             <span className="text-[9px] font-black uppercase tracking-widest">Snapshot Saved</span>
-                          </div>
+                             <span className="text-[9px] font-black uppercase tracking-widest">View Saved Snapshot</span>
+                          </button>
                        )}
                     </div>
                  </div>
@@ -399,8 +397,8 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
                   <div 
                     onClick={() => !isCompressing && fileInputRef.current?.click()}
-                    className={`relative border-2 md:border-4 border-dashed rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[220px] md:min-h-[300px] ${
-                      previewImage ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-slate-50 hover:border-slate-200'
+                    className={`relative border-2 md:border-4 border-dashed rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[320px] md:min-h-[450px] overflow-hidden ${
+                      previewImage ? 'border-emerald-500 bg-slate-950' : 'border-slate-100 bg-slate-50 hover:border-slate-200'
                     } ${isCompressing ? 'opacity-50 cursor-wait' : ''}`}
                   >
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
@@ -411,14 +409,20 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                         <p className="text-[10px] md:text-xs font-black text-indigo-900 uppercase tracking-widest text-center">Optimizing High-Res Asset...</p>
                       </div>
                     ) : previewImage ? (
-                      <div className="absolute inset-0 w-full h-full">
-                        <img src={previewImage} alt="Proof" className="w-full h-full object-cover rounded-[1.75rem] md:rounded-[2.75rem]" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-950 group/preview">
+                        <img src={previewImage} alt="Proof" className="w-full h-full object-contain" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshot(previewImage); }}
+                            className="bg-white text-slate-900 px-6 py-3 rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-3"
+                          >
+                            <i className="fa-solid fa-expand"></i> Verify Full View
+                          </button>
                           <button 
                             onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
-                            className="bg-white text-red-500 px-4 md:px-6 py-2 md:py-3 rounded-xl md:rounded-2xl font-black text-[9px] md:text-10px] uppercase tracking-widest shadow-xl"
+                            className="bg-rose-600 text-white px-6 py-3 rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-3"
                           >
-                            Remove Snapshot
+                            <i className="fa-solid fa-trash"></i> Replace Snapshot
                           </button>
                         </div>
                       </div>
@@ -428,7 +432,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                           <i className="fa-solid fa-cloud-arrow-up text-2xl md:text-3xl"></i>
                         </div>
                         <p className="text-[10px] md:text-xs font-black text-slate-900 uppercase tracking-widest text-center">Drop Snapshot or Tap to Browse</p>
-                        <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 text-center">Mobiles: Up to 25MB (Auto-compressed)</p>
+                        <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 text-center">Optimized for Tall Mobile Screenshots</p>
                       </>
                     )}
                   </div>
@@ -460,6 +464,29 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* GLOBAL SCREENSHOT VIEWER MODAL */}
+      {viewingHistoryScreenshot && (
+        <div 
+          className="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300"
+          onClick={() => setViewingHistoryScreenshot(null)}
+        >
+           <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center pointer-events-none">
+              <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[2rem] md:rounded-[3rem] shadow-2xl border border-white/10">
+                 <img src={viewingHistoryScreenshot} alt="Full Proof" className="max-w-full max-h-full object-contain" />
+                 <button 
+                   onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshot(null); }} 
+                   className="absolute top-6 right-6 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20"
+                 >
+                   <i className="fa-solid fa-xmark text-xl"></i>
+                 </button>
+                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-black/60 backdrop-blur-md rounded-full text-white text-[9px] font-black uppercase tracking-widest border border-white/10">
+                   Operational Asset Preview
+                 </div>
+              </div>
+           </div>
         </div>
       )}
     </div>
