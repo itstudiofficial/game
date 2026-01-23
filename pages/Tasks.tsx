@@ -29,7 +29,11 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
   ];
 
   const availableTasks = useMemo(() => {
-    return tasks.filter(t => {
+    // Defensive check to ensure tasks is an array
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+    
+    return safeTasks.filter(t => {
+      if (!t) return false;
       const isSubmitted = user.completedTasks?.includes(t.id);
       if (isSubmitted) return false;
       const categoryMatch = categoryFilter === 'All' || t.type === categoryFilter;
@@ -38,8 +42,10 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
   }, [tasks, user.completedTasks, categoryFilter]);
 
   const userHistoryItems = useMemo(() => {
-    return transactions
-      .filter(tx => tx.type === 'earn' && tx.userId === user.id)
+    const safeTransactions = Array.isArray(transactions) ? transactions : [];
+    
+    return safeTransactions
+      .filter(tx => tx && tx.type === 'earn' && tx.userId === user.id)
       .filter(tx => {
         if (historyFilter === 'Pending') return tx.status === 'pending';
         return tx.status === 'success';

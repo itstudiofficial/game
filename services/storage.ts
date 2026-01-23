@@ -22,7 +22,13 @@ const KEYS = {
 };
 
 export const storage = {
-  // Utility to create a safe Firebase key from a email
+  // Helper to ensure we always work with an array from Firebase
+  ensureArray: <T>(data: any): T[] => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data.filter(item => item !== null);
+    return Object.values(data).filter(item => item !== null) as T[];
+  },
+
   sanitizeEmail: (email: string): string => {
     return email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
   },
@@ -55,14 +61,10 @@ export const storage = {
     localStorage.setItem(KEYS.USER, JSON.stringify(user));
     if (user.isLoggedIn) {
       const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
-      // Updated admin email check
       const isAdmin = user.email.toLowerCase().trim() === 'ehtesham@adspredia.site' ? true : (user.isAdmin || false);
       const userToSave = { ...user, isAdmin };
-      
-      // Update the user record
       await set(cloudRef, userToSave);
       
-      // Update email lookup mapping
       if (user.email) {
         const emailKey = storage.sanitizeEmail(user.email);
         await set(ref(db, `${KEYS.EMAIL_LOOKUP}/${emailKey}`), user.id);
@@ -70,7 +72,6 @@ export const storage = {
     }
   },
 
-  // Get User ID by Email
   getUserIdByEmail: async (email: string): Promise<string | null> => {
     const emailKey = storage.sanitizeEmail(email);
     const snapshot = await get(ref(db, `${KEYS.EMAIL_LOOKUP}/${emailKey}`));
@@ -90,17 +91,23 @@ export const storage = {
   
   getTasks: (): Task[] => {
     const data = localStorage.getItem(KEYS.TASKS);
-    return data ? JSON.parse(data) : [];
+    try {
+      const parsed = data ? JSON.parse(data) : [];
+      return storage.ensureArray<Task>(parsed);
+    } catch (e) {
+      return [];
+    }
   },
 
   setTasks: (tasks: Task[]) => {
-    localStorage.setItem(KEYS.TASKS, JSON.stringify(tasks));
-    set(ref(db, KEYS.TASKS), tasks);
+    const cleanTasks = storage.ensureArray<Task>(tasks);
+    localStorage.setItem(KEYS.TASKS, JSON.stringify(cleanTasks));
+    set(ref(db, KEYS.TASKS), cleanTasks);
   },
 
   updateTaskInCloud: async (taskId: string, updates: Partial<Task>) => {
     const snapshot = await get(ref(db, KEYS.TASKS));
-    let tasks: Task[] = snapshot.exists() ? snapshot.val() : [];
+    let tasks: Task[] = storage.ensureArray<Task>(snapshot.val());
     const index = tasks.findIndex(t => t.id === taskId);
     if (index !== -1) {
       tasks[index] = { ...tasks[index], ...updates };
@@ -110,7 +117,7 @@ export const storage = {
 
   deleteTaskFromCloud: async (taskId: string) => {
     const snapshot = await get(ref(db, KEYS.TASKS));
-    let tasks: Task[] = snapshot.exists() ? snapshot.val() : [];
+    let tasks: Task[] = storage.ensureArray<Task>(snapshot.val());
     const updatedTasks = tasks.filter(t => t.id !== taskId);
     await set(ref(db, KEYS.TASKS), updatedTasks);
   },
@@ -131,14 +138,12 @@ export const storage = {
 
   getAllUsers: async (): Promise<User[]> => {
     const snapshot = await get(ref(db, KEYS.USERS));
-    const data = snapshot.val();
-    return data ? Object.values(data) : [];
+    return storage.ensureArray<User>(snapshot.val());
   },
 
   getAllGlobalTransactions: async (): Promise<Transaction[]> => {
     const snapshot = await get(ref(db, KEYS.ALL_TRANSACTIONS));
-    const data = snapshot.val();
-    return data ? Object.values(data) : [];
+    return storage.ensureArray<Transaction>(snapshot.val());
   },
 
   updateGlobalTransaction: async (txId: string, updates: Partial<Transaction>) => {
@@ -153,10 +158,9 @@ export const storage = {
     const tasksRef = ref(db, KEYS.TASKS);
     onValue(tasksRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        localStorage.setItem(KEYS.TASKS, JSON.stringify(data));
-        callback(data);
-      }
+      const tasksArray = storage.ensureArray<Task>(data);
+      localStorage.setItem(KEYS.TASKS, JSON.stringify(tasksArray));
+      callback(tasksArray);
     });
   },
 
