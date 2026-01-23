@@ -15,7 +15,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
   const [loading, setLoading] = useState(true);
   const [claimingId, setClaimingId] = useState<string | null>(null);
   
-  const REFERRAL_REWARD = 50;
+  const REFERRAL_REWARD = 100;
   
   // Branded functional link using current origin and 'id' parameter
   const baseUrl = window.location.origin;
@@ -23,7 +23,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
   const functionalLink = `${baseUrl}/?id=${partnerId}`;
   const displayLink = functionalLink.replace(/^https?:\/\//, '');
   
-  const shareMessage = `Unlock daily earnings with Ads Predia! Join via my partner link and get 50 coins instantly: ${functionalLink}`;
+  const shareMessage = `Unlock daily earnings with Ads Predia! Join via my partner link and get 100 coins instantly: ${functionalLink}`;
 
   const fetchRefData = async () => {
     setLoading(true);
@@ -93,10 +93,10 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
             Affiliate Growth Center
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none mb-4">
-            Recruit & <span className="text-indigo-600">Claim 50</span>
+            Recruit & <span className="text-indigo-600">Claim 100</span>
           </h1>
           <p className="text-slate-500 font-medium text-lg leading-relaxed">
-            Expand your earning network. Every authorized sign-up via your ID yields 50 instant coins. Use the claim hub below to finalize your rewards.
+            Expand your earning network. Every authorized sign-up via your ID yields 100 instant coins. Use the claim hub below to finalize your rewards.
           </p>
         </div>
 
@@ -225,7 +225,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
                                 ) : (
                                   <i className="fa-solid fa-hand-holding-dollar group-hover/btn:translate-y-[-2px] transition-transform"></i>
                                 )}
-                                {claimingId === partner.id ? 'Synchronizing...' : 'Claim Now (50)'}
+                                {claimingId === partner.id ? 'Synchronizing...' : `Claim Now (${REFERRAL_REWARD})`}
                               </button>
                             )}
                           </div>
@@ -242,7 +242,7 @@ const Referrals: React.FC<ReferralsProps> = ({ user, onClaim }) => {
                <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em] mb-10">Affiliate Rules</h3>
                <div className="space-y-10">
                  {[
-                   { t: 'Instant Bounty', d: 'Claim 50 Coins for every successful referral as soon as they join.', i: 'fa-bolt' },
+                   { t: 'Instant Bounty', d: `Claim ${REFERRAL_REWARD} Coins for every successful referral as soon as they join.`, i: 'fa-bolt' },
                    { t: 'Manual Claims', d: 'Rewards must be manually initialized via the Directory Hub.', i: 'fa-hand-pointer' },
                    { t: 'Lifetime Access', d: 'No limits on how many partners you can recruit to the network.', i: 'fa-infinity' }
                  ].map((rule, i) => (

@@ -218,7 +218,7 @@ const App: React.FC = () => {
   const handleReferralClaim = async (referredUserId: string) => {
     if (user.claimedReferrals?.includes(referredUserId)) return;
 
-    const reward = 50;
+    const reward = 100;
     const newTx: Transaction = {
       id: `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
       userId: user.id,
