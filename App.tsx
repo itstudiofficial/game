@@ -15,6 +15,9 @@ import Features from './pages/Features';
 import Contact from './pages/Contact';
 import MyCampaigns from './pages/MyCampaigns';
 import ProfileSettings from './pages/ProfileSettings';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
+import Disclaimer from './pages/Disclaimer';
 import { User, Task, Transaction } from './types';
 import { storage } from './services/storage';
 
@@ -326,6 +329,9 @@ const App: React.FC = () => {
         {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleReferralClaim} />}
         {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={handleDeleteTask} onUpdateTask={handleUpdateTask} onNavigate={navigateTo} />}
         {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
+        {currentPage === 'privacy-policy' && <PrivacyPolicy />}
+        {currentPage === 'terms-conditions' && <TermsConditions />}
+        {currentPage === 'disclaimer' && <Disclaimer />}
         {currentPage.startsWith('admin') && user.isAdmin && <AdminPanel initialView={currentPage.split('-')[1] as any} />}
       </main>
       <Footer setCurrentPage={navigateTo} isLoggedIn={user.isLoggedIn} />

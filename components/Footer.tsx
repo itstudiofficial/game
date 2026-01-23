@@ -9,15 +9,7 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
   const handleNavClick = (id: string) => {
-    if (['home', 'tasks', 'spin', 'referrals', 'create', 'wallet', 'dashboard', 'login'].includes(id)) {
-      if (!isLoggedIn && ['tasks', 'spin', 'referrals', 'create', 'wallet', 'dashboard'].includes(id)) {
-        setCurrentPage('login');
-      } else {
-        setCurrentPage(id);
-      }
-    } else {
-      setCurrentPage(id);
-    }
+    setCurrentPage(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -73,8 +65,8 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Support</h4>
             <ul className="space-y-4 text-sm font-medium">
-              <li><button onClick={() => handleNavClick('help-center')} className="hover:text-indigo-400 transition-colors text-left">Help Center</button></li>
-              <li><button onClick={() => handleNavClick('ticket-support')} className="hover:text-indigo-400 transition-colors text-left">Ticket Support</button></li>
+              <li><button onClick={() => handleNavClick('contact')} className="hover:text-indigo-400 transition-colors text-left">Contact Us</button></li>
+              <li><button onClick={() => handleNavClick('features')} className="hover:text-indigo-400 transition-colors text-left">Features</button></li>
               <li><button onClick={() => handleNavClick('api-docs')} className="hover:text-indigo-400 transition-colors text-left">API Docs</button></li>
               <li><button onClick={() => handleNavClick('payment-faq')} className="hover:text-indigo-400 transition-colors text-left">Payment FAQ</button></li>
             </ul>
@@ -84,9 +76,9 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
           <div className="md:col-span-2">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Legal</h4>
             <ul className="space-y-4 text-sm font-medium">
-              <li><button onClick={() => handleNavClick('terms')} className="hover:text-indigo-400 transition-colors text-left">Terms of Use</button></li>
-              <li><button onClick={() => handleNavClick('privacy')} className="hover:text-indigo-400 transition-colors text-left">Privacy Policy</button></li>
-              <li><button onClick={() => handleNavClick('fraud-policy')} className="hover:text-indigo-400 transition-colors text-left">Fraud Policy</button></li>
+              <li><button onClick={() => handleNavClick('privacy-policy')} className="hover:text-indigo-400 transition-colors text-left">Privacy Policy</button></li>
+              <li><button onClick={() => handleNavClick('terms-conditions')} className="hover:text-indigo-400 transition-colors text-left">Term & Conditions</button></li>
+              <li><button onClick={() => handleNavClick('disclaimer')} className="hover:text-indigo-400 transition-colors text-left">Disclaimer</button></li>
               <li><button onClick={() => handleNavClick('refund-policy')} className="hover:text-indigo-400 transition-colors text-left">Refund Policy</button></li>
             </ul>
           </div>
