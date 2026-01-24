@@ -161,7 +161,7 @@ const App: React.FC = () => {
       type: 'earn',
       status: 'pending',
       method: `Task: ${task.title} | ${task.type}`,
-      proofImage: proofImage,
+      proofImage: proofImage || undefined,
       date: submissionTimestamp || new Date().toLocaleString()
     };
 
@@ -280,7 +280,16 @@ const App: React.FC = () => {
   };
 
   const handleWalletAction = async (type: 'deposit' | 'withdraw', amount: number, method: string, accountRef?: string, proofImage?: string) => {
-    const txId = Math.random().toString(36).substr(2, 9);
+    // Basic verification
+    if (isNaN(amount) || amount <= 0) return alert('Invalid amount.');
+    
+    const txId = 'TX-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    
+    if (type === 'withdraw') {
+      if (amount < 3000) return alert('Min withdrawal: 3,000 coins.');
+      if (user.coins < amount) return alert('Insufficient vault balance.');
+    }
+
     const newTx: Transaction = {
       id: txId,
       userId: user.id,
@@ -288,24 +297,27 @@ const App: React.FC = () => {
       amount: amount,
       type: type,
       method: method,
-      account: accountRef,
-      proofImage: proofImage,
+      account: accountRef || undefined,
+      proofImage: proofImage || undefined,
       status: 'pending',
       date: new Date().toLocaleString()
     };
     
-    if (type === 'withdraw') {
-      if (amount < 3000) return alert('Min withdrawal: 3,000 coins.');
-      if (user.coins < amount) return alert('Insufficient vault balance.');
-      const updatedUser = { ...user, coins: user.coins - amount };
-      setUser(updatedUser);
-      await storage.setUser(updatedUser);
+    try {
+      if (type === 'withdraw') {
+        const updatedUser = { ...user, coins: user.coins - amount };
+        setUser(updatedUser);
+        await storage.setUser(updatedUser);
+      }
+      
+      // Unified transaction recording for Admin visibility
+      await storage.addTransaction(newTx);
+      setTransactions(prev => [newTx, ...prev]);
+      alert(`${type.toUpperCase()} request initialized successfully.`);
+    } catch (err) {
+      console.error("Wallet action error:", err);
+      throw new Error("Failed to sync with network.");
     }
-    
-    // Unified transaction recording for Admin visibility
-    await storage.addTransaction(newTx);
-    setTransactions(prev => [newTx, ...prev]);
-    alert(`${type.toUpperCase()} request initialized.`);
   };
 
   return (

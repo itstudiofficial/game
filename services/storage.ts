@@ -22,11 +22,23 @@ const KEYS = {
 };
 
 export const storage = {
-  // Helper to ensure we always work with an array from Firebase
+  // Recursively remove undefined values for Firebase compatibility
+  cleanData: (obj: any): any => {
+    if (Array.isArray(obj)) {
+      return obj.map(storage.cleanData);
+    } else if (obj !== null && typeof obj === 'object') {
+      return Object.fromEntries(
+        Object.entries(obj)
+          .filter(([_, v]) => v !== undefined)
+          .map(([k, v]) => [k, storage.cleanData(v)])
+      );
+    }
+    return obj;
+  },
+
   ensureArray: <T>(data: any): T[] => {
     if (!data) return [];
     if (Array.isArray(data)) return data.filter(item => item !== null);
-    // Handle objects where keys are IDs
     return Object.values(data).filter(item => item !== null) as T[];
   },
 
@@ -63,7 +75,7 @@ export const storage = {
     if (user.isLoggedIn) {
       const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
       const isAdmin = user.email.toLowerCase().trim() === 'ehtesham@adspredia.site' ? true : (user.isAdmin || false);
-      const userToSave = { ...user, isAdmin };
+      const userToSave = storage.cleanData({ ...user, isAdmin });
       await set(cloudRef, userToSave);
       
       if (user.email) {
@@ -112,7 +124,7 @@ export const storage = {
   },
 
   setTasks: (tasks: Task[]) => {
-    const cleanTasks = storage.ensureArray<Task>(tasks);
+    const cleanTasks = storage.ensureArray<Task>(tasks).map(storage.cleanData);
     localStorage.setItem(KEYS.TASKS, JSON.stringify(cleanTasks));
     set(ref(db, KEYS.TASKS), cleanTasks);
   },
@@ -122,7 +134,7 @@ export const storage = {
     let tasks: Task[] = storage.ensureArray<Task>(snapshot.val());
     const index = tasks.findIndex(t => t.id === taskId);
     if (index !== -1) {
-      tasks[index] = { ...tasks[index], ...updates };
+      tasks[index] = storage.cleanData({ ...tasks[index], ...updates });
       await set(ref(db, KEYS.TASKS), tasks);
     }
   },
@@ -140,13 +152,13 @@ export const storage = {
   },
 
   addTransaction: async (tx: Transaction) => {
+    const cleanTx = storage.cleanData(tx);
     const txs = storage.getTransactions();
-    const updated = [tx, ...txs];
+    const updated = [cleanTx, ...txs];
     localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
     
-    // Save to user-specific logs and global audit logs
-    await push(ref(db, `user_transactions/${tx.userId}`), tx);
-    await set(ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`), tx);
+    await push(ref(db, `user_transactions/${tx.userId}`), cleanTx);
+    await set(ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`), cleanTx);
   },
 
   getAllUsers: async (): Promise<User[]> => {
@@ -167,11 +179,11 @@ export const storage = {
   },
 
   updateGlobalTransaction: async (txId: string, updates: Partial<Transaction>) => {
-    await update(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`), updates);
+    await update(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`), storage.cleanData(updates));
   },
 
   updateUserInCloud: async (userId: string, updates: Partial<User>) => {
-    await update(ref(db, `${KEYS.USERS}/${userId}`), updates);
+    await update(ref(db, `${KEYS.USERS}/${userId}`), storage.cleanData(updates));
   },
 
   subscribeToTasks: (callback: (tasks: Task[]) => void) => {
@@ -196,6 +208,6 @@ export const storage = {
   },
 
   setSEOConfig: async (config: SEOConfig) => {
-    await set(ref(db, KEYS.SEO), config);
+    await set(ref(db, KEYS.SEO), storage.cleanData(config));
   }
 };

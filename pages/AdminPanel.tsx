@@ -83,61 +83,50 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
   const handleAuditSubmission = async (tx: Transaction, status: 'success' | 'failed') => {
     try {
-      // Optimistic Update for UI smoothness
-      if (status === 'success') {
-        setUsers(prev => prev.map(u => u.id === tx.userId ? { ...u, coins: (u.coins || 0) + tx.amount } : u));
-      }
-      setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status } : t));
-
       await storage.updateGlobalTransaction(tx.id, { status });
       if (status === 'success') {
-        const targetUser = users.find(u => u.id === tx.userId);
-        if (targetUser) {
-          const newCoins = (targetUser.coins || 0) + tx.amount;
+        const cloudUser = await storage.syncUserFromCloud(tx.userId);
+        if (cloudUser) {
+          const newCoins = (cloudUser.coins || 0) + tx.amount;
           await storage.updateUserInCloud(tx.userId, { coins: newCoins });
         }
       }
-      await fetchData(true); // Background refresh
+      await fetchData(true);
     } catch (err) {
       console.error("Audit update failed", err);
-      fetchData(); // Reset state on error
+      fetchData();
     }
   };
 
   const handleFinanceAction = async (tx: Transaction, status: 'success' | 'failed') => {
     try {
-      // Optimistic Update for UI smoothness
-      if (status === 'success' && tx.type === 'deposit') {
-        setUsers(prev => prev.map(u => u.id === tx.userId ? { ...u, depositBalance: (u.depositBalance || 0) + tx.amount } : u));
-      } else if (status === 'failed' && tx.type === 'withdraw') {
-        setUsers(prev => prev.map(u => u.id === tx.userId ? { ...u, coins: (u.coins || 0) + tx.amount } : u));
-      }
-      setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status } : t));
-
       await storage.updateGlobalTransaction(tx.id, { status });
-      const targetUser = users.find(u => u.id === tx.userId);
+      const cloudUser = await storage.syncUserFromCloud(tx.userId);
       
-      if (status === 'success' && tx.type === 'deposit') {
-        if (targetUser) {
-          const newDepBal = (targetUser.depositBalance || 0) + tx.amount;
-          await storage.updateUserInCloud(tx.userId, { depositBalance: newDepBal });
-        }
-      } else if (status === 'failed' && tx.type === 'withdraw') {
-        if (targetUser) {
-          const newCoins = (targetUser.coins || 0) + tx.amount;
-          await storage.updateUserInCloud(tx.userId, { coins: newCoins });
-        }
+      if (!cloudUser) throw new Error("Target user node not found");
+
+      if (tx.type === 'deposit' && status === 'success') {
+        // Crediting deposit balance on success
+        const newDepBal = (cloudUser.depositBalance || 0) + tx.amount;
+        await storage.updateUserInCloud(tx.userId, { depositBalance: newDepBal });
+      } else if (tx.type === 'withdraw' && status === 'failed') {
+        // Refunding main coins on withdrawal rejection
+        const newCoins = (cloudUser.coins || 0) + tx.amount;
+        await storage.updateUserInCloud(tx.userId, { coins: newCoins });
       }
-      await fetchData(true); // Background refresh
+      
+      // If withdraw && success -> nothing to do (coins were deducted in handleWalletAction)
+      // If deposit && failed -> nothing to do (coins were never added)
+
+      await fetchData(true);
     } catch (err) {
       console.error("Finance action failed", err);
-      fetchData(); // Reset state on error
+      fetchData();
     }
   };
 
   const handleUserStatus = async (userId: string, status: 'active' | 'banned') => {
     try {
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status } : u));
       await storage.updateUserInCloud(userId, { status });
       await fetchData(true);
     } catch (e) {
@@ -158,7 +147,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     }
 
     try {
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, coins: newBalance } : u));
       await storage.updateUserInCloud(userId, { coins: newBalance });
       setEditingUserId(null);
       setAdjustAmount('');
@@ -184,7 +172,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
   const handleTaskAction = async (taskId: string, status: 'active' | 'rejected') => {
     try {
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
       await storage.updateTaskInCloud(taskId, { status });
       await fetchData(true);
     } catch (error) {
@@ -212,7 +199,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     try {
       const currentTasks = await storage.getTasks();
       const updatedTasks = [...currentTasks, newTask];
-      setTasks(updatedTasks);
       storage.setTasks(updatedTasks);
       alert('System Asset Deployed.');
       setNewTaskData({ title: '', link: '', type: 'YouTube', reward: 10, totalWorkers: 100, description: '' });
