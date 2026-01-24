@@ -26,6 +26,7 @@ export const storage = {
   ensureArray: <T>(data: any): T[] => {
     if (!data) return [];
     if (Array.isArray(data)) return data.filter(item => item !== null);
+    // Handle objects where keys are IDs
     return Object.values(data).filter(item => item !== null) as T[];
   },
 
@@ -89,7 +90,6 @@ export const storage = {
     return null;
   },
   
-  // FIX: Updated to fetch directly from cloud if requested for Admin Panel consistency
   getTasks: async (): Promise<Task[]> => {
     try {
       const snapshot = await get(ref(db, KEYS.TASKS));
@@ -102,7 +102,6 @@ export const storage = {
       console.error("Cloud task fetch error:", error);
     }
     
-    // Fallback to local storage
     const data = localStorage.getItem(KEYS.TASKS);
     try {
       const parsed = data ? JSON.parse(data) : [];
@@ -145,6 +144,7 @@ export const storage = {
     const updated = [tx, ...txs];
     localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
     
+    // Save to user-specific logs and global audit logs
     await push(ref(db, `user_transactions/${tx.userId}`), tx);
     await set(ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`), tx);
   },
@@ -155,8 +155,15 @@ export const storage = {
   },
 
   getAllGlobalTransactions: async (): Promise<Transaction[]> => {
-    const snapshot = await get(ref(db, KEYS.ALL_TRANSACTIONS));
-    return storage.ensureArray<Transaction>(snapshot.val());
+    try {
+      const snapshot = await get(ref(db, KEYS.ALL_TRANSACTIONS));
+      if (snapshot.exists()) {
+        return storage.ensureArray<Transaction>(snapshot.val());
+      }
+    } catch (error) {
+      console.error("Global Transaction Fetch Error:", error);
+    }
+    return [];
   },
 
   updateGlobalTransaction: async (txId: string, updates: Partial<Transaction>) => {

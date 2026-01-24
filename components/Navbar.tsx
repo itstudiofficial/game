@@ -25,11 +25,11 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
   const authLinks = [
     { name: 'Dashboard', id: 'dashboard', icon: 'fa-chart-pie' },
     { name: 'Tasks', id: 'tasks', icon: 'fa-list-check' },
-    { name: 'Create', id: 'create', icon: 'fa-bullhorn' },
-    { name: 'My Campaigns', id: 'my-campaigns', icon: 'fa-paper-plane' },
-    { name: 'Wallet', id: 'wallet', icon: 'fa-wallet' },
     { name: 'Spin', id: 'spin', icon: 'fa-clover' },
     { name: 'Affiliate', id: 'referrals', icon: 'fa-users' },
+    { name: 'Create Task', id: 'create', icon: 'fa-bullhorn' },
+    { name: 'My Campaigns', id: 'my-campaigns', icon: 'fa-paper-plane' },
+    { name: 'Wallet', id: 'wallet', icon: 'fa-wallet' },
     { name: 'Profile', id: 'profile', icon: 'fa-user-gear' },
   ];
 

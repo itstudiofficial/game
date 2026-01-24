@@ -45,7 +45,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       
       const t = await storage.getAllGlobalTransactions();
       const seoData = await storage.getSEOConfig();
-      
       const tasksSnapshot = await storage.getTasks();
       
       setUsers(uniqueUsers);
@@ -654,7 +653,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                                  </div>
                               </div>
                               <div className="text-right">
-                                 <div className="text-2xl font-black text-slate-900 tabular-nums">{(tx.amount / 2000).toFixed(2)} <span className="text-xs text-slate-400">USD</span></div>
+                                 <div className="text-2xl font-black text-slate-900 tabular-nums">{(tx.amount / 3000).toFixed(2)} <span className="text-xs text-slate-400">USD</span></div>
                                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">-{tx.amount.toLocaleString()} COINS</p>
                               </div>
                            </div>

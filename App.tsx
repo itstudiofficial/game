@@ -91,7 +91,7 @@ const App: React.FC = () => {
           return;
         }
         setUser(cloudUser);
-        // Also update local transactions if needed
+        // Update local transactions from the global ledger
         const allGlobal = await storage.getAllGlobalTransactions();
         const userTxs = allGlobal.filter(tx => tx.userId === idToSync);
         setTransactions(userTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
@@ -280,8 +280,9 @@ const App: React.FC = () => {
   };
 
   const handleWalletAction = async (type: 'deposit' | 'withdraw', amount: number, method: string, accountRef?: string, proofImage?: string) => {
+    const txId = Math.random().toString(36).substr(2, 9);
     const newTx: Transaction = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: txId,
       userId: user.id,
       username: user.username,
       amount: amount,
@@ -294,15 +295,14 @@ const App: React.FC = () => {
     };
     
     if (type === 'withdraw') {
-      if (amount < 2000) return alert('Min withdrawal: 2,000 coins.');
+      if (amount < 3000) return alert('Min withdrawal: 3,000 coins.');
       if (user.coins < amount) return alert('Insufficient vault balance.');
       const updatedUser = { ...user, coins: user.coins - amount };
       setUser(updatedUser);
       await storage.setUser(updatedUser);
     }
     
-    // FIX: Added await to ensure transaction is successfully written to Firebase
-    // This ensures it appears in the Admin Panel immediately after completion.
+    // Unified transaction recording for Admin visibility
     await storage.addTransaction(newTx);
     setTransactions(prev => [newTx, ...prev]);
     alert(`${type.toUpperCase()} request initialized.`);
