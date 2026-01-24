@@ -374,6 +374,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
              </div>
           </div>
 
+          {/* DESKTOP TABLE VIEW */}
           <div className="hidden md:block overflow-x-auto">
              <table className="w-full text-left">
                 <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -423,6 +424,56 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                    )}
                 </tbody>
              </table>
+          </div>
+
+          {/* MOBILE CARD VIEW - Fixed visibility for small screens */}
+          <div className="block md:hidden divide-y divide-slate-50">
+             {walletHistory.length === 0 ? (
+                <div className="px-10 py-20 text-center">
+                   <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-200">
+                      <i className="fa-solid fa-receipt text-3xl"></i>
+                   </div>
+                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No transactions detected</p>
+                </div>
+             ) : (
+                walletHistory.map(tx => (
+                   <div key={tx.id} className="p-8 hover:bg-slate-50/50 transition-all group">
+                      <div className="flex justify-between items-start mb-6">
+                         <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg border ${tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                               <i className={`fa-solid ${tx.type === 'deposit' ? 'fa-arrow-down' : 'fa-arrow-up'}`}></i>
+                            </div>
+                            <div>
+                               <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-[10px] font-black uppercase text-slate-900">{tx.type}</span>
+                                  <span className={`px-2 py-0.5 text-[7px] font-black rounded-md uppercase tracking-widest border ${tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : tx.status === 'failed' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse'}`}>
+                                     {tx.status}
+                                  </span>
+                               </div>
+                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">{tx.id.toUpperCase()}</p>
+                            </div>
+                         </div>
+                         <div className="text-right">
+                            <div className={`text-lg font-black ${tx.type === 'deposit' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                               {tx.type === 'deposit' ? '+' : '-'}{tx.amount.toLocaleString()}
+                            </div>
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">COINS</span>
+                         </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                         <div>
+                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Method</p>
+                            <p className="text-[9px] font-black text-slate-600 uppercase">{tx.method}</p>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">Timestamp</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase">{tx.date.split(',')[0]}</p>
+                         </div>
+                      </div>
+                   </div>
+                ))
+             )}
           </div>
         </div>
       </div>
