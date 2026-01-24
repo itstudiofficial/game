@@ -18,11 +18,11 @@ const KEYS = {
   USERS: 'users',
   ALL_TRANSACTIONS: 'all_transactions',
   SEO: 'seo_config',
-  EMAIL_LOOKUP: 'email_to_id'
+  EMAIL_LOOKUP: 'email_to_id',
+  USER_TXS: 'user_transactions'
 };
 
 export const storage = {
-  // Recursively remove undefined values for Firebase compatibility
   cleanData: (obj: any): any => {
     if (Array.isArray(obj)) {
       return obj.map(storage.cleanData);
@@ -151,13 +151,29 @@ export const storage = {
     return data ? JSON.parse(data) : [];
   },
 
+  // Optimized: Fetch ONLY specific user transactions
+  getUserTransactions: async (userId: string): Promise<Transaction[]> => {
+    try {
+      const snapshot = await get(ref(db, `${KEYS.USER_TXS}/${userId}`));
+      if (snapshot.exists()) {
+        const txs = storage.ensureArray<Transaction>(snapshot.val());
+        const sorted = txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(sorted));
+        return sorted;
+      }
+    } catch (error) {
+      console.error("Error fetching user transactions:", error);
+    }
+    return storage.getTransactions();
+  },
+
   addTransaction: async (tx: Transaction) => {
     const cleanTx = storage.cleanData(tx);
     const txs = storage.getTransactions();
     const updated = [cleanTx, ...txs];
     localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
     
-    await push(ref(db, `user_transactions/${tx.userId}`), cleanTx);
+    await push(ref(db, `${KEYS.USER_TXS}/${tx.userId}`), cleanTx);
     await set(ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`), cleanTx);
   },
 
@@ -180,6 +196,21 @@ export const storage = {
 
   updateGlobalTransaction: async (txId: string, updates: Partial<Transaction>) => {
     await update(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`), storage.cleanData(updates));
+    
+    // Also update in user-specific node
+    const snapshot = await get(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`));
+    if (snapshot.exists()) {
+      const tx = snapshot.val();
+      const userTxRef = ref(db, `${KEYS.USER_TXS}/${tx.userId}`);
+      const userTxSnapshot = await get(userTxRef);
+      if (userTxSnapshot.exists()) {
+        const userTxs = userTxSnapshot.val();
+        const key = Object.keys(userTxs).find(k => userTxs[k].id === txId);
+        if (key) {
+          await update(ref(db, `${KEYS.USER_TXS}/${tx.userId}/${key}`), storage.cleanData(updates));
+        }
+      }
+    }
   },
 
   updateUserInCloud: async (userId: string, updates: Partial<User>) => {

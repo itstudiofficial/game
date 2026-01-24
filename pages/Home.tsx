@@ -92,13 +92,14 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
               </div>
             </div>
 
-            {/* Hero Visual: Withdrawal Success Image */}
+            {/* Hero Visual: Withdrawal Success Image - Optimized size (800w) */}
             <div className="lg:w-2/5 relative animate-in fade-in slide-in-from-right-12 duration-1000 delay-300">
                <div className="relative z-10 bg-white p-4 rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] border border-slate-100 transform rotate-2 hover:rotate-0 transition-transform duration-700">
                   <img 
-                    src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=1200&auto=format&fit=crop" 
+                    src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=800&auto=format&fit=crop" 
                     alt="Earning Dashboard Success" 
                     className="rounded-[3rem] w-full h-[500px] object-cover"
+                    loading="eager"
                   />
                   <div className="absolute -bottom-10 -left-10 bg-slate-900 p-8 rounded-[3rem] shadow-2xl text-white animate-bounce-slow">
                      <div className="flex items-center gap-4 mb-2">
@@ -141,7 +142,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
         </div>
       </section>
 
-      {/* Earning Gallery Section */}
+      {/* Earning Gallery Section - Optimized 800w images */}
       <section className="py-32 bg-slate-50 relative overflow-hidden">
         <div className="max-w-[1600px] mx-auto px-6">
           <div className="text-center mb-24">
@@ -153,19 +154,19 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {[
               { 
-                img: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=1200&auto=format&fit=crop", 
+                img: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=800&auto=format&fit=crop", 
                 title: "Digital Wallet Growth", 
                 desc: "Average tier-1 users report 20% weekly increase in coin velocity.", 
                 tag: "Verified Growth"
               },
               { 
-                img: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=1200&auto=format&fit=crop", 
+                img: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=800&auto=format&fit=crop", 
                 title: "Instant Crypto Payouts", 
                 desc: "Withdrawal processing times reduced to sub-5 minute intervals for USDT.", 
                 tag: "High Liquidity"
               },
               { 
-                img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop", 
+                img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop", 
                 title: "Performance Ads", 
                 desc: "Advertisers scaling budgets by 3x after initial pilot success metrics.", 
                 tag: "ROI Optimized"
@@ -173,7 +174,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
             ].map((item, i) => (
               <div key={i} className="group bg-white rounded-[4rem] p-6 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-700">
                 <div className="overflow-hidden rounded-[3rem] mb-8 h-80 relative">
-                   <img src={item.img} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                   <img src={item.img} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" loading="lazy" />
                    <div className="absolute top-6 left-6 px-4 py-2 bg-slate-900/80 backdrop-blur-md rounded-xl text-[8px] font-black uppercase text-white tracking-widest">
                      {item.tag}
                    </div>
@@ -246,6 +247,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
                        src="https://images.unsplash.com/photo-1518183275881-c39359c6571a?q=80&w=800&auto=format&fit=crop" 
                        alt="Server" 
                        className="absolute inset-0 w-full h-full object-cover opacity-10 group-hover:opacity-20 transition-opacity"
+                       loading="lazy"
                      />
                      <div className="relative z-10">
                         <i className="fa-solid fa-server text-3xl text-blue-500 mb-6"></i>
@@ -337,11 +339,12 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:40px_40px]"></div>
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"></div>
             
-            {/* Background CTA Image: Wealth / Earning focus */}
+            {/* Background CTA Image: Optimized 800w */}
             <img 
-              src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=1200&auto=format&fit=crop" 
+              src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=800&auto=format&fit=crop" 
               alt="Earnings" 
               className="absolute inset-0 w-full h-full object-cover opacity-5 pointer-events-none"
+              loading="lazy"
             />
             
             <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-16">

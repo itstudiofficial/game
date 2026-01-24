@@ -206,11 +206,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
           </div>
         </div>
 
-        {/* OPERATIONAL LEDGER (Recently Earning) */}
+        {/* INCOME ANALYSIS (Recently Earning) */}
         <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-8 md:p-12 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center bg-slate-50/20 gap-6">
              <div>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Operational Ledger</h3>
+                <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Income Analysis</h3>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit of yield and verification status</p>
              </div>
              

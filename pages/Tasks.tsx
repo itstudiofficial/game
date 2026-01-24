@@ -301,21 +301,21 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       </div>
 
       {selectedTask && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-2xl animate-in fade-in duration-500 overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] w-full max-w-2xl shadow-[0_60px_120px_-20px_rgba(0,0,0,0.5)] border border-slate-200/50 overflow-hidden animate-in zoom-in-95 duration-500 my-auto">
-            <div className="p-6 md:p-16">
-              <div className="flex justify-between items-start mb-8 md:mb-12">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-500 overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] w-full max-w-2xl shadow-[0_60px_120px_-20px_rgba(0,0,0,0.5)] border border-white/20 animate-in zoom-in-95 duration-500 relative max-h-[90vh] overflow-y-auto">
+            <div className="p-6 md:p-12">
+              <div className="flex justify-between items-start mb-6 md:mb-10 sticky top-0 bg-white z-10 py-2">
                 <div className="flex items-center gap-4 md:gap-6">
-                   <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-900 rounded-[1.25rem] md:rounded-[1.75rem] flex items-center justify-center text-white text-xl md:text-2xl shadow-xl shrink-0">
+                   <div className="w-10 h-10 md:w-16 md:h-16 bg-slate-900 rounded-[1rem] md:rounded-[1.75rem] flex items-center justify-center text-white text-lg md:text-2xl shadow-xl shrink-0">
                       <i className={`fa-solid ${getIcon(selectedTask.type).split(' ')[0]}`}></i>
                    </div>
-                   <div>
-                      <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tighter leading-none mb-2 line-clamp-1">{selectedTask.title}</h2>
-                      <div className="flex items-center gap-2 md:gap-3">
-                         <span className="px-2 py-0.5 md:px-3 md:py-1 bg-indigo-50 text-indigo-600 text-[7px] md:text-[8px] font-black rounded-lg uppercase tracking-widest border border-indigo-100">
-                            {selectedTask.type} Unit
+                   <div className="min-w-0">
+                      <h2 className="text-lg md:text-3xl font-black text-slate-900 tracking-tighter leading-tight mb-1 line-clamp-1">{selectedTask.title}</h2>
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                         <span className="px-2 py-0.5 md:px-3 md:py-1 bg-indigo-50 text-indigo-600 text-[6px] md:text-[8px] font-black rounded-lg uppercase tracking-widest border border-indigo-100">
+                            {selectedTask.type}
                          </span>
-                         <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">ID: {selectedTask.id.toUpperCase()}</span>
+                         <span className="text-[7px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">ID: {selectedTask.id.toUpperCase()}</span>
                       </div>
                    </div>
                 </div>
@@ -325,43 +325,38 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
               </div>
 
               {!isSubmittingProof ? (
-                <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="bg-slate-50 p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-inner">
-                    <h4 className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 md:mb-4">Operational Instructions</h4>
-                    <p className="text-slate-700 text-sm md:text-base font-bold leading-relaxed whitespace-pre-wrap">
+                <div className="space-y-4 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="bg-slate-50 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 shadow-inner">
+                    <h4 className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 md:mb-3">Operational Instructions</h4>
+                    <p className="text-slate-700 text-xs md:text-base font-bold leading-relaxed whitespace-pre-wrap">
                       {selectedTask.description}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 md:gap-6">
-                    <div className="p-5 md:p-8 bg-slate-900 rounded-[1.75rem] md:rounded-[2rem] text-white">
-                        <div className="text-[7px] md:text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-1">Asset Value</div>
-                        <div className="text-xl md:text-3xl font-black">{selectedTask.reward} <span className="text-[8px] md:text-[10px] text-slate-500 uppercase">Coins</span></div>
+                  <div className="grid grid-cols-2 gap-3 md:gap-6">
+                    <div className="p-4 md:p-6 bg-slate-900 rounded-[1.25rem] md:rounded-[2rem] text-white">
+                        <div className="text-[6px] md:text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-1">Asset Value</div>
+                        <div className="text-lg md:text-3xl font-black">{selectedTask.reward} <span className="text-[7px] md:text-[10px] text-slate-500 uppercase">Coins</span></div>
                     </div>
-                    <div className={`p-5 md:p-8 rounded-[1.75rem] md:rounded-[2rem] border ${
+                    <div className={`p-4 md:p-6 rounded-[1.25rem] md:rounded-[2rem] border ${
                       selectedTask.status === 'active' ? 'bg-indigo-50 border-indigo-100' : 
-                      selectedTask.status === 'completed' ? 'bg-emerald-50 border-emerald-100' :
                       'bg-amber-50 border-amber-100'
                     }`}>
-                        <div className={`text-[7px] md:text-[8px] font-black uppercase tracking-widest mb-1 ${
-                          selectedTask.status === 'active' ? 'text-indigo-600' : 
-                          selectedTask.status === 'completed' ? 'text-emerald-600' :
-                          'text-amber-600'
+                        <div className={`text-[6px] md:text-[8px] font-black uppercase tracking-widest mb-1 ${
+                          selectedTask.status === 'active' ? 'text-indigo-600' : 'text-amber-600'
                         }`}>Security Level</div>
-                        <div className={`text-xl md:text-3xl font-black ${
-                          selectedTask.status === 'active' ? 'text-indigo-900' : 
-                          selectedTask.status === 'completed' ? 'text-emerald-900' :
-                          'text-amber-900'
+                        <div className={`text-lg md:text-3xl font-black ${
+                          selectedTask.status === 'active' ? 'text-indigo-900' : 'text-amber-900'
                         }`}>{selectedTask.status.toUpperCase()}</div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                     <a 
                       href={selectedTask.link} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className={`flex-[2] py-5 md:py-6 text-white font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest text-center shadow-2xl transition-all active:scale-95 ${
+                      className={`flex-[2] py-4 md:py-6 text-white font-black rounded-2xl md:rounded-3xl text-[9px] md:text-xs uppercase tracking-widest text-center shadow-2xl transition-all active:scale-95 ${
                         selectedTask.status === 'active' ? 'bg-indigo-600 shadow-indigo-200 hover:bg-indigo-700' : 'bg-slate-400 cursor-not-allowed pointer-events-none'
                       }`}
                     >
@@ -370,69 +365,74 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     <button 
                       onClick={() => setIsSubmittingProof(true)}
                       disabled={selectedTask.status !== 'active' || user.completedTasks?.includes(selectedTask.id)}
-                      className={`flex-1 py-5 md:py-6 font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest transition-all ${
+                      className={`flex-1 py-4 md:py-6 font-black rounded-2xl md:rounded-3xl text-[9px] md:text-xs uppercase tracking-widest transition-all ${
                         selectedTask.status === 'active' && !user.completedTasks?.includes(selectedTask.id) ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
-                      {user.completedTasks?.includes(selectedTask.id) ? 'Already Submitted' : 'Start Verification'}
+                      {user.completedTasks?.includes(selectedTask.id) ? 'Submitted' : 'Start Proof'}
                     </button>
                   </div>
-                  <p className="text-center text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    {selectedTask.status === 'active' ? 'You must complete the action before submitting proof' : 'This task entry is archived.'}
-                  </p>
                 </div>
               ) : (
-                <div className="space-y-6 md:space-y-10 animate-in slide-in-from-right-12 duration-500">
-                  <div className="bg-amber-50 p-5 md:p-8 rounded-[1.75rem] md:rounded-[2.5rem] border border-amber-100 flex items-center gap-4 md:gap-6">
-                    <div className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-amber-500 text-xl shadow-sm shrink-0">
+                <div className="space-y-4 md:space-y-8 animate-in slide-in-from-right-12 duration-500">
+                  <div className="bg-amber-50 p-4 md:p-6 rounded-[1.25rem] md:rounded-[2.5rem] border border-amber-100 flex items-center gap-4">
+                    <div className="w-10 h-10 md:w-14 md:h-14 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-amber-500 text-lg shadow-sm shrink-0">
                       <i className="fa-solid fa-camera"></i>
                     </div>
                     <div>
-                      <h5 className="font-black text-amber-900 text-[10px] md:text-xs uppercase tracking-widest mb-1">Verification Required</h5>
-                      <p className="text-[10px] md:text-[11px] text-amber-800/70 font-bold leading-relaxed">
-                        Upload a visual capture of your completed action for validation.
+                      <h5 className="font-black text-amber-900 text-[8px] md:text-xs uppercase tracking-widest mb-0.5">Verification Required</h5>
+                      <p className="text-[8px] md:text-[11px] text-amber-800/70 font-bold leading-tight md:leading-relaxed">
+                        Please upload a clear screenshot of the completed task. AI will verify the proof within seconds.
                       </p>
                     </div>
                   </div>
 
                   <div 
                     onClick={() => !isCompressing && fileInputRef.current?.click()}
-                    className={`relative border-2 md:border-4 border-dashed rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[320px] md:min-h-[450px] overflow-hidden ${
-                      previewImage ? 'border-emerald-500 bg-slate-950' : 'border-slate-100 bg-slate-50 hover:border-slate-200'
+                    className={`relative border-2 md:border-4 border-dashed rounded-[2rem] p-6 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[250px] md:min-h-[350px] overflow-hidden ${
+                      previewImage ? 'border-emerald-500 bg-slate-950' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
                     } ${isCompressing ? 'opacity-50 cursor-wait' : ''}`}
                   >
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
                     
                     {isCompressing ? (
-                      <div className="flex flex-col items-center gap-4">
-                        <i className="fa-solid fa-circle-notch fa-spin text-3xl md:text-4xl text-indigo-500"></i>
-                        <p className="text-[10px] md:text-xs font-black text-indigo-900 uppercase tracking-widest text-center">Optimizing High-Res Asset...</p>
+                      <div className="flex flex-col items-center gap-3">
+                        <i className="fa-solid fa-circle-notch fa-spin text-3xl text-indigo-500"></i>
+                        <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest text-center">Synchronizing Asset...</p>
                       </div>
                     ) : previewImage ? (
                       <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-950 group/preview">
-                        <img src={previewImage} alt="Proof" className="w-full h-full object-contain" />
+                        <img src={previewImage} alt="Proof Preview" className="w-full h-full object-contain" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshot(previewImage); }}
-                            className="bg-white text-slate-900 px-6 py-3 rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-3"
-                          >
-                            <i className="fa-solid fa-expand"></i> Verify Full View
-                          </button>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
-                            className="bg-rose-600 text-white px-6 py-3 rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-3"
-                          >
-                            <i className="fa-solid fa-trash"></i> Replace Snapshot
-                          </button>
+                           <div className="flex gap-2">
+                             <button 
+                                onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshot(previewImage); }}
+                                className="bg-white text-slate-900 px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-slate-50 transition-all"
+                             >
+                               <i className="fa-solid fa-expand"></i> Review
+                             </button>
+                             <button 
+                                onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
+                                className="bg-rose-600 text-white px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-rose-700 transition-all"
+                             >
+                               <i className="fa-solid fa-trash"></i> Replace
+                             </button>
+                           </div>
                         </div>
                       </div>
                     ) : (
                       <>
-                        <div className="w-14 h-14 md:w-20 md:h-20 bg-white rounded-2xl md:rounded-3xl flex items-center justify-center text-slate-300 mb-4 md:mb-6 shadow-sm border border-slate-50">
+                        <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl md:rounded-3xl flex items-center justify-center text-slate-300 mb-6 shadow-sm border border-slate-50 group-hover:text-indigo-500 transition-colors">
                           <i className="fa-solid fa-cloud-arrow-up text-2xl md:text-3xl"></i>
                         </div>
-                        <p className="text-[10px] md:text-xs font-black text-slate-900 uppercase tracking-widest text-center">Drop Snapshot or Tap to Browse</p>
-                        <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 text-center">Optimized for Tall Mobile Screenshots</p>
+                        <p className="text-[10px] md:text-xs font-black text-slate-900 uppercase tracking-[0.2em] text-center px-4 mb-6">Drag & Drop or Tap to Upload</p>
+                        
+                        <button 
+                          type="button"
+                          className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
+                        >
+                           Choose Screenshot
+                        </button>
                       </>
                     )}
                   </div>
@@ -440,23 +440,23 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                   <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                     <button 
                       onClick={() => setIsSubmittingProof(false)} 
-                      className="order-2 sm:order-1 flex-1 py-5 md:py-6 bg-slate-100 text-slate-500 font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                      className="flex-1 py-4 md:py-6 bg-slate-100 text-slate-500 font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest hover:bg-slate-200 transition-all order-2 sm:order-1"
                     >
                       Back
                     </button>
                     <button 
                       onClick={handleFinalSubmit} 
                       disabled={isUploading || isCompressing || !previewImage} 
-                      className={`order-1 sm:order-2 flex-[2] py-5 md:py-6 text-white font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-widest shadow-2xl transition-all flex items-center justify-center gap-2 md:gap-3 active:scale-95 disabled:opacity-50 ${
-                        previewImage ? 'bg-slate-900 hover:bg-indigo-600' : 'bg-slate-300 cursor-not-allowed'
+                      className={`flex-[2] py-4 md:py-6 text-white font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-[0.3em] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 order-1 sm:order-2 ${
+                        previewImage ? 'bg-slate-900 hover:bg-indigo-600 shadow-indigo-100' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
                       {isUploading ? (
                         <>
-                          <i className="fa-solid fa-spinner fa-spin"></i> Synchronizing...
+                          <i className="fa-solid fa-spinner fa-spin"></i> Initializing Sync...
                         </>
                       ) : (
-                        <>Submit Proof of Work <i className="fa-solid fa-paper-plane"></i></>
+                        <>Submit Proof <i className="fa-solid fa-paper-plane"></i></>
                       )}
                     </button>
                   </div>
@@ -470,21 +470,18 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       {/* GLOBAL SCREENSHOT VIEWER MODAL */}
       {viewingHistoryScreenshot && (
         <div 
-          className="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300"
+          className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300"
           onClick={() => setViewingHistoryScreenshot(null)}
         >
            <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center pointer-events-none">
-              <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[2rem] md:rounded-[3rem] shadow-2xl border border-white/10">
-                 <img src={viewingHistoryScreenshot} alt="Full Proof" className="max-w-full max-h-full object-contain" />
+              <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[2rem] md:rounded-[4rem] shadow-2xl border border-white/10">
+                 <img src={viewingHistoryScreenshot} alt="Full Proof Viewer" className="max-w-full max-h-full object-contain" />
                  <button 
                    onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshot(null); }} 
                    className="absolute top-6 right-6 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20"
                  >
                    <i className="fa-solid fa-xmark text-xl"></i>
                  </button>
-                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-black/60 backdrop-blur-md rounded-full text-white text-[9px] font-black uppercase tracking-widest border border-white/10">
-                   Operational Asset Preview
-                 </div>
               </div>
            </div>
         </div>

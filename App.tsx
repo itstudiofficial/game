@@ -1,63 +1,69 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './pages/Home';
-import Tasks from './pages/Tasks';
-import CreateTask from './pages/CreateTask';
-import Wallet from './pages/Wallet';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import SpinWheel from './pages/SpinWheel';
-import Referrals from './pages/Referrals'; 
-import AdminPanel from './pages/AdminPanel';
-import Features from './pages/Features';
-import Contact from './pages/Contact';
-import MyCampaigns from './pages/MyCampaigns';
-import ProfileSettings from './pages/ProfileSettings';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsConditions from './pages/TermsConditions';
-import Disclaimer from './pages/Disclaimer';
 import { User, Task, Transaction } from './types';
 import { storage } from './services/storage';
+
+// Lazy load pages to optimize initial bundle size
+const Home = lazy(() => import('./pages/Home'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const CreateTask = lazy(() => import('./pages/CreateTask'));
+const Wallet = lazy(() => import('./pages/Wallet'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Login = lazy(() => import('./pages/Login'));
+const SpinWheel = lazy(() => import('./pages/SpinWheel'));
+const Referrals = lazy(() => import('./pages/Referrals'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const Features = lazy(() => import('./pages/Features'));
+const Contact = lazy(() => import('./pages/Contact'));
+const MyCampaigns = lazy(() => import('./pages/MyCampaigns'));
+const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const Disclaimer = lazy(() => import('./pages/Disclaimer'));
+
+const PageLoader = () => (
+  <div className="min-h-[60vh] flex flex-col items-center justify-center p-10 text-center animate-in fade-in duration-500">
+    <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
+    <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Loading Module...</h2>
+  </div>
+);
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState<User>(storage.getUser());
-  const [tasks, setTasks] = useState<Task[]>([]); // Initialize empty, will be populated by storage/subscription
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [sessionConflict, setSessionConflict] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  // Initial Task Load
+  // Initial Data Load & Session Sync
   useEffect(() => {
-    const loadInitialTasks = async () => {
-      const initialTasks = await storage.getTasks();
-      setTasks(initialTasks);
+    const initApp = async () => {
+      try {
+        const initialTasks = await storage.getTasks();
+        setTasks(initialTasks);
+        
+        if (user.isLoggedIn) {
+          const cloudUser = await storage.syncUserFromCloud(user.id);
+          if (cloudUser) {
+            setUser(cloudUser);
+            // Targeted fetch: only get this user's transactions
+            const userTxs = await storage.getUserTransactions(user.id);
+            setTransactions(userTxs);
+          }
+        }
+        
+        const seo = await storage.getSEOConfig();
+        document.title = seo.siteTitle;
+      } catch (error) {
+        console.error("Initialization error:", error);
+      } finally {
+        setInitialLoading(false);
+      }
     };
-    loadInitialTasks();
-  }, []);
-
-  // Apply SEO Config on mount
-  useEffect(() => {
-    const applySEO = async () => {
-      const seo = await storage.getSEOConfig();
-      document.title = seo.siteTitle;
-      const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute('content', seo.metaDescription);
-      const metaKeywords = document.querySelector('meta[name="keywords"]');
-      if (metaKeywords) metaKeywords.setAttribute('content', seo.keywords);
-    };
-    applySEO();
-  }, []);
-
-  // Capture Referral from URL - Supports both 'id' and 'ref'
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const refCode = params.get('id') || params.get('ref');
-    if (refCode) {
-      sessionStorage.setItem('pending_referral', refCode.toUpperCase());
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+    initApp();
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -91,25 +97,24 @@ const App: React.FC = () => {
           return;
         }
         setUser(cloudUser);
-        // Update local transactions from the global ledger
-        const allGlobal = await storage.getAllGlobalTransactions();
-        const userTxs = allGlobal.filter(tx => tx.userId === idToSync);
-        setTransactions(userTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        // Optimize: Fetch ONLY this user's transactions instead of global history
+        const userTxs = await storage.getUserTransactions(idToSync);
+        setTransactions(userTxs);
       }
     }
   }, [user.id, user.isLoggedIn, handleLogout]);
 
+  // Periodic Refresh - reduced frequency to save bandwidth
   useEffect(() => {
     if (user.isLoggedIn) {
-      refreshUserBalance();
-      const interval = setInterval(refreshUserBalance, 15000); 
+      const interval = setInterval(refreshUserBalance, 30000); 
       return () => clearInterval(interval);
     }
   }, [user.isLoggedIn, refreshUserBalance]);
 
   useEffect(() => {
-    storage.setUser(user);
-  }, [user]);
+    if (!initialLoading) storage.setUser(user);
+  }, [user, initialLoading]);
 
   useEffect(() => {
     storage.subscribeToTasks((updatedTasks) => {
@@ -149,176 +154,27 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleTaskCompletion = async (taskId: string, proofImage?: string, submissionTimestamp?: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
-
-    const newTx: Transaction = {
-      id: `SUB-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      userId: user.id,
-      username: user.username,
-      amount: task.reward,
-      type: 'earn',
-      status: 'pending',
-      method: `Task: ${task.title} | ${task.type}`,
-      proofImage: proofImage || undefined,
-      date: submissionTimestamp || new Date().toLocaleString()
-    };
-
-    const updatedUser = {
-      ...user,
-      completedTasks: [...(user.completedTasks || []), taskId]
-    };
-    
-    setUser(updatedUser);
-    await storage.setUser(updatedUser);
-    await storage.addTransaction(newTx);
-    setTransactions(prev => [newTx, ...prev]);
-    
-    alert(`Verification submission received. Redirecting to Dashboard.`);
-    navigateTo('dashboard');
-  };
-
-  const handleCreateTask = async (taskData: any) => {
-    const totalCost = taskData.reward * taskData.totalWorkers;
-    if (user.depositBalance < totalCost) return alert('Insufficient Deposit Balance.');
-
-    const newTask: Task = {
-      id: `TASK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      ...taskData,
-      creatorId: user.id,
-      completedCount: 0,
-      status: 'pending'
-    };
-
-    const updatedUser: User = {
-      ...user,
-      depositBalance: user.depositBalance - totalCost,
-      createdTasks: [...(user.createdTasks || []), newTask.id]
-    };
-
-    const updatedTasks = [...tasks, newTask];
-    
-    setUser(updatedUser);
-    setTasks(updatedTasks);
-    
-    await storage.setUser(updatedUser);
-    storage.setTasks(updatedTasks);
-    
-    alert('Campaign submitted for review!');
-    navigateTo('my-campaigns');
-  };
-
-  const handleDeleteTask = async (taskId: string) => {
-    if (!confirm('Are you sure you want to terminate this campaign? No refunds for remaining quota.')) return;
-    
-    await storage.deleteTaskFromCloud(taskId);
-    const updatedUser: User = {
-      ...user,
-      createdTasks: (user.createdTasks || []).filter(id => id !== taskId)
-    };
-    setUser(updatedUser);
-    await storage.setUser(updatedUser);
-    alert('Campaign deleted.');
-  };
-
-  const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
-    await storage.updateTaskInCloud(taskId, updates);
-    alert('Campaign updated.');
-  };
-
-  const handleReferralClaim = async (referredUserId: string) => {
-    if (user.claimedReferrals?.includes(referredUserId)) return;
-
-    const reward = 100;
-    const newTx: Transaction = {
-      id: `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      userId: user.id,
-      username: user.username,
-      amount: reward,
-      type: 'referral_claim',
-      status: 'success',
-      method: `Referral Bonus: Partner ${referredUserId}`,
-      date: new Date().toLocaleString()
-    };
-
-    const updatedUser: User = {
-      ...user,
-      coins: (user.coins || 0) + reward,
-      claimedReferrals: [...(user.claimedReferrals || []), referredUserId]
-    };
-
-    setUser(updatedUser);
-    await storage.setUser(updatedUser);
-    await storage.addTransaction(newTx);
-    setTransactions(prev => [newTx, ...prev]);
-  };
-
-  const handleSpinReward = async (reward: number, cost: number) => {
-    if (!user.isLoggedIn) return;
-    
-    const newTx: Transaction = {
-      id: `SPIN-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-      userId: user.id,
-      username: user.username,
-      amount: reward,
-      type: 'spin',
-      status: 'success',
-      method: `Daily Spin Reward`,
-      date: new Date().toLocaleString()
-    };
-
-    const updatedUser: User = {
-      ...user,
-      coins: (user.coins || 0) + reward - cost
-    };
-
-    setUser(updatedUser);
-    await storage.setUser(updatedUser);
-    await storage.addTransaction(newTx);
-    setTransactions(prev => [newTx, ...prev]);
-  };
-
-  const handleWalletAction = async (type: 'deposit' | 'withdraw', amount: number, method: string, accountRef?: string, proofImage?: string) => {
-    // Basic verification
-    if (isNaN(amount) || amount <= 0) return alert('Invalid amount.');
-    
-    const txId = 'TX-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-    
-    if (type === 'withdraw') {
-      if (amount < 3000) return alert('Min withdrawal: 3,000 coins.');
-      if (user.coins < amount) return alert('Insufficient vault balance.');
-    }
-
-    const newTx: Transaction = {
-      id: txId,
-      userId: user.id,
-      username: user.username,
-      amount: amount,
-      type: type,
-      method: method,
-      account: accountRef || undefined,
-      proofImage: proofImage || undefined,
-      status: 'pending',
-      date: new Date().toLocaleString()
-    };
-    
-    try {
-      if (type === 'withdraw') {
-        const updatedUser = { ...user, coins: user.coins - amount };
-        setUser(updatedUser);
-        await storage.setUser(updatedUser);
-      }
-      
-      // Unified transaction recording for Admin visibility
-      await storage.addTransaction(newTx);
-      setTransactions(prev => [newTx, ...prev]);
-      alert(`${type.toUpperCase()} request initialized successfully.`);
-    } catch (err) {
-      console.error("Wallet action error:", err);
-      throw new Error("Failed to sync with network.");
-    }
-  };
+  if (initialLoading) {
+    return (
+      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center p-6 text-center z-[1000]">
+        <div className="w-24 h-24 mb-8 animate-pulse">
+           <svg viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+             <path d="M200 70L30 310H130L200 70Z" fill="#1E293B" />
+             <path d="M200 70L370 310C320 250 250 150 200 70Z" fill="#2563EB" />
+           </svg>
+        </div>
+        <div className="space-y-4">
+           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Ads<span className="text-indigo-600">Predia</span></h1>
+           <div className="flex items-center justify-center gap-3">
+              <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-bounce"></div>
+           </div>
+           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mt-4">Synchronizing Command Hub</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -342,22 +198,46 @@ const App: React.FC = () => {
       )}
 
       <main className="flex-grow">
-        {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
-        {currentPage === 'features' && <Features />}
-        {currentPage === 'contact' && <Contact />}
-        {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={handleTaskCompletion} />}
-        {currentPage === 'create' && <CreateTask onCreate={handleCreateTask} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
-        {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
-        {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
-        {currentPage === 'login' && <Login onLogin={handleLogin} />}
-        {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={handleSpinReward} transactions={transactions} />}
-        {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleReferralClaim} />}
-        {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={handleDeleteTask} onUpdateTask={handleUpdateTask} onNavigate={navigateTo} />}
-        {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
-        {currentPage === 'privacy-policy' && <PrivacyPolicy />}
-        {currentPage === 'terms-conditions' && <TermsConditions />}
-        {currentPage === 'disclaimer' && <Disclaimer />}
-        {currentPage.startsWith('admin') && user.isAdmin && <AdminPanel initialView={currentPage.split('-')[1] as any} />}
+        <Suspense fallback={<PageLoader />}>
+          {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
+          {currentPage === 'features' && <Features />}
+          {currentPage === 'contact' && <Contact />}
+          {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={(tid, p, t) => refreshUserBalance()} />}
+          {currentPage === 'create' && <CreateTask onCreate={async (data) => {
+            const totalCost = data.reward * data.totalWorkers;
+            const newTask: Task = {
+              id: `TASK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+              ...data,
+              creatorId: user.id,
+              completedCount: 0,
+              status: 'pending'
+            };
+            const updatedUser = { ...user, depositBalance: user.depositBalance - totalCost, createdTasks: [...(user.createdTasks || []), newTask.id] };
+            const updatedTasks = [...tasks, newTask];
+            setUser(updatedUser);
+            setTasks(updatedTasks);
+            await storage.setUser(updatedUser);
+            storage.setTasks(updatedTasks);
+            navigateTo('my-campaigns');
+          }} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
+          {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={(t, a, m, ar, pi) => refreshUserBalance()} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
+          {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
+          {currentPage === 'login' && <Login onLogin={handleLogin} />}
+          {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={() => refreshUserBalance()} transactions={transactions} />}
+          {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={() => refreshUserBalance()} />}
+          {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={async (tid) => {
+            await storage.deleteTaskFromCloud(tid);
+            refreshUserBalance();
+          }} onUpdateTask={async (tid, data) => {
+            await storage.updateTaskInCloud(tid, data);
+            refreshUserBalance();
+          }} onNavigate={navigateTo} />}
+          {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
+          {currentPage === 'privacy-policy' && <PrivacyPolicy />}
+          {currentPage === 'terms-conditions' && <TermsConditions />}
+          {currentPage === 'disclaimer' && <Disclaimer />}
+          {currentPage.startsWith('admin') && user.isAdmin && <AdminPanel initialView={currentPage.split('-')[1] as any} />}
+        </Suspense>
       </main>
       <Footer setCurrentPage={navigateTo} isLoggedIn={user.isLoggedIn} />
     </div>
