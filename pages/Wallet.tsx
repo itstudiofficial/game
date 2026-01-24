@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Transaction } from '../types';
 
 interface WalletProps {
@@ -65,6 +65,30 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
       color: 'text-blue-500', 
       bg: 'bg-blue-50',
       step: activeTab === 'deposit' ? 'Transfer to this Payeer account, then paste Order ID and upload screenshot below.' : 'Enter your Payeer Account ID (PXXXXX) and Name below.'
+    }
+  };
+
+  // Logic to filter methods based on active tab
+  const availableMethods = useMemo(() => {
+    const all = Object.keys(GATEWAY_DETAILS);
+    if (activeTab === 'deposit') {
+      return all.filter(m => m !== 'JazzCash' && m !== 'Bank Account');
+    }
+    return all;
+  }, [activeTab]);
+
+  const handleTabChange = (tab: 'deposit' | 'withdraw') => {
+    setActiveTab(tab);
+    if (tab === 'deposit') {
+      setAccount('');
+      setProofImage(null);
+      // If current method is now invalid for deposit, reset to Easypaisa
+      if (method === 'JazzCash' || method === 'Bank Account') {
+        setMethod('Easypaisa');
+      }
+    } else {
+      setWithdrawName('');
+      setWithdrawNumber('');
     }
   };
 
@@ -209,16 +233,16 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
              <div className="p-10 md:p-16">
                  <div className="animate-in fade-in duration-500">
                    <div className="flex bg-slate-50 p-2 rounded-[2rem] border border-slate-200 mb-12">
-                      <button onClick={() => { setActiveTab('deposit'); setAccount(''); setProofImage(null); }} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'deposit' ? 'bg-white text-emerald-600 shadow-lg' : 'text-slate-400'}`}>Deposit Funds</button>
-                      <button onClick={() => { setActiveTab('withdraw'); setWithdrawName(''); setWithdrawNumber(''); }} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-lg' : 'text-slate-400'}`}>Withdraw Profits</button>
+                      <button onClick={() => handleTabChange('deposit')} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'deposit' ? 'bg-white text-emerald-600 shadow-lg' : 'text-slate-400'}`}>Deposit Funds</button>
+                      <button onClick={() => handleTabChange('withdraw')} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === 'withdraw' ? 'bg-white text-indigo-600 shadow-lg' : 'text-slate-400'}`}>Withdraw Profits</button>
                    </div>
 
                    <form onSubmit={handleSubmitInitial} className="space-y-10">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                          <div className="space-y-4">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Choose Gateway</label>
-                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                               {Object.keys(GATEWAY_DETAILS).map(gate => (
+                            <div className={`grid gap-3 ${activeTab === 'deposit' ? 'grid-cols-3' : 'grid-cols-3 sm:grid-cols-5'}`}>
+                               {availableMethods.map(gate => (
                                  <button key={gate} type="button" onClick={() => setMethod(gate)} className={`py-4 px-2 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-2 ${method === gate ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm' : 'border-slate-100 text-slate-400 hover:border-slate-200'}`}>
                                    <i className={`fa-solid ${(GATEWAY_DETAILS as any)[gate].icon} text-lg`}></i>
                                    <span className="text-[7px] font-black uppercase text-center leading-tight">{gate}</span>
