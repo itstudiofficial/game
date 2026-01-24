@@ -24,10 +24,11 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Economic Policy Update: 2,000 Coins = $1.00
-  const COIN_RATE = 2000;
-  const MIN_DEPOSIT = 2000; 
-  const MIN_WITHDRAWAL = 2000;
+  // Economic Policy Update
+  const WITHDRAW_RATE = 3000; // 3,000 Coins = $1.00
+  const DEPOSIT_RATE = 2500;  // 2,500 Coins = $1.00 (5,000 = $2.00)
+  const MIN_DEPOSIT = 5000; 
+  const MIN_WITHDRAWAL = 3000;
 
   const GATEWAY_DETAILS = {
     'Easypaisa': { 
@@ -36,6 +37,20 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
       color: 'text-emerald-500', 
       bg: 'bg-emerald-50',
       step: activeTab === 'deposit' ? 'Transfer to this number via Easypaisa, then paste TxID and upload screenshot below.' : 'Enter your 11-digit Easypaisa number and account title below.'
+    },
+    'JazzCash': { 
+      address: '+92-3338182116', 
+      icon: 'fa-mobile-retro', 
+      color: 'text-rose-500', 
+      bg: 'bg-rose-50',
+      step: activeTab === 'deposit' ? 'Transfer to this number via JazzCash, then paste TxID and upload screenshot below.' : 'Enter your 11-digit JazzCash number and account title below.'
+    },
+    'Bank Account': { 
+      address: 'Bank: Meezan | Acc: 02120104812345', 
+      icon: 'fa-building-columns', 
+      color: 'text-slate-700', 
+      bg: 'bg-slate-100',
+      step: activeTab === 'deposit' ? 'Transfer to this Bank Account, then paste Ref/TxID and upload screenshot below.' : 'Enter Bank Name, Account Number/IBAN, and Title below.'
     },
     'USDT': { 
       address: 'TWFfb9ewKRbtSz8qTitr2fJpyRPQWtKj2U', 
@@ -113,7 +128,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
     e.preventDefault();
     const val = parseInt(amount);
     if (activeTab === 'deposit') {
-      if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Min deposit: ${MIN_DEPOSIT.toLocaleString()} coins ($1.00)`);
+      if (isNaN(val) || val < MIN_DEPOSIT) return alert(`Min deposit: ${MIN_DEPOSIT.toLocaleString()} coins ($2.00)`);
       if (!account) return alert('Transaction Ref / TxID is required.');
       if (!proofImage) return alert('Please upload a screenshot of your payment proof.');
     } else {
@@ -154,7 +169,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
       <div className="max-w-[1600px] mx-auto px-6 md:px-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-6">
           <div>
-            <h1 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter mb-4">Financial <span className="text-indigo-600">Vault</span></h1>
+            <h1 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter mb-4">Main <span className="text-indigo-600">Wallet</span></h1>
             <p className="text-slate-500 font-medium text-lg">Manage your liquidity, deposits, and authorized withdrawals.</p>
           </div>
           <button 
@@ -172,7 +187,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                   <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">Earning Balance (Main)</p>
                   <h2 className="text-5xl font-black tracking-tighter mb-6">{coins.toLocaleString()} <span className="text-xs text-slate-500 font-bold uppercase">Coins</span></h2>
                   <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 inline-block text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    ≈ ${(coins / COIN_RATE).toFixed(2)} USD
+                    ≈ ${(coins / WITHDRAW_RATE).toFixed(2)} USD
                   </div>
                </div>
                <i className="fa-solid fa-coins absolute -right-8 -bottom-8 text-9xl text-white/5 rotate-12 transition-transform group-hover:scale-110"></i>
@@ -202,11 +217,11 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                          <div className="space-y-4">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Choose Gateway</label>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                                {Object.keys(GATEWAY_DETAILS).map(gate => (
-                                 <button key={gate} type="button" onClick={() => setMethod(gate)} className={`py-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${method === gate ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm' : 'border-slate-100 text-slate-400 hover:border-slate-200'}`}>
+                                 <button key={gate} type="button" onClick={() => setMethod(gate)} className={`py-4 px-2 rounded-2xl border-2 transition-all flex flex-col items-center justify-center gap-2 ${method === gate ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm' : 'border-slate-100 text-slate-400 hover:border-slate-200'}`}>
                                    <i className={`fa-solid ${(GATEWAY_DETAILS as any)[gate].icon} text-lg`}></i>
-                                   <span className="text-[8px] font-black uppercase">{gate}</span>
+                                   <span className="text-[7px] font-black uppercase text-center leading-tight">{gate}</span>
                                  </button>
                                ))}
                             </div>
@@ -214,8 +229,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                          <div className="space-y-4">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Amount (Coins)</label>
                             <div className="relative">
-                               <input type="number" placeholder={`${MIN_WITHDRAWAL.toLocaleString()}+`} value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-8 py-6 bg-slate-50 border-none rounded-3xl font-black text-2xl text-slate-900 focus:ring-4 focus:ring-indigo-600/5 transition-all shadow-inner" />
-                               <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">≈ ${(parseInt(amount) || 0) / COIN_RATE} USD</span>
+                               <input type="number" placeholder={`${activeTab === 'deposit' ? MIN_DEPOSIT.toLocaleString() : MIN_WITHDRAWAL.toLocaleString()}+`} value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-8 py-6 bg-slate-50 border-none rounded-3xl font-black text-2xl text-slate-900 focus:ring-4 focus:ring-indigo-600/5 transition-all shadow-inner" />
+                               <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300">
+                                 ≈ ${(parseInt(amount) || 0) / (activeTab === 'deposit' ? DEPOSIT_RATE : WITHDRAW_RATE)} USD
+                               </span>
                             </div>
                          </div>
                       </div>
@@ -244,7 +261,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                         {activeTab === 'withdraw' ? (
                           <>
                             <div className="space-y-4">
-                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Account Title (Your Name)</label>
+                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Account Title (Name)</label>
                                <input 
                                  type="text" 
                                  required 
@@ -255,13 +272,13 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                                />
                             </div>
                             <div className="space-y-4">
-                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Account Number / Address</label>
+                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Number / Account ID</label>
                                <input 
                                  type="text" 
                                  required 
                                  value={withdrawNumber} 
                                  onChange={e => setWithdrawNumber(e.target.value)} 
-                                 placeholder={method === 'Easypaisa' ? "03XX XXXXXXX" : `Enter ${method} ID`} 
+                                 placeholder={method === 'Easypaisa' || method === 'JazzCash' ? "03XX XXXXXXX" : method === 'Bank Account' ? "Enter IBAN or Account No." : `Enter ${method} ID`} 
                                  className="w-full px-8 py-6 bg-slate-50 border-none rounded-3xl font-black text-slate-900 focus:ring-4 focus:ring-indigo-600/5 transition-all shadow-inner" 
                                />
                             </div>
@@ -325,7 +342,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
         <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
           <div className="p-8 md:p-14 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
              <div>
-                <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter uppercase">Vault History</h3>
+                <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter uppercase">Wallet History</h3>
                 <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit of your financial movements</p>
              </div>
              <div className="w-10 h-10 md:w-14 md:h-14 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-slate-300 shadow-inner">
@@ -398,6 +415,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                  <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-widest">
                     <span>Value</span>
                     <span className="text-slate-900">{parseInt(amount).toLocaleString()} Coins</span>
+                 </div>
+                 <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                    <span>Equivalent</span>
+                    <span className="text-slate-900">≈ ${(parseInt(amount) || 0) / (activeTab === 'deposit' ? DEPOSIT_RATE : WITHDRAW_RATE)} USD</span>
                  </div>
                  <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-widest">
                     <span>Gateway</span>

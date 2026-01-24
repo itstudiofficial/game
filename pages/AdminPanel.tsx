@@ -36,8 +36,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     setView(initialView);
   }, [initialView]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const u = await storage.getAllUsers();
       const validUsers = u.filter(user => user && user.id);
@@ -55,7 +55,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     } catch (error) {
       console.error("Critical Admin Sync Error:", error);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
@@ -66,7 +66,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const totalCoinsInCirculation = useMemo(() => users.reduce((acc, u) => acc + (u.coins || 0), 0), [users]);
   const totalDepositBalance = useMemo(() => users.reduce((acc, u) => acc + (u.depositBalance || 0), 0), [users]);
   
-  // FIX: dashboard stats now include all pending operations
   const pendingTaskAudits = useMemo(() => transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length, [transactions]);
   const pendingFinanceAudits = useMemo(() => transactions.filter(tx => (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length, [transactions]);
   const totalAuditQueue = pendingTaskAudits + pendingFinanceAudits;
@@ -85,6 +84,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
   const handleAuditSubmission = async (tx: Transaction, status: 'success' | 'failed') => {
     try {
+      // Optimistic Update for UI smoothness
+      if (status === 'success') {
+        setUsers(prev => prev.map(u => u.id === tx.userId ? { ...u, coins: (u.coins || 0) + tx.amount } : u));
+      }
+      setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status } : t));
+
       await storage.updateGlobalTransaction(tx.id, { status });
       if (status === 'success') {
         const targetUser = users.find(u => u.id === tx.userId);
@@ -93,14 +98,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           await storage.updateUserInCloud(tx.userId, { coins: newCoins });
         }
       }
-      await fetchData();
+      await fetchData(true); // Background refresh
     } catch (err) {
       console.error("Audit update failed", err);
+      fetchData(); // Reset state on error
     }
   };
 
   const handleFinanceAction = async (tx: Transaction, status: 'success' | 'failed') => {
     try {
+      // Optimistic Update for UI smoothness
+      if (status === 'success' && tx.type === 'deposit') {
+        setUsers(prev => prev.map(u => u.id === tx.userId ? { ...u, depositBalance: (u.depositBalance || 0) + tx.amount } : u));
+      } else if (status === 'failed' && tx.type === 'withdraw') {
+        setUsers(prev => prev.map(u => u.id === tx.userId ? { ...u, coins: (u.coins || 0) + tx.amount } : u));
+      }
+      setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status } : t));
+
       await storage.updateGlobalTransaction(tx.id, { status });
       const targetUser = users.find(u => u.id === tx.userId);
       
@@ -115,18 +129,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           await storage.updateUserInCloud(tx.userId, { coins: newCoins });
         }
       }
-      await fetchData();
+      await fetchData(true); // Background refresh
     } catch (err) {
       console.error("Finance action failed", err);
+      fetchData(); // Reset state on error
     }
   };
 
   const handleUserStatus = async (userId: string, status: 'active' | 'banned') => {
     try {
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status } : u));
       await storage.updateUserInCloud(userId, { status });
-      await fetchData();
+      await fetchData(true);
     } catch (e) {
       alert("Status update failed.");
+      fetchData();
     }
   };
 
@@ -142,13 +159,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     }
 
     try {
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, coins: newBalance } : u));
       await storage.updateUserInCloud(userId, { coins: newBalance });
       setEditingUserId(null);
       setAdjustAmount('');
-      await fetchData();
-      alert(`Balance updated for node ${userId}. New balance: ${newBalance.toLocaleString()}`);
+      await fetchData(true);
     } catch (e) {
       alert("Adjustment failed.");
+      fetchData();
     }
   };
 
@@ -167,10 +185,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
   const handleTaskAction = async (taskId: string, status: 'active' | 'rejected') => {
     try {
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
       await storage.updateTaskInCloud(taskId, { status });
-      await fetchData();
+      await fetchData(true);
     } catch (error) {
       alert("Failed to update task status.");
+      fetchData();
     }
   };
 
@@ -192,11 +212,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
     try {
       const currentTasks = await storage.getTasks();
-      storage.setTasks([...currentTasks, newTask]);
+      const updatedTasks = [...currentTasks, newTask];
+      setTasks(updatedTasks);
+      storage.setTasks(updatedTasks);
       alert('System Asset Deployed.');
       setNewTaskData({ title: '', link: '', type: 'YouTube', reward: 10, totalWorkers: 100, description: '' });
       setView('tasks');
-      await fetchData();
+      await fetchData(true);
     } catch (error) {
       alert('Deployment failed.');
     } finally {
@@ -453,7 +475,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                   <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Audit Verification Queue</h2>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Validate submitted assets for manual credit release</p>
                </div>
-               <button onClick={fetchData} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+               <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
                   <i className="fa-solid fa-sync"></i> Refresh Queue
                </button>
             </div>
@@ -531,7 +553,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manage network inflow and liquidity requests</p>
                </div>
                <div className="flex gap-4 items-center">
-                  <button onClick={fetchData} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm mr-4">
+                  <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm mr-4">
                      <i className="fa-solid fa-sync"></i> Sync Vault Data
                   </button>
                   <div className="bg-emerald-50 px-6 py-3 rounded-2xl border border-emerald-100">
@@ -632,7 +654,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                                  </div>
                               </div>
                               <div className="text-right">
-                                 {/* Policy Update: 2,000 Coins = $1.00 */}
                                  <div className="text-2xl font-black text-slate-900 tabular-nums">{(tx.amount / 2000).toFixed(2)} <span className="text-xs text-slate-400">USD</span></div>
                                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">-{tx.amount.toLocaleString()} COINS</p>
                               </div>
@@ -670,7 +691,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                     <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Campaign Registry Audit</h2>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Review user-created tasks for global deployment</p>
                  </div>
-                 <button onClick={fetchData} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+                 <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
                    <i className="fa-solid fa-sync"></i> Refresh Registry
                  </button>
               </div>
@@ -772,7 +793,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                     <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Universal Event Logs</h2>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Real-time recording of all node operations</p>
                  </div>
-                 <button onClick={fetchData} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
+                 <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
                     <i className="fa-solid fa-sync"></i> Refresh Logs
                  </button>
               </div>
