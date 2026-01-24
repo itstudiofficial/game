@@ -8,6 +8,7 @@ import { storage } from './services/storage';
 // Lazy load pages to optimize initial bundle size
 const Home = lazy(() => import('./pages/Home'));
 const Tasks = lazy(() => import('./pages/Tasks'));
+const MathSolver = lazy(() => import('./pages/MathSolver'));
 const CreateTask = lazy(() => import('./pages/CreateTask'));
 const Wallet = lazy(() => import('./pages/Wallet'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -149,6 +150,27 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleMathSolve = async (reward: number) => {
+    const updatedUser = { ...user, coins: user.coins + reward };
+    setUser(updatedUser);
+    await storage.setUser(updatedUser);
+    
+    const tx: Transaction = {
+      id: `TX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      userId: user.id,
+      username: user.username,
+      amount: reward,
+      type: 'math_reward',
+      method: 'Math Problem Solved',
+      status: 'success',
+      date: new Date().toLocaleString()
+    };
+    await storage.addTransaction(tx);
+    // Silent refresh to update local transaction list
+    const userTxs = await storage.getUserTransactions(user.id);
+    setTransactions(userTxs);
+  };
+
   const navigateTo = (page: string) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -203,6 +225,7 @@ const App: React.FC = () => {
           {currentPage === 'features' && <Features />}
           {currentPage === 'contact' && <Contact />}
           {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={(tid, p, t) => refreshUserBalance()} />}
+          {currentPage === 'math-solver' && user.isLoggedIn && <MathSolver onSolve={handleMathSolve} />}
           {currentPage === 'create' && <CreateTask onCreate={async (data) => {
             const totalCost = data.reward * data.totalWorkers;
             const newTask: Task = {

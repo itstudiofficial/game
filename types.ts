@@ -37,7 +37,7 @@ export interface Transaction {
   userId: string;
   username?: string;
   amount: number;
-  type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin' | 'referral_claim';
+  type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin' | 'referral_claim' | 'math_reward';
   method?: string;
   account?: string; 
   proofImage?: string; 
