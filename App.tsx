@@ -139,7 +139,8 @@ const App: React.FC = () => {
       referredBy: userData.referredBy || cloudUser?.referredBy || '',
       completedTasks: cloudUser?.completedTasks || [],
       createdTasks: cloudUser?.createdTasks || [],
-      claimedReferrals: cloudUser?.claimedReferrals || []
+      claimedReferrals: cloudUser?.claimedReferrals || [],
+      lastMathTimestamp: cloudUser?.lastMathTimestamp || 0
     };
     
     localStorage.setItem('ct_user_session_id', newSessionId);
@@ -150,8 +151,13 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleMathSolve = async (reward: number) => {
-    const updatedUser = { ...user, coins: user.coins + reward };
+  const handleMathSolve = async (reward: number, isLast: boolean) => {
+    const updates: Partial<User> = { coins: user.coins + reward };
+    if (isLast) {
+      updates.lastMathTimestamp = Date.now();
+    }
+    
+    const updatedUser = { ...user, ...updates };
     setUser(updatedUser);
     await storage.setUser(updatedUser);
     
@@ -161,7 +167,7 @@ const App: React.FC = () => {
       username: user.username,
       amount: reward,
       type: 'math_reward',
-      method: 'Math Problem Solved',
+      method: `Math Problem Solved${isLast ? ' (Sequence Complete)' : ''}`,
       status: 'success',
       date: new Date().toLocaleString()
     };
@@ -225,7 +231,7 @@ const App: React.FC = () => {
           {currentPage === 'features' && <Features />}
           {currentPage === 'contact' && <Contact />}
           {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={(tid, p, t) => refreshUserBalance()} />}
-          {currentPage === 'math-solver' && user.isLoggedIn && <MathSolver onSolve={handleMathSolve} />}
+          {currentPage === 'math-solver' && user.isLoggedIn && <MathSolver user={user} onSolve={handleMathSolve} transactions={transactions} />}
           {currentPage === 'create' && <CreateTask onCreate={async (data) => {
             const totalCost = data.reward * data.totalWorkers;
             const newTask: Task = {

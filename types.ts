@@ -26,6 +26,7 @@ export interface User {
   isLoggedIn: boolean;
   isAdmin?: boolean;
   lastSpinTimestamp?: number;
+  lastMathTimestamp?: number; // New field for daily restriction
   dailySpinsCount?: number;
   status?: 'active' | 'banned';
   referredBy?: string;
