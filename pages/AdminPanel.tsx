@@ -16,6 +16,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const [loading, setLoading] = useState(true);
   const [savingSeo, setSavingSeo] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [liveSync, setLiveSync] = useState(false);
   
   // Coin Adjustment State
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -57,9 +58,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
     initAdmin();
 
-    // Set up Real-time listener for ALL transactions
+    // Set up Real-time listener for ALL transactions globally
     const unsubscribe = storage.subscribeToAllTransactions((txs) => {
-      // Sort immediately on arrival
+      setLiveSync(true);
       const sortedTxs = (txs || []).sort((a, b) => {
         try {
           return new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -68,6 +69,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         }
       });
       setTransactions(sortedTxs);
+      setTimeout(() => setLiveSync(false), 2000);
     });
 
     return () => {
@@ -75,33 +77,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     };
   }, []);
 
-  const fetchData = async (isSilent = false) => {
-    if (!isSilent) setLoading(true);
-    try {
-      const u = await storage.getAllUsers();
-      const validUsers = u.filter(user => user && user.id);
-      const uniqueUsers = Array.from(new Map(validUsers.map(user => [user.id, user])).values());
-      
-      const tasksSnapshot = await storage.getTasks();
-      const seoData = await storage.getSEOConfig();
-      
-      setUsers(uniqueUsers);
-      setTasks(tasksSnapshot || []);
-      setSeo(seoData);
-    } catch (error) {
-      console.error("Manual Admin Sync Error:", error);
-    } finally {
-      if (!isSilent) setLoading(false);
-    }
-  };
-
   const totalCoinsInCirculation = useMemo(() => users.reduce((acc, u) => acc + (u.coins || 0), 0), [users]);
   const totalDepositBalance = useMemo(() => users.reduce((acc, u) => acc + (u.depositBalance || 0), 0), [users]);
   
-  const pendingTaskAudits = useMemo(() => transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').length, [transactions]);
-  const pendingFinanceAudits = useMemo(() => transactions.filter(tx => tx && (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length, [transactions]);
-  const totalAuditQueue = pendingTaskAudits + pendingFinanceAudits;
+  const pendingTaskAudits = useMemo(() => 
+    transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').length, 
+    [transactions]
+  );
   
+  const pendingFinanceAudits = useMemo(() => 
+    transactions.filter(tx => tx && (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length, 
+    [transactions]
+  );
+  
+  const totalAuditQueue = pendingTaskAudits + pendingFinanceAudits;
   const pendingTasksCount = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
 
   const filteredUsers = useMemo(() => {
@@ -133,10 +122,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           }
         }
       }
-      // UI will auto-update via listener
     } catch (err) {
       console.error("Audit update failed", err);
-      alert("Verification failed. Check network.");
+      alert("Status synchronization failed.");
     }
   };
 
@@ -163,7 +151,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const handleUserStatus = async (userId: string, status: 'active' | 'banned') => {
     try {
       await storage.updateUserInCloud(userId, { status });
-      await fetchData(true);
+      const u = await storage.getAllUsers();
+      setUsers(u || []);
     } catch (e) {
       alert("Status update failed.");
     }
@@ -184,7 +173,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       await storage.updateUserInCloud(userId, { coins: newBalance });
       setEditingUserId(null);
       setAdjustAmount('');
-      await fetchData(true);
+      const u = await storage.getAllUsers();
+      setUsers(u || []);
     } catch (e) {
       alert("Adjustment failed.");
     }
@@ -206,7 +196,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const handleTaskAction = async (taskId: string, status: 'active' | 'rejected') => {
     try {
       await storage.updateTaskInCloud(taskId, { status });
-      await fetchData(true);
+      const t = await storage.getTasks();
+      setTasks(t || []);
     } catch (error) {
       alert("Failed to update task status.");
     }
@@ -235,7 +226,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       alert('System Asset Deployed.');
       setNewTaskData({ title: '', link: '', type: 'YouTube', reward: 10, totalWorkers: 100, description: '' });
       setView('tasks');
-      await fetchData(true);
+      setTasks(updatedTasks);
     } catch (error) {
       alert('Deployment failed.');
     } finally {
@@ -261,8 +252,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
              <div>
                 <h1 className="text-3xl font-black text-white tracking-tighter leading-none uppercase">Admin <span className="text-indigo-400">Terminal</span></h1>
                 <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mt-2 flex items-center gap-2">
-                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                   Session Root: Authorized (Live Sync)
+                   <span className={`w-1.5 h-1.5 rounded-full ${liveSync ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`}></span>
+                   Session Root: Authorized (Live Audit)
                 </p>
              </div>
           </div>
@@ -487,21 +478,47 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
         {view === 'reviews' && (
           <div className="space-y-10 animate-in fade-in duration-500">
+            {/* Real-time Diagnostics Header */}
+            <div className="bg-slate-900 rounded-[2.5rem] p-6 md:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl border border-white/5">
+               <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-2xl shadow-xl shadow-indigo-500/20">
+                     <i className="fa-solid fa-magnifying-glass-chart"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight leading-none mb-2 uppercase">Diagnostic Hub</h3>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Monitoring all incoming task signals</p>
+                  </div>
+               </div>
+               <div className="flex gap-4">
+                  <div className="px-6 py-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                     <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Signals</p>
+                     <p className="text-xl font-black tabular-nums">{transactions.length}</p>
+                  </div>
+                  <div className="px-6 py-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                     <p className="text-[7px] font-black text-indigo-400 uppercase tracking-widest mb-1">Pending Tasks</p>
+                     <p className="text-xl font-black tabular-nums text-indigo-400">{pendingTaskAudits}</p>
+                  </div>
+               </div>
+            </div>
+
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 px-4">
                <div>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Audit Verification Queue (Live)</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Validate submitted assets for manual credit release</p>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Audit Verification Queue</h2>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manual validation required for coin release</p>
                </div>
-               <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
-                  <i className="fa-solid fa-sync"></i> Full Stack Re-Sync
-               </button>
+               <div className="flex items-center gap-3">
+                  <span className={`w-2 h-2 rounded-full ${liveSync ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`}></span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Live Connection Active</span>
+               </div>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 pb-10">
                {transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').length === 0 ? (
-                 <div className="col-span-full py-40 bg-white rounded-[4rem] border border-dashed border-slate-200 text-center">
-                    <i className="fa-solid fa-check-double text-6xl text-emerald-100 mb-8"></i>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No pending audits in network stack.</p>
+                 <div className="col-span-full py-40 bg-white rounded-[4rem] border border-dashed border-slate-200 text-center flex flex-col items-center">
+                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-8">
+                       <i className="fa-solid fa-check-double text-4xl text-slate-200"></i>
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">The audit queue is currently synchronized.</p>
                  </div>
                ) : (
                  transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').map(tx => (
@@ -536,20 +553,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                                </div>
                             </div>
                             <div className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                               <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Target Asset Context:</span>
+                               <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Signal Context:</span>
                                <p className="text-[10px] md:text-[11px] font-bold text-slate-700 leading-relaxed line-clamp-3">{tx.method || 'Unknown Task Submission'}</p>
                             </div>
                          </div>
                          <div className="flex gap-3 md:gap-4 mt-6 md:mt-8">
                             <button 
                               onClick={() => handleAuditSubmission(tx, 'success')} 
-                              className="flex-[2] py-4 md:py-5 bg-emerald-600 text-white rounded-2xl text-[9px] md:text-100 font-black uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                              className="flex-[2] py-4 md:py-5 bg-emerald-600 text-white rounded-2xl text-[9px] md:text-10 font-black uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
                               <i className="fa-solid fa-circle-check"></i> Verify & Pay
                             </button>
                             <button 
                               onClick={() => handleAuditSubmission(tx, 'failed')} 
-                              className="flex-1 py-4 md:py-5 bg-rose-50 text-rose-500 rounded-2xl text-[9px] md:text-100 font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white border border-rose-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                              className="flex-1 py-4 md:py-5 bg-rose-50 text-rose-500 rounded-2xl text-[9px] md:text-10 font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white border border-rose-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
                               <i className="fa-solid fa-circle-xmark"></i> Reject
                             </button>
@@ -570,20 +587,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manage network inflow and liquidity requests</p>
                </div>
                <div className="flex gap-4 items-center">
-                  <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm mr-4">
-                     <i className="fa-solid fa-sync"></i> Sync Vault Data
-                  </button>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-100 text-[8px] font-black uppercase tracking-widest text-slate-400 shadow-sm">
+                     <span className={`w-1.5 h-1.5 rounded-full ${liveSync ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`}></span>
+                     Syncing
+                  </div>
                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-12">
                {/* PENDING DEPOSITS SECTION */}
                <section>
-                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 px-4">Pending Deposit Requests</h3>
+                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 px-4">Pending Deposit Signals</h3>
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                     {transactions.filter(tx => tx && tx.type === 'deposit' && tx.status === 'pending').length === 0 ? (
                       <div className="col-span-full py-20 bg-white rounded-[3rem] border border-slate-100 text-center">
-                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No pending deposits detected.</p>
+                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No pending deposit signals detected.</p>
                       </div>
                     ) : (
                       transactions.filter(tx => tx && tx.type === 'deposit' && tx.status === 'pending').map(tx => (
@@ -636,11 +654,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
                {/* PENDING WITHDRAWALS SECTION */}
                <section>
-                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 px-4">Pending Withdrawal Requests</h3>
+                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 px-4">Pending Withdrawal Signals</h3>
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                     {transactions.filter(tx => tx && tx.type === 'withdraw' && tx.status === 'pending').length === 0 ? (
                       <div className="col-span-full py-20 bg-white rounded-[3rem] border border-slate-100 text-center">
-                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No pending withdrawals detected.</p>
+                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No pending withdrawal requests detected.</p>
                       </div>
                     ) : (
                       transactions.filter(tx => tx && tx.type === 'withdraw' && tx.status === 'pending').map(tx => (
@@ -696,15 +714,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                     <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Campaign Registry Audit</h2>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Review user-created tasks for global deployment</p>
                  </div>
-                 <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
-                   <i className="fa-solid fa-sync"></i> Refresh Registry
-                 </button>
               </div>
 
               {/* PRIORITIZED PENDING REVIEW SECTION */}
               <section>
                 <div className="flex items-center gap-4 mb-8 px-4">
-                   <h3 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em]">Campaigns Awaiting Review</h3>
+                   <h3 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em]">Campaigns Awaiting Signal</h3>
                    <div className="h-px bg-indigo-100 flex-1"></div>
                 </div>
                 
@@ -760,7 +775,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
               {/* ARCHIVE / ACTIVE TASKS SECTION */}
               <section>
                 <div className="flex items-center gap-4 mb-8 px-4">
-                   <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Operational Registry</h3>
+                   <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Operational Signals</h3>
                    <div className="h-px bg-slate-100 flex-1"></div>
                 </div>
 
@@ -795,18 +810,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
            <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
               <div className="p-10 border-b border-slate-100 flex justify-between items-center">
                  <div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Universal Event Logs</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Real-time recording of all node operations</p>
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Universal Event Signals</h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Real-time recording of all network activities</p>
                  </div>
-                 <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
-                    <i className="fa-solid fa-sync"></i> Refresh Logs
-                 </button>
               </div>
               <div className="overflow-x-auto">
                  <table className="w-full text-left">
                     <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
                        <tr>
-                          <th className="px-10 py-6">Event UID</th>
+                          <th className="px-10 py-6">Signal UID</th>
                           <th className="px-6 py-6">Operator</th>
                           <th className="px-6 py-6">Action</th>
                           <th className="px-6 py-6 text-right">Magnitude</th>

@@ -6,7 +6,7 @@ interface TasksProps {
   user: User;
   tasks: Task[];
   transactions: Transaction[];
-  onComplete: (taskId: string, proofImage?: string, timestamp?: string) => void;
+  onComplete: (taskId: string, proofImage?: string, timestamp?: string) => Promise<void> | void;
 }
 
 const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) => {
@@ -59,9 +59,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        // Aggressive compression for reliable Firebase RTDB transmission
-        const MAX_WIDTH = 800; 
-        const MAX_HEIGHT = 1000;
+        // Very aggressive mobile-friendly compression
+        const MAX_WIDTH = 640; 
+        const MAX_HEIGHT = 800;
         let width = img.width;
         let height = img.height;
 
@@ -84,8 +84,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'medium';
           ctx.drawImage(img, 0, 0, width, height);
-          // 0.5 quality drastically reduces base64 string length while keeping readability for humans/admin
-          resolve(canvas.toDataURL('image/jpeg', 0.5));
+          resolve(canvas.toDataURL('image/jpeg', 0.4));
         } else {
           reject(new Error('Failed to create canvas context'));
         }
@@ -117,14 +116,21 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
     }
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     if (!previewImage) return alert("Please upload a screenshot proof first.");
+    if (!selectedTask) return;
+
     setIsUploading(true);
-    // Short artificial delay for UX feedback
-    setTimeout(() => {
-      if (selectedTask) onComplete(selectedTask.id, previewImage, new Date().toLocaleString());
+    try {
+      // We must await the onComplete to ensure it reaches the database
+      await onComplete(selectedTask.id, previewImage, new Date().toLocaleString());
       handleCloseModal();
-    }, 1500);
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Submission failed. Please check your internet connection.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleCloseModal = () => {
@@ -387,12 +393,12 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
                   <div className="relative group">
                     <label 
-                      htmlFor="screenshot-upload-v2"
+                      htmlFor="screenshot-upload-v3"
                       className={`relative border-2 md:border-4 border-dashed rounded-[2rem] p-6 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[400px] md:min-h-[500px] overflow-hidden ${
                         previewImage ? 'border-emerald-500 bg-slate-950 shadow-2xl' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
                       } ${isCompressing ? 'opacity-50 cursor-wait' : ''}`}
                     >
-                      <input id="screenshot-upload-v2" type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                      <input id="screenshot-upload-v3" type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
                       
                       {isCompressing ? (
                         <div className="flex flex-col items-center gap-3">
@@ -454,10 +460,10 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     >
                       {isUploading ? (
                         <>
-                          <i className="fa-solid fa-spinner fa-spin"></i> Initializing Sync...
+                          <i className="fa-solid fa-spinner fa-spin"></i> Dispatching Proof...
                         </>
                       ) : (
-                        <>Submit Final Proof <i className="fa-solid fa-paper-plane"></i></>
+                        <>Finalize Submission <i className="fa-solid fa-paper-plane"></i></>
                       )}
                     </button>
                   </div>

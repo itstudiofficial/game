@@ -39,6 +39,7 @@ export const storage = {
   ensureArray: <T>(data: any): T[] => {
     if (!data) return [];
     if (Array.isArray(data)) return data.filter(item => item !== null);
+    // Handle objects returned by Firebase (e.g. {id1: val1, id2: val2})
     return Object.values(data).filter(item => item !== null) as T[];
   },
 
@@ -49,7 +50,7 @@ export const storage = {
   getUserId: (): string => {
     let id = localStorage.getItem('ap_local_id');
     if (!id) {
-      id = 'ID-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+      id = 'USR-' + Math.random().toString(36).substr(2, 6).toUpperCase();
       localStorage.setItem('ap_local_id', id);
     }
     return id;
@@ -168,13 +169,18 @@ export const storage = {
 
   addTransaction: async (tx: Transaction) => {
     const cleanTx = storage.cleanData(tx);
-    const txs = storage.getTransactions();
-    const updated = [cleanTx, ...txs];
-    localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
     
-    // Save to user node and global node
-    await push(ref(db, `${KEYS.USER_TXS}/${tx.userId}`), cleanTx);
-    await set(ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`), cleanTx);
+    // Write to Global Node for Admin review
+    const globalTxRef = ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`);
+    await set(globalTxRef, cleanTx);
+    
+    // Also push to User-specific node for history
+    const userTxRef = ref(db, `${KEYS.USER_TXS}/${tx.userId}`);
+    await push(userTxRef, cleanTx);
+    
+    // Update local cache
+    const currentTxs = storage.getTransactions();
+    localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([cleanTx, ...currentTxs]));
   },
 
   getAllUsers: async (): Promise<User[]> => {
@@ -203,19 +209,21 @@ export const storage = {
   },
 
   updateGlobalTransaction: async (txId: string, updates: Partial<Transaction>) => {
+    // 1. Update Global Audit Node
     await update(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`), storage.cleanData(updates));
     
-    // Also update in user-specific node
-    const snapshot = await get(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`));
-    if (snapshot.exists()) {
-      const tx = snapshot.val();
-      const userTxRef = ref(db, `${KEYS.USER_TXS}/${tx.userId}`);
-      const userTxSnapshot = await get(userTxRef);
-      if (userTxSnapshot.exists()) {
-        const userTxs = userTxSnapshot.val();
-        const key = Object.keys(userTxs).find(k => userTxs[k].id === txId);
-        if (key) {
-          await update(ref(db, `${KEYS.USER_TXS}/${tx.userId}/${key}`), storage.cleanData(updates));
+    // 2. Locate and Update the specific User-node entry
+    const globalSnapshot = await get(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`));
+    if (globalSnapshot.exists()) {
+      const txData = globalSnapshot.val();
+      const userTxsRef = ref(db, `${KEYS.USER_TXS}/${txData.userId}`);
+      const userTxsSnapshot = await get(userTxsRef);
+      
+      if (userTxsSnapshot.exists()) {
+        const entries = userTxsSnapshot.val();
+        const firebaseKey = Object.keys(entries).find(key => entries[key].id === txId);
+        if (firebaseKey) {
+          await update(ref(db, `${KEYS.USER_TXS}/${txData.userId}/${firebaseKey}`), storage.cleanData(updates));
         }
       }
     }

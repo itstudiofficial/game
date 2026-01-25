@@ -156,7 +156,7 @@ const App: React.FC = () => {
 
     // 1. Create a pending 'earn' transaction for the global ledger
     const tx: Transaction = {
-      id: `TX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      id: `TXN-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
       taskId: taskId, 
       username: user.username,
@@ -168,22 +168,23 @@ const App: React.FC = () => {
       date: timestamp || new Date().toLocaleString()
     };
 
+    // CRITICAL: We await this to ensure the Admin Panel sees it immediately
     await storage.addTransaction(tx);
 
-    // 2. Mark as completed for user locally so it disappears from their marketplace
+    // 2. Mark as completed for user locally
     const updatedCompletedTasks = Array.from(new Set([...(user.completedTasks || []), taskId]));
     const updatedUser = { ...user, completedTasks: updatedCompletedTasks };
     
     setUser(updatedUser);
     await storage.setUser(updatedUser);
     
-    // 3. Sync to ensure local state matches cloud
-    refreshUserBalance();
+    // 3. Sync everything
+    await refreshUserBalance();
   };
 
   const handleWalletAction = async (type: 'deposit' | 'withdraw', amt: number, meth: string, acc?: string, proof?: string) => {
     const tx: Transaction = {
-      id: `TX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      id: `FIN-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
       username: user.username,
       amount: amt,
@@ -195,7 +196,6 @@ const App: React.FC = () => {
       date: new Date().toLocaleString()
     };
     
-    // If it's a withdrawal, we deduct coins immediately to "escrow" them from the user's view
     if (type === 'withdraw') {
       const updatedUser = { ...user, coins: user.coins - amt };
       await storage.setUser(updatedUser);
@@ -203,7 +203,7 @@ const App: React.FC = () => {
     }
     
     await storage.addTransaction(tx);
-    refreshUserBalance();
+    await refreshUserBalance();
   };
 
   const handleSpinResult = async (win: number, cost: number) => {
@@ -212,7 +212,7 @@ const App: React.FC = () => {
     await storage.setUser(updatedUser);
     
     const tx: Transaction = {
-      id: `SPIN-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      id: `SPN-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
       username: user.username,
       amount: win,
@@ -222,7 +222,7 @@ const App: React.FC = () => {
       date: new Date().toLocaleString()
     };
     await storage.addTransaction(tx);
-    refreshUserBalance();
+    await refreshUserBalance();
   };
 
   const handleReferralClaim = async (partnerId: string) => {
@@ -235,7 +235,7 @@ const App: React.FC = () => {
     await storage.setUser(updatedUser);
     
     const tx: Transaction = {
-      id: `REF-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      id: `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
       username: user.username,
       amount: 100,
@@ -245,7 +245,7 @@ const App: React.FC = () => {
       date: new Date().toLocaleString()
     };
     await storage.addTransaction(tx);
-    refreshUserBalance();
+    await refreshUserBalance();
   };
 
   const handleMathSolve = async (reward: number, isLast: boolean) => {
@@ -259,7 +259,7 @@ const App: React.FC = () => {
     await storage.setUser(updatedUser);
     
     const tx: Transaction = {
-      id: `TX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      id: `MTH-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
       username: user.username,
       amount: reward,
@@ -352,10 +352,10 @@ const App: React.FC = () => {
           {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleReferralClaim} />}
           {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={async (tid) => {
             await storage.deleteTaskFromCloud(tid);
-            refreshUserBalance();
+            await refreshUserBalance();
           }} onUpdateTask={async (tid, data) => {
             await storage.updateTaskInCloud(tid, data);
-            refreshUserBalance();
+            await refreshUserBalance();
           }} onNavigate={navigateTo} />}
           {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
           {currentPage === 'privacy-policy' && <PrivacyPolicy />}
