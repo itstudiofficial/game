@@ -83,14 +83,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
   const handleAuditSubmission = async (tx: Transaction, status: 'success' | 'failed') => {
     try {
+      // 1. Update the transaction status
       await storage.updateGlobalTransaction(tx.id, { status });
+      
       if (status === 'success') {
+        // 2. Credit the user's coins
         const cloudUser = await storage.syncUserFromCloud(tx.userId);
         if (cloudUser) {
           const newCoins = (cloudUser.coins || 0) + tx.amount;
           await storage.updateUserInCloud(tx.userId, { coins: newCoins });
         }
+
+        // 3. Increment the campaign's completed count
+        if (tx.taskId) {
+          const taskToUpdate = tasks.find(t => t.id === tx.taskId);
+          if (taskToUpdate) {
+            const newCount = (taskToUpdate.completedCount || 0) + 1;
+            await storage.updateTaskInCloud(tx.taskId, { completedCount: newCount });
+          }
+        }
       }
+      
       await fetchData(true);
     } catch (err) {
       console.error("Audit update failed", err);
@@ -106,18 +119,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       if (!cloudUser) throw new Error("Target user node not found");
 
       if (tx.type === 'deposit' && status === 'success') {
-        // Crediting deposit balance on success
         const newDepBal = (cloudUser.depositBalance || 0) + tx.amount;
         await storage.updateUserInCloud(tx.userId, { depositBalance: newDepBal });
       } else if (tx.type === 'withdraw' && status === 'failed') {
-        // Refunding main coins on withdrawal rejection
         const newCoins = (cloudUser.coins || 0) + tx.amount;
         await storage.updateUserInCloud(tx.userId, { coins: newCoins });
       }
       
-      // If withdraw && success -> nothing to do (coins were deducted in handleWalletAction)
-      // If deposit && failed -> nothing to do (coins were never added)
-
       await fetchData(true);
     } catch (err) {
       console.error("Finance action failed", err);
@@ -455,7 +463,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
         {view === 'reviews' && (
           <div className="space-y-10 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center px-4">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 px-4">
                <div>
                   <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Audit Verification Queue</h2>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Validate submitted assets for manual credit release</p>
@@ -465,7 +473,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                </button>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 pb-10">
                {transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length === 0 ? (
                  <div className="col-span-full py-40 bg-white rounded-[4rem] border border-dashed border-slate-200 text-center">
                     <i className="fa-solid fa-check-double text-6xl text-emerald-100 mb-8"></i>
@@ -473,10 +481,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                  </div>
                ) : (
                  transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').map(tx => (
-                   <div key={tx.id} className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all group overflow-hidden">
+                   <div key={tx.id} className="bg-white p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 md:gap-8 hover:shadow-xl transition-all group overflow-hidden">
                       <div 
                         onClick={() => tx.proofImage && setSelectedScreenshot(tx.proofImage)} 
-                        className="w-full md:w-56 h-72 bg-slate-900 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative shrink-0"
+                        className="w-full md:w-56 h-64 md:h-72 bg-slate-900 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative shrink-0"
                       >
                          {tx.proofImage ? (
                            <img src={tx.proofImage} alt="Proof" className="w-full h-full object-contain transition-transform group-hover:scale-110" />
@@ -492,32 +500,32 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                       </div>
 
                       <div className="flex-1 flex flex-col justify-between min-w-0">
-                         <div className="space-y-6">
+                         <div className="space-y-4 md:space-y-6">
                             <div className="flex justify-between items-start">
                                <div className="min-w-0">
-                                  <h4 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2 truncate">{tx.username || 'Ghost Node'}</h4>
-                                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{tx.date}</p>
+                                  <h4 className="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-none mb-2 truncate">{tx.username || 'Ghost Node'}</h4>
+                                  <p className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">{tx.date}</p>
                                </div>
                                <div className="text-right shrink-0">
-                                  <div className="text-2xl font-black text-indigo-600 tabular-nums">+{tx.amount}</div>
-                                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">COIN DELTA</p>
+                                  <div className="text-xl md:text-2xl font-black text-indigo-600 tabular-nums">+{tx.amount}</div>
+                                  <p className="text-[7px] md:text-[8px] font-black text-slate-400 uppercase tracking-widest">COIN DELTA</p>
                                </div>
                             </div>
-                            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Target Asset Context:</span>
-                               <p className="text-[11px] font-bold text-slate-700 leading-relaxed truncate">{tx.method || 'Unknown Task Submission'}</p>
+                            <div className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                               <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Target Asset Context:</span>
+                               <p className="text-[10px] md:text-[11px] font-bold text-slate-700 leading-relaxed truncate">{tx.method || 'Unknown Task Submission'}</p>
                             </div>
                          </div>
-                         <div className="flex gap-4 mt-8">
+                         <div className="flex gap-3 md:gap-4 mt-6 md:mt-8">
                             <button 
                               onClick={() => handleAuditSubmission(tx, 'success')} 
-                              className="flex-[2] py-5 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-100 transition-all active:scale-95"
+                              className="flex-[2] py-4 md:py-5 bg-emerald-600 text-white rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-100 transition-all active:scale-95"
                             >
                               Verify & Pay
                             </button>
                             <button 
                               onClick={() => handleAuditSubmission(tx, 'failed')} 
-                              className="flex-1 py-5 bg-rose-50 text-rose-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white border border-rose-100 transition-all active:scale-95"
+                              className="flex-1 py-4 md:py-5 bg-rose-50 text-rose-500 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white border border-rose-100 transition-all active:scale-95"
                             >
                               Reject
                             </button>
@@ -541,18 +549,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                   <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm mr-4">
                      <i className="fa-solid fa-sync"></i> Sync Vault Data
                   </button>
-                  <div className="bg-emerald-50 px-6 py-3 rounded-2xl border border-emerald-100">
-                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Pending Inflow</p>
-                    <p className="text-xl font-black text-emerald-700 tabular-nums">
-                      {transactions.filter(t => t.type === 'deposit' && t.status === 'pending').reduce((s,t) => s+t.amount, 0).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="bg-blue-50 px-6 py-3 rounded-2xl border border-blue-100">
-                    <p className="text-[8px] font-black text-blue-600 uppercase tracking-widest">Pending Outflow</p>
-                    <p className="text-xl font-black text-blue-700 tabular-nums">
-                      {transactions.filter(t => t.type === 'withdraw' && t.status === 'pending').reduce((s,t) => s+t.amount, 0).toLocaleString()}
-                    </p>
-                  </div>
                </div>
             </div>
 

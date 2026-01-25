@@ -36,6 +36,7 @@ export interface User {
 export interface Transaction {
   id: string;
   userId: string;
+  taskId?: string; // Links submission to a campaign
   username?: string;
   amount: number;
   type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin' | 'referral_claim' | 'math_reward';

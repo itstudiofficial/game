@@ -98,14 +98,13 @@ const App: React.FC = () => {
           return;
         }
         setUser(cloudUser);
-        // Optimize: Fetch ONLY this user's transactions instead of global history
         const userTxs = await storage.getUserTransactions(idToSync);
         setTransactions(userTxs);
       }
     }
   }, [user.id, user.isLoggedIn, handleLogout]);
 
-  // Periodic Refresh - reduced frequency to save bandwidth
+  // Periodic Refresh
   useEffect(() => {
     if (user.isLoggedIn) {
       const interval = setInterval(refreshUserBalance, 30000); 
@@ -151,6 +150,37 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleTaskComplete = async (taskId: string, proofImage?: string, timestamp?: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // 1. Create a pending 'earn' transaction
+    const tx: Transaction = {
+      id: `TX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      userId: user.id,
+      taskId: taskId, // Link to task for admin audit
+      username: user.username,
+      amount: task.reward,
+      type: 'earn',
+      method: `${task.title} | ${task.type}`,
+      proofImage,
+      status: 'pending',
+      date: timestamp || new Date().toLocaleString()
+    };
+
+    await storage.addTransaction(tx);
+
+    // 2. Mark as completed for user locally and in cloud
+    const updatedCompletedTasks = Array.from(new Set([...(user.completedTasks || []), taskId]));
+    const updatedUser = { ...user, completedTasks: updatedCompletedTasks };
+    
+    setUser(updatedUser);
+    await storage.setUser(updatedUser);
+    
+    // 3. Sync everything
+    refreshUserBalance();
+  };
+
   const handleMathSolve = async (reward: number, isLast: boolean) => {
     const updates: Partial<User> = { coins: user.coins + reward };
     if (isLast) {
@@ -172,7 +202,6 @@ const App: React.FC = () => {
       date: new Date().toLocaleString()
     };
     await storage.addTransaction(tx);
-    // Silent refresh to update local transaction list
     const userTxs = await storage.getUserTransactions(user.id);
     setTransactions(userTxs);
   };
@@ -230,7 +259,7 @@ const App: React.FC = () => {
           {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
           {currentPage === 'features' && <Features />}
           {currentPage === 'contact' && <Contact />}
-          {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={(tid, p, t) => refreshUserBalance()} />}
+          {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={handleTaskComplete} />}
           {currentPage === 'math-solver' && user.isLoggedIn && <MathSolver user={user} onSolve={handleMathSolve} transactions={transactions} />}
           {currentPage === 'create' && <CreateTask onCreate={async (data) => {
             const totalCost = data.reward * data.totalWorkers;
@@ -249,11 +278,72 @@ const App: React.FC = () => {
             storage.setTasks(updatedTasks);
             navigateTo('my-campaigns');
           }} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
-          {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={(t, a, m, ar, pi) => refreshUserBalance()} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
+          {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={async (type, amt, meth, acc, proof) => {
+            const tx: Transaction = {
+              id: `TX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+              userId: user.id,
+              username: user.username,
+              amount: amt,
+              type: type,
+              method: meth,
+              account: acc,
+              proofImage: proof,
+              status: 'pending',
+              date: new Date().toLocaleString()
+            };
+            
+            // If it's a withdrawal, we deduct coins immediately to "escrow" them
+            if (type === 'withdraw') {
+              const updatedUser = { ...user, coins: user.coins - amt };
+              await storage.setUser(updatedUser);
+              setUser(updatedUser);
+            }
+            
+            await storage.addTransaction(tx);
+            refreshUserBalance();
+          }} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
           {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
           {currentPage === 'login' && <Login onLogin={handleLogin} />}
-          {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={() => refreshUserBalance()} transactions={transactions} />}
-          {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={() => refreshUserBalance()} />}
+          {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={async (win, cost) => {
+             const updatedUser = { ...user, coins: user.coins + win - cost };
+             setUser(updatedUser);
+             await storage.setUser(updatedUser);
+             
+             const tx: Transaction = {
+               id: `SPIN-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+               userId: user.id,
+               username: user.username,
+               amount: win,
+               type: 'spin',
+               method: 'Lucky Wheel Spin',
+               status: 'success',
+               date: new Date().toLocaleString()
+             };
+             await storage.addTransaction(tx);
+             refreshUserBalance();
+          }} transactions={transactions} />}
+          {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={async (partnerId) => {
+             const updatedUser = { 
+               ...user, 
+               coins: user.coins + 100, 
+               claimedReferrals: [...(user.claimedReferrals || []), partnerId] 
+             };
+             setUser(updatedUser);
+             await storage.setUser(updatedUser);
+             
+             const tx: Transaction = {
+               id: `REF-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+               userId: user.id,
+               username: user.username,
+               amount: 100,
+               type: 'referral_claim',
+               method: `Referral Bonus: Node ${partnerId}`,
+               status: 'success',
+               date: new Date().toLocaleString()
+             };
+             await storage.addTransaction(tx);
+             refreshUserBalance();
+          }} />}
           {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={async (tid) => {
             await storage.deleteTaskFromCloud(tid);
             refreshUserBalance();
