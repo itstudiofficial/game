@@ -59,8 +59,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1600;
+        // Aggressive compression for reliable Firebase RTDB transmission
+        const MAX_WIDTH = 800; 
+        const MAX_HEIGHT = 1000;
         let width = img.width;
         let height = img.height;
 
@@ -81,9 +82,10 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
+          ctx.imageSmoothingQuality = 'medium';
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.85));
+          // 0.5 quality drastically reduces base64 string length while keeping readability for humans/admin
+          resolve(canvas.toDataURL('image/jpeg', 0.5));
         } else {
           reject(new Error('Failed to create canvas context'));
         }
@@ -101,11 +103,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 25 * 1024 * 1024) {
-        alert("File size exceeds 25MB. Please choose a smaller image.");
-        return;
-      }
-      
       setIsCompressing(true);
       try {
         const compressed = await compressImage(file);
@@ -123,10 +120,11 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
   const handleFinalSubmit = () => {
     if (!previewImage) return alert("Please upload a screenshot proof first.");
     setIsUploading(true);
+    // Short artificial delay for UX feedback
     setTimeout(() => {
       if (selectedTask) onComplete(selectedTask.id, previewImage, new Date().toLocaleString());
       handleCloseModal();
-    }, 2000);
+    }, 1500);
   };
 
   const handleCloseModal = () => {
@@ -382,59 +380,62 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     <div>
                       <h5 className="font-black text-amber-900 text-[8px] md:text-xs uppercase tracking-widest mb-0.5">Verification Required</h5>
                       <p className="text-[8px] md:text-[11px] text-amber-800/70 font-bold leading-tight md:leading-relaxed">
-                        Please upload a clear screenshot of the completed task. AI will verify the proof within seconds.
+                        Please upload a clear screenshot. The audit node verifies visual markers in seconds.
                       </p>
                     </div>
                   </div>
 
-                  <div 
-                    onClick={() => !isCompressing && fileInputRef.current?.click()}
-                    className={`relative border-2 md:border-4 border-dashed rounded-[2rem] p-6 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[250px] md:min-h-[350px] overflow-hidden ${
-                      previewImage ? 'border-emerald-500 bg-slate-950' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
-                    } ${isCompressing ? 'opacity-50 cursor-wait' : ''}`}
-                  >
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-                    
-                    {isCompressing ? (
-                      <div className="flex flex-col items-center gap-3">
-                        <i className="fa-solid fa-circle-notch fa-spin text-3xl text-indigo-500"></i>
-                        <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest text-center">Synchronizing Asset...</p>
-                      </div>
-                    ) : previewImage ? (
-                      <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-950 group/preview">
-                        <img src={previewImage} alt="Proof Preview" className="w-full h-full object-contain" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4">
-                           <div className="flex gap-2">
-                             <button 
-                                onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshot(previewImage); }}
-                                className="bg-white text-slate-900 px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-slate-50 transition-all"
-                             >
-                               <i className="fa-solid fa-expand"></i> Review
-                             </button>
-                             <button 
-                                onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
-                                className="bg-rose-600 text-white px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-rose-700 transition-all"
-                             >
-                               <i className="fa-solid fa-trash"></i> Replace
-                             </button>
-                           </div>
+                  <div className="relative group">
+                    <label 
+                      htmlFor="screenshot-upload-v2"
+                      className={`relative border-2 md:border-4 border-dashed rounded-[2rem] p-6 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[400px] md:min-h-[500px] overflow-hidden ${
+                        previewImage ? 'border-emerald-500 bg-slate-950 shadow-2xl' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
+                      } ${isCompressing ? 'opacity-50 cursor-wait' : ''}`}
+                    >
+                      <input id="screenshot-upload-v2" type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                      
+                      {isCompressing ? (
+                        <div className="flex flex-col items-center gap-3">
+                          <i className="fa-solid fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
+                          <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest text-center">Optimizing Asset...</p>
                         </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl md:rounded-3xl flex items-center justify-center text-slate-300 mb-6 shadow-sm border border-slate-50 group-hover:text-indigo-500 transition-colors">
-                          <i className="fa-solid fa-cloud-arrow-up text-2xl md:text-3xl"></i>
+                      ) : previewImage ? (
+                        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-950 group/preview">
+                          <img src={previewImage} alt="Proof Preview" className="w-full h-full object-contain" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4">
+                             <div className="flex gap-2">
+                               <button 
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshot(previewImage); }}
+                                  className="bg-white text-slate-900 px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-slate-50 transition-all"
+                               >
+                                 <i className="fa-solid fa-expand"></i> Review
+                               </button>
+                               <button 
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
+                                  className="bg-rose-600 text-white px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl flex items-center gap-2 hover:bg-rose-700 transition-all"
+                               >
+                                 <i className="fa-solid fa-trash"></i> Replace
+                               </button>
+                             </div>
+                          </div>
                         </div>
-                        <p className="text-[10px] md:text-xs font-black text-slate-900 uppercase tracking-[0.2em] text-center px-4 mb-6">Drag & Drop or Tap to Upload</p>
-                        
-                        <button 
-                          type="button"
-                          className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
-                        >
-                           Choose Screenshot
-                        </button>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl md:rounded-3xl flex items-center justify-center text-slate-300 mb-6 shadow-sm border border-slate-50 group-hover:text-indigo-50 transition-colors">
+                            <i className="fa-solid fa-cloud-arrow-up text-2xl md:text-3xl"></i>
+                          </div>
+                          <p className="text-[10px] md:text-xs font-black text-slate-900 uppercase tracking-[0.2em] text-center px-4 mb-6">Drag & Drop or Tap to Upload</p>
+                          
+                          <div 
+                            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
+                          >
+                             Select Proof From Device
+                          </div>
+                        </>
+                      )}
+                    </label>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
@@ -456,7 +457,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                           <i className="fa-solid fa-spinner fa-spin"></i> Initializing Sync...
                         </>
                       ) : (
-                        <>Submit Proof <i className="fa-solid fa-paper-plane"></i></>
+                        <>Submit Final Proof <i className="fa-solid fa-paper-plane"></i></>
                       )}
                     </button>
                   </div>

@@ -151,7 +151,6 @@ export const storage = {
     return data ? JSON.parse(data) : [];
   },
 
-  // Optimized: Fetch ONLY specific user transactions
   getUserTransactions: async (userId: string): Promise<Transaction[]> => {
     try {
       const snapshot = await get(ref(db, `${KEYS.USER_TXS}/${userId}`));
@@ -173,6 +172,7 @@ export const storage = {
     const updated = [cleanTx, ...txs];
     localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(updated));
     
+    // Save to user node and global node
     await push(ref(db, `${KEYS.USER_TXS}/${tx.userId}`), cleanTx);
     await set(ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`), cleanTx);
   },
@@ -192,6 +192,14 @@ export const storage = {
       console.error("Global Transaction Fetch Error:", error);
     }
     return [];
+  },
+
+  subscribeToAllTransactions: (callback: (txs: Transaction[]) => void) => {
+    const txRef = ref(db, KEYS.ALL_TRANSACTIONS);
+    return onValue(txRef, (snapshot) => {
+      const data = snapshot.val();
+      callback(storage.ensureArray<Transaction>(data));
+    });
   },
 
   updateGlobalTransaction: async (txId: string, updates: Partial<Transaction>) => {

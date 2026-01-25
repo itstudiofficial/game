@@ -36,6 +36,45 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     setView(initialView);
   }, [initialView]);
 
+  useEffect(() => {
+    const initAdmin = async () => {
+      setLoading(true);
+      try {
+        const u = await storage.getAllUsers();
+        setUsers(u || []);
+        
+        const tasksSnapshot = await storage.getTasks();
+        setTasks(tasksSnapshot || []);
+        
+        const seoData = await storage.getSEOConfig();
+        setSeo(seoData);
+      } catch (err) {
+        console.error("Admin init error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAdmin();
+
+    // Set up Real-time listener for ALL transactions
+    const unsubscribe = storage.subscribeToAllTransactions((txs) => {
+      // Sort immediately on arrival
+      const sortedTxs = (txs || []).sort((a, b) => {
+        try {
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        } catch (e) {
+          return 0;
+        }
+      });
+      setTransactions(sortedTxs);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
   const fetchData = async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
@@ -43,30 +82,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       const validUsers = u.filter(user => user && user.id);
       const uniqueUsers = Array.from(new Map(validUsers.map(user => [user.id, user])).values());
       
-      const t = await storage.getAllGlobalTransactions();
-      const seoData = await storage.getSEOConfig();
       const tasksSnapshot = await storage.getTasks();
+      const seoData = await storage.getSEOConfig();
       
       setUsers(uniqueUsers);
-      setTransactions((t || []).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       setTasks(tasksSnapshot || []);
       setSeo(seoData);
     } catch (error) {
-      console.error("Critical Admin Sync Error:", error);
+      console.error("Manual Admin Sync Error:", error);
     } finally {
       if (!isSilent) setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const totalCoinsInCirculation = useMemo(() => users.reduce((acc, u) => acc + (u.coins || 0), 0), [users]);
   const totalDepositBalance = useMemo(() => users.reduce((acc, u) => acc + (u.depositBalance || 0), 0), [users]);
   
-  const pendingTaskAudits = useMemo(() => transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length, [transactions]);
-  const pendingFinanceAudits = useMemo(() => transactions.filter(tx => (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length, [transactions]);
+  const pendingTaskAudits = useMemo(() => transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').length, [transactions]);
+  const pendingFinanceAudits = useMemo(() => transactions.filter(tx => tx && (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length, [transactions]);
   const totalAuditQueue = pendingTaskAudits + pendingFinanceAudits;
   
   const pendingTasksCount = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
@@ -83,18 +116,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
   const handleAuditSubmission = async (tx: Transaction, status: 'success' | 'failed') => {
     try {
-      // 1. Update the transaction status
       await storage.updateGlobalTransaction(tx.id, { status });
       
       if (status === 'success') {
-        // 2. Credit the user's coins
         const cloudUser = await storage.syncUserFromCloud(tx.userId);
         if (cloudUser) {
           const newCoins = (cloudUser.coins || 0) + tx.amount;
           await storage.updateUserInCloud(tx.userId, { coins: newCoins });
         }
 
-        // 3. Increment the campaign's completed count
         if (tx.taskId) {
           const taskToUpdate = tasks.find(t => t.id === tx.taskId);
           if (taskToUpdate) {
@@ -103,11 +133,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           }
         }
       }
-      
-      await fetchData(true);
+      // UI will auto-update via listener
     } catch (err) {
       console.error("Audit update failed", err);
-      fetchData();
+      alert("Verification failed. Check network.");
     }
   };
 
@@ -125,11 +154,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         const newCoins = (cloudUser.coins || 0) + tx.amount;
         await storage.updateUserInCloud(tx.userId, { coins: newCoins });
       }
-      
-      await fetchData(true);
     } catch (err) {
       console.error("Finance action failed", err);
-      fetchData();
+      alert("Operation failed.");
     }
   };
 
@@ -139,7 +166,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       await fetchData(true);
     } catch (e) {
       alert("Status update failed.");
-      fetchData();
     }
   };
 
@@ -161,7 +187,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       await fetchData(true);
     } catch (e) {
       alert("Adjustment failed.");
-      fetchData();
     }
   };
 
@@ -184,7 +209,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       await fetchData(true);
     } catch (error) {
       alert("Failed to update task status.");
-      fetchData();
     }
   };
 
@@ -238,7 +262,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                 <h1 className="text-3xl font-black text-white tracking-tighter leading-none uppercase">Admin <span className="text-indigo-400">Terminal</span></h1>
                 <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mt-2 flex items-center gap-2">
                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                   Session Root: Authorized
+                   Session Root: Authorized (Live Sync)
                 </p>
              </div>
           </div>
@@ -465,26 +489,26 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           <div className="space-y-10 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 px-4">
                <div>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Audit Verification Queue</h2>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Audit Verification Queue (Live)</h2>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Validate submitted assets for manual credit release</p>
                </div>
                <button onClick={() => fetchData(true)} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm">
-                  <i className="fa-solid fa-sync"></i> Refresh Queue
+                  <i className="fa-solid fa-sync"></i> Full Stack Re-Sync
                </button>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 pb-10">
-               {transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length === 0 ? (
+               {transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').length === 0 ? (
                  <div className="col-span-full py-40 bg-white rounded-[4rem] border border-dashed border-slate-200 text-center">
                     <i className="fa-solid fa-check-double text-6xl text-emerald-100 mb-8"></i>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No pending audits in network stack.</p>
                  </div>
                ) : (
-                 transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').map(tx => (
+                 transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').map(tx => (
                    <div key={tx.id} className="bg-white p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 md:gap-8 hover:shadow-xl transition-all group overflow-hidden">
                       <div 
                         onClick={() => tx.proofImage && setSelectedScreenshot(tx.proofImage)} 
-                        className="w-full md:w-56 h-64 md:h-72 bg-slate-900 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative shrink-0"
+                        className="w-full md:w-64 h-[450px] md:h-80 bg-slate-900 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative shrink-0"
                       >
                          {tx.proofImage ? (
                            <img src={tx.proofImage} alt="Proof" className="w-full h-full object-contain transition-transform group-hover:scale-110" />
@@ -513,21 +537,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                             </div>
                             <div className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
                                <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Target Asset Context:</span>
-                               <p className="text-[10px] md:text-[11px] font-bold text-slate-700 leading-relaxed truncate">{tx.method || 'Unknown Task Submission'}</p>
+                               <p className="text-[10px] md:text-[11px] font-bold text-slate-700 leading-relaxed line-clamp-3">{tx.method || 'Unknown Task Submission'}</p>
                             </div>
                          </div>
                          <div className="flex gap-3 md:gap-4 mt-6 md:mt-8">
                             <button 
                               onClick={() => handleAuditSubmission(tx, 'success')} 
-                              className="flex-[2] py-4 md:py-5 bg-emerald-600 text-white rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-100 transition-all active:scale-95"
+                              className="flex-[2] py-4 md:py-5 bg-emerald-600 text-white rounded-2xl text-[9px] md:text-100 font-black uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
-                              Verify & Pay
+                              <i className="fa-solid fa-circle-check"></i> Verify & Pay
                             </button>
                             <button 
                               onClick={() => handleAuditSubmission(tx, 'failed')} 
-                              className="flex-1 py-4 md:py-5 bg-rose-50 text-rose-500 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white border border-rose-100 transition-all active:scale-95"
+                              className="flex-1 py-4 md:py-5 bg-rose-50 text-rose-500 rounded-2xl text-[9px] md:text-100 font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white border border-rose-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
-                              Reject
+                              <i className="fa-solid fa-circle-xmark"></i> Reject
                             </button>
                          </div>
                       </div>
@@ -557,12 +581,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                <section>
                   <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 px-4">Pending Deposit Requests</h3>
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                    {transactions.filter(tx => tx.type === 'deposit' && tx.status === 'pending').length === 0 ? (
+                    {transactions.filter(tx => tx && tx.type === 'deposit' && tx.status === 'pending').length === 0 ? (
                       <div className="col-span-full py-20 bg-white rounded-[3rem] border border-slate-100 text-center">
                          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No pending deposits detected.</p>
                       </div>
                     ) : (
-                      transactions.filter(tx => tx.type === 'deposit' && tx.status === 'pending').map(tx => (
+                      transactions.filter(tx => tx && tx.type === 'deposit' && tx.status === 'pending').map(tx => (
                         <div key={tx.id} className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-8 hover:shadow-xl transition-all group overflow-hidden">
                            <div 
                              onClick={() => tx.proofImage && setSelectedScreenshot(tx.proofImage)} 
@@ -614,12 +638,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                <section>
                   <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 px-4">Pending Withdrawal Requests</h3>
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                    {transactions.filter(tx => tx.type === 'withdraw' && tx.status === 'pending').length === 0 ? (
+                    {transactions.filter(tx => tx && tx.type === 'withdraw' && tx.status === 'pending').length === 0 ? (
                       <div className="col-span-full py-20 bg-white rounded-[3rem] border border-slate-100 text-center">
                          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No pending withdrawals detected.</p>
                       </div>
                     ) : (
-                      transactions.filter(tx => tx.type === 'withdraw' && tx.status === 'pending').map(tx => (
+                      transactions.filter(tx => tx && tx.type === 'withdraw' && tx.status === 'pending').map(tx => (
                         <div key={tx.id} className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col group transition-all hover:shadow-xl">
                            <div className="flex justify-between items-start mb-6">
                               <div className="flex items-center gap-5">
@@ -790,8 +814,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                        </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                       {transactions.map(tx => (
-                         <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
+                       {(transactions || []).map(tx => (
+                         tx && <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-10 py-6 font-mono text-[9px] text-slate-400 uppercase">{tx.id}</td>
                             <td className="px-6 py-6">
                                <div className="font-black text-slate-900 text-[11px]">{tx.username || 'System Agent'}</div>
@@ -799,11 +823,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                             </td>
                             <td className="px-6 py-6">
                                <span className="px-2.5 py-1 bg-slate-100 rounded-lg text-[8px] font-black uppercase tracking-widest text-slate-500">
-                                  {tx.type.replace('_', ' ')}
+                                  {(tx.type || '').replace('_', ' ')}
                                </span>
                             </td>
                             <td className={`px-6 py-6 text-right font-black text-[11px] ${tx.type === 'withdraw' || tx.type === 'spend' ? 'text-rose-600' : 'text-emerald-600'}`}>
-                               {tx.type === 'withdraw' || tx.type === 'spend' ? '-' : '+'}{tx.amount.toLocaleString()}
+                               {tx.type === 'withdraw' || tx.type === 'spend' ? '-' : '+'}{(tx.amount || 0).toLocaleString()}
                             </td>
                             <td className="px-10 py-6 text-right text-[9px] font-black text-slate-300 uppercase tracking-widest">{tx.date}</td>
                          </tr>
