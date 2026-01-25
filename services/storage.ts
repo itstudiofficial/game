@@ -38,9 +38,17 @@ export const storage = {
 
   ensureArray: <T>(data: any): T[] => {
     if (!data) return [];
-    if (Array.isArray(data)) return data.filter(item => item !== null);
-    // Handle objects returned by Firebase (e.g. {id1: val1, id2: val2})
-    return Object.values(data).filter(item => item !== null) as T[];
+    try {
+      if (Array.isArray(data)) {
+        return data.filter(item => item !== null) as T[];
+      }
+      if (typeof data === 'object') {
+        return Object.values(data).filter(item => item !== null) as T[];
+      }
+    } catch (e) {
+      console.error("Critical: ensureArray conversion failed", e);
+    }
+    return [];
   },
 
   sanitizeEmail: (email: string): string => {
@@ -170,15 +178,15 @@ export const storage = {
   addTransaction: async (tx: Transaction) => {
     const cleanTx = storage.cleanData(tx);
     
-    // Write to Global Node for Admin review
+    // Explicitly write to Global Audit Node
     const globalTxRef = ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`);
     await set(globalTxRef, cleanTx);
     
-    // Also push to User-specific node for history
+    // Explicitly write to User-specific history
     const userTxRef = ref(db, `${KEYS.USER_TXS}/${tx.userId}`);
     await push(userTxRef, cleanTx);
     
-    // Update local cache
+    // Cache locally
     const currentTxs = storage.getTransactions();
     localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([cleanTx, ...currentTxs]));
   },
@@ -192,7 +200,8 @@ export const storage = {
     try {
       const snapshot = await get(ref(db, KEYS.ALL_TRANSACTIONS));
       if (snapshot.exists()) {
-        return storage.ensureArray<Transaction>(snapshot.val());
+        const data = snapshot.val();
+        return storage.ensureArray<Transaction>(data);
       }
     } catch (error) {
       console.error("Global Transaction Fetch Error:", error);
@@ -204,15 +213,20 @@ export const storage = {
     const txRef = ref(db, KEYS.ALL_TRANSACTIONS);
     return onValue(txRef, (snapshot) => {
       const data = snapshot.val();
-      callback(storage.ensureArray<Transaction>(data));
+      if (data) {
+        callback(storage.ensureArray<Transaction>(data));
+      } else {
+        callback([]);
+      }
+    }, (error) => {
+      console.error("Live subscription failed:", error);
     });
   },
 
   updateGlobalTransaction: async (txId: string, updates: Partial<Transaction>) => {
-    // 1. Update Global Audit Node
-    await update(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`), storage.cleanData(updates));
+    const updateData = storage.cleanData(updates);
+    await update(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`), updateData);
     
-    // 2. Locate and Update the specific User-node entry
     const globalSnapshot = await get(ref(db, `${KEYS.ALL_TRANSACTIONS}/${txId}`));
     if (globalSnapshot.exists()) {
       const txData = globalSnapshot.val();
@@ -223,7 +237,7 @@ export const storage = {
         const entries = userTxsSnapshot.val();
         const firebaseKey = Object.keys(entries).find(key => entries[key].id === txId);
         if (firebaseKey) {
-          await update(ref(db, `${KEYS.USER_TXS}/${txData.userId}/${firebaseKey}`), storage.cleanData(updates));
+          await update(ref(db, `${KEYS.USER_TXS}/${txData.userId}/${firebaseKey}`), updateData);
         }
       }
     }

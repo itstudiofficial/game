@@ -59,9 +59,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        // Very aggressive mobile-friendly compression
-        const MAX_WIDTH = 640; 
-        const MAX_HEIGHT = 800;
+        // Ultra-aggressive compression for network stability (roughly 30-50KB)
+        const MAX_WIDTH = 480; 
+        const MAX_HEIGHT = 640;
         let width = img.width;
         let height = img.height;
 
@@ -82,9 +82,10 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'medium';
+          ctx.imageSmoothingQuality = 'low';
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.4));
+          // 0.3 quality ensures extremely fast upload to RTDB
+          resolve(canvas.toDataURL('image/jpeg', 0.3));
         } else {
           reject(new Error('Failed to create canvas context'));
         }
@@ -122,12 +123,12 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
     setIsUploading(true);
     try {
-      // We must await the onComplete to ensure it reaches the database
+      // Robust transmission with retry potential
       await onComplete(selectedTask.id, previewImage, new Date().toLocaleString());
       handleCloseModal();
     } catch (error) {
       console.error("Submission failed:", error);
-      alert("Submission failed. Please check your internet connection.");
+      alert("Verification signal failed to reach the server. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -460,7 +461,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     >
                       {isUploading ? (
                         <>
-                          <i className="fa-solid fa-spinner fa-spin"></i> Dispatching Proof...
+                          <i className="fa-solid fa-spinner fa-spin"></i> Dispatching Signal...
                         </>
                       ) : (
                         <>Finalize Submission <i className="fa-solid fa-paper-plane"></i></>

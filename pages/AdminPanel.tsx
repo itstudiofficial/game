@@ -37,39 +37,41 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     setView(initialView);
   }, [initialView]);
 
+  const forceRefreshData = async () => {
+    setLiveSync(true);
+    try {
+      const txs = await storage.getAllGlobalTransactions();
+      setTransactions(txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      
+      const u = await storage.getAllUsers();
+      setUsers(u || []);
+      
+      const tasksSnapshot = await storage.getTasks();
+      setTasks(tasksSnapshot || []);
+    } catch (err) {
+      console.error("Admin refresh error:", err);
+    } finally {
+      setTimeout(() => setLiveSync(false), 1000);
+    }
+  };
+
   useEffect(() => {
     const initAdmin = async () => {
       setLoading(true);
-      try {
-        const u = await storage.getAllUsers();
-        setUsers(u || []);
-        
-        const tasksSnapshot = await storage.getTasks();
-        setTasks(tasksSnapshot || []);
-        
-        const seoData = await storage.getSEOConfig();
-        setSeo(seoData);
-      } catch (err) {
-        console.error("Admin init error:", err);
-      } finally {
-        setLoading(false);
-      }
+      await forceRefreshData();
+      setLoading(false);
     };
 
     initAdmin();
 
     // Set up Real-time listener for ALL transactions globally
     const unsubscribe = storage.subscribeToAllTransactions((txs) => {
-      setLiveSync(true);
-      const sortedTxs = (txs || []).sort((a, b) => {
-        try {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        } catch (e) {
-          return 0;
-        }
-      });
-      setTransactions(sortedTxs);
-      setTimeout(() => setLiveSync(false), 2000);
+      if (txs) {
+        setTransactions((prev) => {
+          const sorted = [...txs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          return sorted;
+        });
+      }
     });
 
     return () => {
@@ -122,6 +124,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           }
         }
       }
+      // Re-fetch to ensure UI is crisp
+      forceRefreshData();
     } catch (err) {
       console.error("Audit update failed", err);
       alert("Status synchronization failed.");
@@ -142,6 +146,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         const newCoins = (cloudUser.coins || 0) + tx.amount;
         await storage.updateUserInCloud(tx.userId, { coins: newCoins });
       }
+      forceRefreshData();
     } catch (err) {
       console.error("Finance action failed", err);
       alert("Operation failed.");
@@ -151,8 +156,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const handleUserStatus = async (userId: string, status: 'active' | 'banned') => {
     try {
       await storage.updateUserInCloud(userId, { status });
-      const u = await storage.getAllUsers();
-      setUsers(u || []);
+      forceRefreshData();
     } catch (e) {
       alert("Status update failed.");
     }
@@ -173,8 +177,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       await storage.updateUserInCloud(userId, { coins: newBalance });
       setEditingUserId(null);
       setAdjustAmount('');
-      const u = await storage.getAllUsers();
-      setUsers(u || []);
+      forceRefreshData();
     } catch (e) {
       alert("Adjustment failed.");
     }
@@ -196,8 +199,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const handleTaskAction = async (taskId: string, status: 'active' | 'rejected') => {
     try {
       await storage.updateTaskInCloud(taskId, { status });
-      const t = await storage.getTasks();
-      setTasks(t || []);
+      forceRefreshData();
     } catch (error) {
       alert("Failed to update task status.");
     }
@@ -226,7 +228,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       alert('System Asset Deployed.');
       setNewTaskData({ title: '', link: '', type: 'YouTube', reward: 10, totalWorkers: 100, description: '' });
       setView('tasks');
-      setTasks(updatedTasks);
+      forceRefreshData();
     } catch (error) {
       alert('Deployment failed.');
     } finally {
@@ -237,7 +239,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-10 text-center">
        <div className="w-16 h-16 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
-       <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Synchronizing Command Hub...</h2>
+       <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Initializing Core Console...</h2>
     </div>
   );
 
@@ -251,10 +253,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
              </div>
              <div>
                 <h1 className="text-3xl font-black text-white tracking-tighter leading-none uppercase">Admin <span className="text-indigo-400">Terminal</span></h1>
-                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 mt-2 flex items-center gap-2">
-                   <span className={`w-1.5 h-1.5 rounded-full ${liveSync ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`}></span>
-                   Session Root: Authorized (Live Audit)
-                </p>
+                <div className="flex items-center gap-3 mt-2">
+                   <span className={`w-2 h-2 rounded-full ${liveSync ? 'bg-indigo-400 animate-ping' : 'bg-emerald-500'}`}></span>
+                   <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Root Node: Operational</p>
+                </div>
              </div>
           </div>
 
@@ -417,122 +419,71 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
            </div>
         )}
 
-        {view === 'create-task' && (
-          <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700">
-            <div className="flex justify-between items-start mb-12">
-              <div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">System Asset Deployment</h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Inject verified global tasks into the marketplace</p>
-              </div>
-              <div className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-[9px] font-black uppercase tracking-widest">
-                Admin Privilege: Root Authority
-              </div>
-            </div>
-
-            <form onSubmit={handleAdminCreateTask} className="space-y-10 max-w-5xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Campaign Title</label>
-                  <input type="text" value={newTaskData.title} onChange={e => setNewTaskData({...newTaskData, title: e.target.value})} placeholder="e.g. Subscribe to Spredia TV" className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all" required />
-                </div>
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Destination Target Link</label>
-                  <input type="url" value={newTaskData.link} onChange={e => setNewTaskData({...newTaskData, link: e.target.value})} placeholder="https://youtube.com/..." className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all" required />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Task Modality</label>
-                  <select value={newTaskData.type} onChange={e => setNewTaskData({...newTaskData, type: e.target.value as TaskType})} className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all appearance-none cursor-pointer">
-                    <option value="YouTube">YouTube</option>
-                    <option value="Websites">Websites</option>
-                    <option value="Apps">Apps</option>
-                    <option value="Social Media">Social Media</option>
-                  </select>
-                </div>
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Reward (Coins)</label>
-                  <input type="number" value={newTaskData.reward} onChange={e => setNewTaskData({...newTaskData, reward: parseInt(e.target.value) || 0})} className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all" required />
-                </div>
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Slot Quota</label>
-                  <input type="number" value={newTaskData.totalWorkers} onChange={e => setNewTaskData({...newTaskData, totalWorkers: parseInt(e.target.value) || 0})} className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all" required />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Operator Instructions</label>
-                <textarea rows={4} value={newTaskData.description} onChange={e => setNewTaskData({...newTaskData, description: e.target.value})} placeholder="Detailed steps for the end-user..." className="w-full px-8 py-6 bg-slate-50 border-none rounded-[2rem] font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all resize-none leading-relaxed" required />
-              </div>
-
-              <div className="flex justify-end pt-6">
-                 <button type="submit" disabled={isDeploying} className="px-16 py-6 bg-slate-900 text-white font-black rounded-2xl uppercase text-[10px] tracking-[0.4em] hover:bg-indigo-600 transition-all flex items-center gap-4 shadow-xl shadow-slate-200 active:scale-95 disabled:opacity-50">
-                   {isDeploying ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-rocket"></i>}
-                   Propagate System Asset
-                 </button>
-              </div>
-            </form>
-          </div>
-        )}
-
         {view === 'reviews' && (
           <div className="space-y-10 animate-in fade-in duration-500">
             {/* Real-time Diagnostics Header */}
-            <div className="bg-slate-900 rounded-[2.5rem] p-6 md:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl border border-white/5">
-               <div className="flex items-center gap-6">
+            <div className="bg-slate-900 rounded-[2.5rem] p-6 md:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl border border-white/5 relative overflow-hidden">
+               <div className="relative z-10 flex items-center gap-6">
                   <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-2xl shadow-xl shadow-indigo-500/20">
                      <i className="fa-solid fa-magnifying-glass-chart"></i>
                   </div>
                   <div>
-                    <h3 className="text-xl font-black tracking-tight leading-none mb-2 uppercase">Diagnostic Hub</h3>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Monitoring all incoming task signals</p>
+                    <h3 className="text-xl font-black tracking-tight leading-none mb-2 uppercase">Review Diagnostic Hub</h3>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Real-time signal synchronization</p>
                   </div>
                </div>
-               <div className="flex gap-4">
+               <div className="relative z-10 flex flex-wrap justify-center gap-4">
                   <div className="px-6 py-4 bg-white/5 rounded-2xl border border-white/10 text-center">
                      <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Signals</p>
                      <p className="text-xl font-black tabular-nums">{transactions.length}</p>
                   </div>
                   <div className="px-6 py-4 bg-white/5 rounded-2xl border border-white/10 text-center">
-                     <p className="text-[7px] font-black text-indigo-400 uppercase tracking-widest mb-1">Pending Tasks</p>
-                     <p className="text-xl font-black tabular-nums text-indigo-400">{pendingTaskAudits}</p>
+                     <p className="text-[7px] font-black text-indigo-400 uppercase tracking-widest mb-1">Earn Signals</p>
+                     <p className="text-xl font-black tabular-nums text-indigo-400">{transactions.filter(t => t.type === 'earn').length}</p>
                   </div>
+                  <div className="px-6 py-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                     <p className="text-[7px] font-black text-emerald-400 uppercase tracking-widest mb-1">Pending Review</p>
+                     <p className="text-xl font-black tabular-nums text-emerald-400">{pendingTaskAudits}</p>
+                  </div>
+                  <button 
+                    onClick={forceRefreshData}
+                    className="px-6 py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-xl active:scale-95 flex items-center gap-3"
+                  >
+                    <i className={`fa-solid fa-sync ${liveSync ? 'fa-spin' : ''}`}></i> Force Sync
+                  </button>
                </div>
+               <i className="fa-solid fa-satellite-dish absolute -right-8 -bottom-8 text-[12rem] text-white/5 -rotate-12 pointer-events-none"></i>
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 px-4">
                <div>
                   <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Audit Verification Queue</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manual validation required for coin release</p>
-               </div>
-               <div className="flex items-center gap-3">
-                  <span className={`w-2 h-2 rounded-full ${liveSync ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`}></span>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Live Connection Active</span>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manual validation required for node payout</p>
                </div>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 pb-10">
                {transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').length === 0 ? (
-                 <div className="col-span-full py-40 bg-white rounded-[4rem] border border-dashed border-slate-200 text-center flex flex-col items-center">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-8">
-                       <i className="fa-solid fa-check-double text-4xl text-slate-200"></i>
+                 <div className="col-span-full py-40 bg-white rounded-[4rem] border-2 border-dashed border-slate-200 text-center flex flex-col items-center">
+                    <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-8">
+                       <i className="fa-solid fa-check-double text-5xl text-slate-200"></i>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">The audit queue is currently synchronized.</p>
+                    <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest">Queue Synchronized</h3>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-4">No pending task signals detected in global stack.</p>
                  </div>
                ) : (
                  transactions.filter(tx => tx && tx.type === 'earn' && tx.status === 'pending').map(tx => (
-                   <div key={tx.id} className="bg-white p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 md:gap-8 hover:shadow-xl transition-all group overflow-hidden">
+                   <div key={tx.id} className="bg-white p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 md:gap-8 hover:shadow-xl transition-all group overflow-hidden animate-in slide-in-from-bottom-4">
                       <div 
                         onClick={() => tx.proofImage && setSelectedScreenshot(tx.proofImage)} 
-                        className="w-full md:w-64 h-[450px] md:h-80 bg-slate-900 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative shrink-0"
+                        className="w-full md:w-64 h-[400px] md:h-80 bg-slate-900 rounded-[2rem] border border-slate-100 overflow-hidden cursor-zoom-in relative shrink-0"
                       >
                          {tx.proofImage ? (
-                           <img src={tx.proofImage} alt="Proof" className="w-full h-full object-contain transition-transform group-hover:scale-110" />
+                           <img src={tx.proofImage} alt="Proof" className="w-full h-full object-contain transition-transform group-hover:scale-105" />
                          ) : (
                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-600">
                              <i className="fa-solid fa-image-slash text-4xl mb-4"></i>
-                             <span className="text-[8px] font-black uppercase tracking-widest">No Visual Proof</span>
+                             <span className="text-[8px] font-black uppercase tracking-widest">Visual Asset Missing</span>
                            </div>
                          )}
                          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
@@ -544,17 +495,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                          <div className="space-y-4 md:space-y-6">
                             <div className="flex justify-between items-start">
                                <div className="min-w-0">
-                                  <h4 className="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-none mb-2 truncate">{tx.username || 'Ghost Node'}</h4>
-                                  <p className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">{tx.date}</p>
+                                  <h4 className="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-none mb-2 truncate">{tx.username || 'Unknown Node'}</h4>
+                                  <div className="flex items-center gap-3">
+                                     <span className="text-[8px] font-mono font-bold text-indigo-400 bg-indigo-50 px-1.5 py-0.5 rounded">ID: {tx.userId.slice(-6)}</span>
+                                     <p className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">{tx.date}</p>
+                                  </div>
                                </div>
                                <div className="text-right shrink-0">
                                   <div className="text-xl md:text-2xl font-black text-indigo-600 tabular-nums">+{tx.amount}</div>
-                                  <p className="text-[7px] md:text-[8px] font-black text-slate-400 uppercase tracking-widest">COIN DELTA</p>
+                                  <p className="text-[7px] md:text-[8px] font-black text-slate-400 uppercase tracking-widest">COINS</p>
                                </div>
                             </div>
                             <div className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                               <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Signal Context:</span>
-                               <p className="text-[10px] md:text-[11px] font-bold text-slate-700 leading-relaxed line-clamp-3">{tx.method || 'Unknown Task Submission'}</p>
+                               <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Signal Meta:</span>
+                               <p className="text-[10px] md:text-[11px] font-bold text-slate-700 leading-relaxed line-clamp-3">{tx.method || 'Undocumented Task'}</p>
                             </div>
                          </div>
                          <div className="flex gap-3 md:gap-4 mt-6 md:mt-8">
@@ -562,7 +516,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                               onClick={() => handleAuditSubmission(tx, 'success')} 
                               className="flex-[2] py-4 md:py-5 bg-emerald-600 text-white rounded-2xl text-[9px] md:text-10 font-black uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
-                              <i className="fa-solid fa-circle-check"></i> Verify & Pay
+                              <i className="fa-solid fa-circle-check"></i> Authorize & Pay
                             </button>
                             <button 
                               onClick={() => handleAuditSubmission(tx, 'failed')} 
