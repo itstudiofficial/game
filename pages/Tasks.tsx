@@ -65,7 +65,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        // Ultra-aggressive compression for network stability (roughly 30-50KB)
+        // Aggressive compression for mobile speed
         const MAX_WIDTH = 480; 
         const MAX_HEIGHT = 640;
         let width = img.width;
@@ -90,7 +90,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'low';
           ctx.drawImage(img, 0, 0, width, height);
-          // 0.3 quality ensures extremely fast upload to RTDB
           resolve(canvas.toDataURL('image/jpeg', 0.3));
         } else {
           reject(new Error('Failed to create canvas context'));
@@ -129,7 +128,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
     setIsUploading(true);
     try {
-      // Robust transmission with retry potential
       await onComplete(selectedTask.id, previewImage, new Date().toLocaleString());
       handleCloseModal();
     } catch (error) {
@@ -412,7 +410,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                   <div className="relative group">
                     <label 
                       htmlFor="screenshot-upload-v3"
-                      className={`relative border-2 md:border-4 border-dashed rounded-[2rem] p-6 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[400px] md:min-h-[500px] overflow-hidden ${
+                      className={`relative border-2 md:border-4 border-dashed rounded-[2rem] p-6 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[300px] md:min-h-[500px] overflow-hidden ${
                         previewImage ? 'border-emerald-500 bg-slate-950 shadow-2xl' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
                       } ${isCompressing ? 'opacity-50 cursor-wait' : ''}`}
                     >
@@ -450,12 +448,34 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                           <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl md:rounded-3xl flex items-center justify-center text-slate-300 mb-6 shadow-sm border border-slate-50 group-hover:text-indigo-50 transition-colors">
                             <i className="fa-solid fa-cloud-arrow-up text-2xl md:text-3xl"></i>
                           </div>
-                          <p className="text-[10px] md:text-xs font-black text-slate-900 uppercase tracking-[0.2em] text-center px-4 mb-6">Drag & Drop or Tap to Upload</p>
+                          <p className="text-[10px] md:text-xs font-black text-slate-900 uppercase tracking-[0.2em] text-center px-4 mb-8">Drag & Drop or Take a Photo</p>
                           
-                          <div 
-                            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
-                          >
-                             Select Proof From Device
+                          <div className="flex flex-col gap-4 w-full px-4">
+                             <button 
+                               type="button"
+                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}
+                               className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-3"
+                             >
+                                <i className="fa-solid fa-image"></i>
+                                Choose From Gallery
+                             </button>
+                             <button 
+                               type="button"
+                               onClick={(e) => { 
+                                 e.preventDefault(); 
+                                 e.stopPropagation(); 
+                                 if(fileInputRef.current) {
+                                   fileInputRef.current.setAttribute('capture', 'environment');
+                                   fileInputRef.current.click();
+                                   // Reset after click so gallery still works next time
+                                   setTimeout(() => fileInputRef.current?.removeAttribute('capture'), 500);
+                                 }
+                               }}
+                               className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3"
+                             >
+                                <i className="fa-solid fa-camera"></i>
+                                Capture Now
+                             </button>
                           </div>
                         </>
                       )}
@@ -473,12 +493,12 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                       onClick={handleFinalSubmit} 
                       disabled={isUploading || isCompressing || !previewImage} 
                       className={`flex-[2] py-4 md:py-6 text-white font-black rounded-2xl md:rounded-3xl text-[10px] md:text-xs uppercase tracking-[0.3em] shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95 order-1 sm:order-2 ${
-                        previewImage ? 'bg-slate-900 hover:bg-indigo-600 shadow-indigo-100' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        previewImage ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
                       {isUploading ? (
                         <>
-                          <i className="fa-solid fa-spinner fa-spin"></i> Dispatching Signal...
+                          <i className="fa-solid fa-spinner fa-spin"></i> Dispatching...
                         </>
                       ) : (
                         <>Finalize Submission <i className="fa-solid fa-paper-plane"></i></>

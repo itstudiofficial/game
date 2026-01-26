@@ -30,10 +30,10 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
   const MIN_DEPOSIT = 5000; 
   const MIN_WITHDRAWAL = 3000;
 
-  // Internal Currency Multipliers (Approximate for Valuation)
-  const PKR_RATE = 280; // $1 = 280 PKR
-  const EUR_RATE = 0.92; // $1 = 0.92 EUR
-  const GBP_RATE = 0.79; // $1 = 0.79 GBP
+  // Internal Currency Multipliers
+  const PKR_RATE = 280;
+  const EUR_RATE = 0.92;
+  const GBP_RATE = 0.79;
 
   const totalWorthUSD = coins / WITHDRAW_RATE;
 
@@ -246,7 +246,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
           </div>
         </div>
 
-        {/* Currency Valuation Section */}
+        {/* Currency Valuation Hub */}
         <div className="mb-12">
           <div className="flex items-center gap-4 mb-8">
             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">Global Valuation Hub</h3>
@@ -265,7 +265,6 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                 </div>
               </div>
             ))}
-            {/* Exchange Rates Informative Card */}
             <div className="col-span-2 md:col-span-3 lg:col-span-1 bg-indigo-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-indigo-100 flex flex-col justify-between">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-4">Internal Market Rates</p>
@@ -362,25 +361,46 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                       {activeTab === 'deposit' && (
                         <div className="space-y-4">
                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Payment Screenshot Proof</label>
-                           <div onClick={() => !isCompressing && fileInputRef.current?.click()} className={`h-[72px] bg-slate-50 rounded-3xl border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${isCompressing ? 'opacity-50 cursor-wait' : ''} ${proofImage ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 hover:border-indigo-400'}`}>
-                              <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-                              {isCompressing ? (
-                                 <div className="flex items-center gap-3">
-                                    <i className="fa-solid fa-circle-notch fa-spin text-indigo-500"></i>
-                                    <span className="text-[10px] font-black text-indigo-600 uppercase">Optimizing Proof...</span>
-                                 </div>
-                              ) : proofImage ? (
-                                 <div className="flex items-center gap-3">
-                                    <i className="fa-solid fa-circle-check text-emerald-500"></i>
-                                    <span className="text-[10px] font-black text-emerald-600 uppercase">Screenshot Optimized</span>
-                                    <button type="button" onClick={(e) => { e.stopPropagation(); setProofImage(null); }} className="text-slate-400 hover:text-rose-500 transition-colors ml-4"><i className="fa-solid fa-trash-can"></i></button>
-                                 </div>
-                              ) : (
-                                 <div className="flex items-center gap-3 text-slate-400">
-                                    <i className="fa-solid fa-camera"></i>
-                                    <span className="text-[10px] font-black uppercase">Upload Image Proof</span>
-                                 </div>
-                              )}
+                           <div className="relative">
+                              <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                onChange={handleFileChange} 
+                                className="hidden" 
+                                accept="image/*" 
+                              />
+                              
+                              <div 
+                                onClick={() => !isCompressing && fileInputRef.current?.click()} 
+                                className={`min-h-[72px] p-4 bg-slate-50 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${isCompressing ? 'opacity-50 cursor-wait' : ''} ${proofImage ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 hover:border-indigo-400'}`}
+                              >
+                                 {isCompressing ? (
+                                    <div className="flex items-center gap-3">
+                                       <i className="fa-solid fa-circle-notch fa-spin text-indigo-500"></i>
+                                       <span className="text-[10px] font-black text-indigo-600 uppercase">Optimizing Proof...</span>
+                                    </div>
+                                 ) : proofImage ? (
+                                    <div className="flex items-center gap-3">
+                                       <i className="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
+                                       <span className="text-[10px] font-black text-emerald-600 uppercase">Proof Loaded</span>
+                                       <button type="button" onClick={(e) => { e.stopPropagation(); setProofImage(null); }} className="text-slate-400 hover:text-rose-500 transition-colors ml-4 bg-white p-2 rounded-lg shadow-sm"><i className="fa-solid fa-trash-can"></i></button>
+                                    </div>
+                                 ) : (
+                                    <div className="flex flex-col items-center gap-4 py-2">
+                                       <div className="flex items-center gap-3 text-slate-400">
+                                          <i className="fa-solid fa-camera-retro"></i>
+                                          <span className="text-[10px] font-black uppercase">Drop or Tap to Choose File</span>
+                                       </div>
+                                       <button 
+                                          type="button"
+                                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}
+                                          className="px-6 py-3 bg-white border border-slate-200 text-indigo-600 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-sm hover:bg-indigo-50 transition-all flex items-center gap-2"
+                                       >
+                                          <i className="fa-solid fa-folder-open"></i> Browse Gallery
+                                       </button>
+                                    </div>
+                                 )}
+                              </div>
                            </div>
                         </div>
                       )}
@@ -394,7 +414,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
            </div>
         </div>
 
-        {/* History Table/List */}
+        {/* History Ledger */}
         <div className="bg-white rounded-[4rem] border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-10 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
              <div>
@@ -445,7 +465,7 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
                          <div className="flex items-center gap-4">
                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg border ${tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}><i className={`fa-solid ${tx.type === 'deposit' ? 'fa-arrow-down' : 'fa-arrow-up'}`}></i></div>
                             <div>
-                               <div className="flex items-center gap-2 mb-1"><span className="text-[10px] font-black uppercase text-slate-900">{tx.type}</span><span className={`px-2 py-0.5 text-[7px] font-black rounded-md uppercase tracking-widest border ${tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : tx.status === 'failed' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse'}`}>{tx.status}</span></div>
+                               <div className="flex items-center gap-2 mb-1"><span className="text-[10px] font-black uppercase text-slate-900">{tx.type}</span><span className={`px-2 py-0.5 text-[7px] font-black rounded-md uppercase tracking-widest border ${tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : tx.status === 'failed' ? 'bg-rose-50 text-rose-100 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse'}`}>{tx.status}</span></div>
                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">{tx.id.toUpperCase()}</p>
                             </div>
                          </div>
