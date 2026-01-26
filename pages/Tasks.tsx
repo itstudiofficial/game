@@ -31,10 +31,16 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
   const availableTasks = useMemo(() => {
     const safeTasks = Array.isArray(tasks) ? tasks : [];
+    const today = new Date().toISOString().split('T')[0];
+    
     return safeTasks.filter(t => {
       if (!t) return false;
       const isSubmitted = user.completedTasks?.includes(t.id);
       if (isSubmitted) return false;
+
+      // Filter out expired tasks
+      if (t.dueDate && t.dueDate < today) return false;
+
       const categoryMatch = categoryFilter === 'All' || t.type === categoryFilter;
       return categoryMatch && t.status === 'active';
     });
@@ -239,6 +245,12 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     <p className="text-slate-400 text-xs font-medium line-clamp-2">{task.description}</p>
                   </div>
                   <div className="pt-6 border-t border-slate-50 relative z-10">
+                    {task.dueDate && (
+                      <div className="mb-4 flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                        <i className="fa-solid fa-calendar-day text-[10px] text-slate-400"></i>
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Due: {task.dueDate}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center mb-4 text-[9px] font-black uppercase text-slate-400 tracking-widest">
                        <span>Quota Fullness</span>
                        <span>{Math.floor((task.completedCount / task.totalWorkers) * 100)}%</span>
@@ -332,7 +344,12 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
               {!isSubmittingProof ? (
                 <div className="space-y-4 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="bg-slate-50 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 shadow-inner">
-                    <h4 className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 md:mb-3">Operational Instructions</h4>
+                    <div className="flex justify-between items-center mb-3">
+                       <h4 className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Operational Instructions</h4>
+                       {selectedTask.dueDate && (
+                         <span className="text-[8px] md:text-[10px] font-black text-rose-500 uppercase tracking-widest">Expires: {selectedTask.dueDate}</span>
+                       )}
+                    </div>
                     <p className="text-slate-700 text-xs md:text-base font-bold leading-relaxed whitespace-pre-wrap">
                       {selectedTask.description}
                     </p>

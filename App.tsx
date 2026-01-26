@@ -344,7 +344,13 @@ const App: React.FC = () => {
           {currentPage === 'contact' && <Contact />}
           {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={handleTaskComplete} />}
           {currentPage === 'math-solver' && user.isLoggedIn && <MathSolver user={user} onSolve={handleMathSolve} transactions={transactions} />}
-          {currentPage === 'create' && <CreateTask onCreate={async (data) => {
+          {currentPage === 'create' && <CreateTask tasks={tasks} user={user} onDeleteTask={async (tid) => {
+            await storage.deleteTaskFromCloud(tid);
+            await refreshUserBalance();
+          }} onUpdateTask={async (tid, data) => {
+            await storage.updateTaskInCloud(tid, data);
+            await refreshUserBalance();
+          }} onCreate={async (data) => {
             const totalCost = data.reward * data.totalWorkers;
             const newTask: Task = {
               id: `TASK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,

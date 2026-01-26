@@ -12,6 +12,7 @@ export interface Task {
   completedCount: number;
   status: 'active' | 'completed' | 'pending' | 'rejected';
   link?: string;
+  dueDate?: string; // New optional property: YYYY-MM-DD
 }
 
 export interface User {

@@ -30,7 +30,8 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
       onUpdateTask(editingTask.id, {
         title: editingTask.title,
         description: editingTask.description,
-        totalWorkers: editingTask.totalWorkers
+        totalWorkers: editingTask.totalWorkers,
+        dueDate: editingTask.dueDate
       });
       setEditingTask(null);
     }
@@ -115,7 +116,7 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
               filteredTasks.map(task => (
                 <div key={task.id} className="p-8 md:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10 hover:bg-slate-50/80 transition-all group animate-in slide-in-from-bottom-4 duration-500">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex flex-wrap items-center gap-4 mb-4">
                       <span className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border shadow-sm ${
                         task.status === 'active' 
                           ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
@@ -127,6 +128,11 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
                       </span>
                       <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">UID: {task.id.toUpperCase()}</span>
                       <span className="text-[9px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-widest">{task.type}</span>
+                      {task.dueDate && (
+                        <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded uppercase tracking-widest flex items-center gap-1">
+                          <i className="fa-solid fa-calendar-day"></i> Due: {task.dueDate}
+                        </span>
+                      )}
                     </div>
                     
                     <h4 className="text-2xl font-black text-slate-900 tracking-tight mb-2 group-hover:text-indigo-600 transition-colors truncate">{task.title}</h4>
@@ -233,6 +239,16 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
                       type="number" 
                       value={editingTask.totalWorkers} 
                       onChange={e => setEditingTask({...editingTask, totalWorkers: parseInt(e.target.value)})} 
+                      className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
+                    />
+                 </div>
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Expiry Date</label>
+                    <input 
+                      type="date" 
+                      value={editingTask.dueDate || ''} 
+                      onChange={e => setEditingTask({...editingTask, dueDate: e.target.value})} 
+                      min={new Date().toISOString().split('T')[0]}
                       className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
                     />
                  </div>
