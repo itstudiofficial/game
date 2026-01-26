@@ -12,7 +12,7 @@ interface TasksProps {
 const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) => {
   const [activeView, setActiveView] = useState<'Marketplace' | 'My History'>('Marketplace');
   const [categoryFilter, setCategoryFilter] = useState<TaskType | 'All'>('All');
-  const [historyFilter, setHistoryFilter] = useState<'Pending' | 'Approved'>('Pending');
+  const [historyFilter, setHistoryFilter] = useState<'Pending' | 'Approved' | 'Rejected'>('Pending');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -49,6 +49,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       .filter(tx => tx && tx.type === 'earn' && tx.userId === user.id)
       .filter(tx => {
         if (historyFilter === 'Pending') return tx.status === 'pending';
+        if (historyFilter === 'Rejected') return tx.status === 'failed';
         return tx.status === 'success';
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -202,9 +203,10 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                   ))}
                 </div>
              ) : (
-                <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
-                   <button onClick={() => setHistoryFilter('Pending')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${historyFilter === 'Pending' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400'}`}>Pending</button>
-                   <button onClick={() => setHistoryFilter('Approved')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${historyFilter === 'Approved' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400'}`}>Approved</button>
+                <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+                   <button onClick={() => setHistoryFilter('Pending')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${historyFilter === 'Pending' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400'}`}>Pending</button>
+                   <button onClick={() => setHistoryFilter('Approved')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${historyFilter === 'Approved' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400'}`}>Approved</button>
+                   <button onClick={() => setHistoryFilter('Rejected')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${historyFilter === 'Rejected' ? 'bg-rose-600 text-white shadow-lg' : 'text-slate-400'}`}>Rejected</button>
                 </div>
              )}
           </div>
@@ -268,8 +270,12 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                        <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all">
                           <i className={`fa-solid ${getIcon(tx.method || '')}`}></i>
                        </div>
-                       <div className={`px-4 py-1.5 text-[8px] font-black rounded-lg uppercase tracking-widest border transition-all ${tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse'}`}>
-                          {tx.status}
+                       <div className={`px-4 py-1.5 text-[8px] font-black rounded-lg uppercase tracking-widest border transition-all ${
+                         tx.status === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                         tx.status === 'failed' ? 'bg-rose-50 text-rose-600 border-rose-100' : 
+                         'bg-amber-50 text-amber-600 border-amber-100 animate-pulse'
+                       }`}>
+                          {tx.status === 'failed' ? 'rejected' : tx.status}
                        </div>
                     </div>
                     <div>
