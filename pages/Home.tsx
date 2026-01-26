@@ -13,15 +13,15 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
             <React.Fragment key={i}>
               <div className="flex items-center gap-3">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span className="text-[9px] font-black text-white uppercase tracking-widest">User_Alpha just completed a Task</span>
+                <span className="text-[9px] font-black text-white uppercase tracking-widest">User_{Math.random().toString(36).substr(2, 5)} just completed a Task</span>
               </div>
               <div className="flex items-center gap-3 text-blue-400">
                 <i className="fa-solid fa-circle-check"></i>
-                <span className="text-[9px] font-black uppercase tracking-widest">Withdrawal Verified: $45.00 via Payeer</span>
+                <span className="text-[9px] font-black uppercase tracking-widest">Withdrawal Verified: ${ (Math.random() * 100 + 10).toFixed(2) } via Payeer</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-                <span className="text-[9px] font-black text-white uppercase tracking-widest">New Campaign Deployed: "Video Ads 402"</span>
+                <span className="w-1.5 h-1.5 bg-indigo-50 rounded-full"></span>
+                <span className="text-[9px] font-black text-white uppercase tracking-widest">New Campaign Deployed: "Ad Sequence {Math.floor(Math.random()*900 + 100)}"</span>
               </div>
             </React.Fragment>
           ))}
@@ -54,16 +54,16 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
               </div>
 
               <div className="relative mb-14 max-w-4xl">
-                <h1 className="text-6xl md:text-8xl lg:text-[7rem] font-black tracking-tighter leading-[0.85] text-slate-900 mb-8 drop-shadow-[0_20px_40px_rgba(0,0,0,0.02)]">
-                  The <br/>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-600 to-indigo-800 drop-shadow-sm">
-                    Future of Freelance Income
+                <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-tighter leading-[0.9] text-slate-900 mb-8 drop-shadow-[0_20px_40px_rgba(0,0,0,0.02)]">
+                  The Smarter Way<br/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-600 to-indigo-800">
+                    to Earn & Advertise Online
                   </span>
                 </h1>
               </div>
               
               <p className="text-lg md:text-2xl text-slate-500 font-medium max-w-2xl leading-relaxed mb-16">
-                AdsPredia is the global standard for micro-tasking. Complete high-value tasks verified by AI or scale your brand with human-centric organic engagement.
+                AdsPredia is the global standard for micro-tasking. Complete high-value tasks verified by AI or scale your brand with real organic engagement.
               </p>
               
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start items-center gap-8 w-full sm:w-auto">
@@ -92,29 +92,34 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
               </div>
             </div>
 
-            {/* Hero Visual: Withdrawal Success Image - Optimized size (800w) */}
             <div className="lg:w-2/5 relative animate-in fade-in slide-in-from-right-12 duration-1000 delay-300">
                <div className="relative z-10 bg-white p-4 rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] border border-slate-100 transform rotate-2 hover:rotate-0 transition-transform duration-700">
                   <img 
-                    src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=800&auto=format&fit=crop" 
-                    alt="Earning Dashboard Success" 
-                    className="rounded-[3rem] w-full h-[500px] object-cover"
+                    src="https://images.unsplash.com/photo-1620714223084-8fcacc6dfd8d?q=80&w=800&auto=format&fit=crop" 
+                    alt="Premium Fintech Success Visualization" 
+                    className="rounded-[3rem] w-full h-[550px] object-cover shadow-2xl"
                     loading="eager"
                   />
-                  <div className="absolute -bottom-10 -left-10 bg-slate-900 p-8 rounded-[3rem] shadow-2xl text-white animate-bounce-slow">
-                     <div className="flex items-center gap-4 mb-2">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-                           <i className="fa-solid fa-wallet"></i>
+                  <div className="absolute -bottom-10 -left-10 bg-slate-900 p-8 rounded-[3rem] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.4)] text-white animate-bounce-slow border border-white/5 backdrop-blur-sm">
+                     <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.5)]">
+                           <i className="fa-solid fa-check-double text-xl"></i>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Withdrawal Success</span>
+                        <div>
+                           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 block">Payout Protocol</span>
+                           <span className="text-[12px] font-black uppercase tracking-widest text-white">Withdrawal Success</span>
+                        </div>
                      </div>
-                     <div className="text-3xl font-black tabular-nums">$125.50</div>
-                     <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">Ref: #PX-99201-Verified</p>
+                     <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-black tabular-nums">$240.75</span>
+                        <span className="text-[10px] font-black text-slate-500 uppercase">Settled</span>
+                     </div>
+                     <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-8">
+                        <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">Node: PX-99201</p>
+                        <i className="fa-brands fa-cc-visa text-white/40 text-lg"></i>
+                     </div>
                   </div>
                </div>
-               {/* Background Decorative Rings */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border border-indigo-100 rounded-full -z-10 opacity-30 animate-spin-slow"></div>
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] border border-indigo-50 rounded-full -z-10 opacity-20 animate-reverse-spin-slow"></div>
             </div>
           </div>
         </div>
@@ -122,296 +127,349 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
 
       {/* Numerical Insights */}
       <section className="bg-white py-24 relative overflow-hidden">
-        <div className="max-w-[1600px] mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-0">
-            {[
-              { label: 'Network Payouts', val: '$10k+', icon: 'fa-money-bill-trend-up', color: 'text-emerald-500' },
-              { label: 'Daily Tasks', val: '100+', icon: 'fa-layer-group', color: 'text-indigo-600' },
-              { label: 'Market Partners', val: '10k+', icon: 'fa-users', color: 'text-blue-500' },
-              { label: 'Conversion Rate', val: '99.8%', icon: 'fa-circle-check', color: 'text-amber-500' }
-            ].map((stat, i) => (
-              <div key={i} className="text-center group flex flex-col items-center md:border-r border-slate-50 last:border-0 px-8">
-                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 shadow-sm">
-                  <i className={`fa-solid ${stat.icon} ${stat.color} text-xl group-hover:text-white`}></i>
-                </div>
-                <div className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2 tabular-nums">{stat.val}</div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Earning Gallery Section - Optimized 800w images */}
-      <section className="py-32 bg-slate-50 relative overflow-hidden">
-        <div className="max-w-[1600px] mx-auto px-6">
-          <div className="text-center mb-24">
-            <span className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.5em] mb-4 block">Visual Evidence</span>
-            <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-8 leading-none">Earnings in <span className="text-indigo-600">Action</span></h2>
-            <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto">Real results from real users. See how our network nodes are generating daily value across the globe.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[
-              { 
-                img: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?q=80&w=800&auto=format&fit=crop", 
-                title: "Digital Wallet Growth", 
-                desc: "Average tier-1 users report 20% weekly increase in coin velocity.", 
-                tag: "Verified Growth"
-              },
-              { 
-                img: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=800&auto=format&fit=crop", 
-                title: "Instant Crypto Payouts", 
-                desc: "Withdrawal processing times reduced to sub-5 minute intervals for USDT.", 
-                tag: "High Liquidity"
-              },
-              { 
-                img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop", 
-                title: "Performance Ads", 
-                desc: "Advertisers scaling budgets by 3x after initial pilot success metrics.", 
-                tag: "ROI Optimized"
-              }
-            ].map((item, i) => (
-              <div key={i} className="group bg-white rounded-[4rem] p-6 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-700">
-                <div className="overflow-hidden rounded-[3rem] mb-8 h-80 relative">
-                   <img src={item.img} alt={item.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" loading="lazy" />
-                   <div className="absolute top-6 left-6 px-4 py-2 bg-slate-900/80 backdrop-blur-md rounded-xl text-[8px] font-black uppercase text-white tracking-widest">
-                     {item.tag}
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+              {[
+                { label: 'Active Tasks Daily', val: '150+', icon: 'fa-list-check', color: 'text-indigo-600' },
+                { label: 'Daily Payouts', val: '$2,500+', icon: 'fa-money-bill-trend-up', color: 'text-emerald-600' },
+                { label: 'Global Freelancers', val: '20K+', icon: 'fa-user-group', color: 'text-blue-600' },
+                { label: 'AI Verification', val: '99.9%', icon: 'fa-microchip', color: 'text-rose-600' }
+              ].map((stat, i) => (
+                <div key={i} className="group">
+                   <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-300 group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 border border-slate-100 shadow-sm">
+                      <i className={`fa-solid ${stat.icon} text-xl`}></i>
                    </div>
+                   <div className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2 tabular-nums">{stat.val}</div>
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
                 </div>
-                <div className="px-4 pb-4">
-                  <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight group-hover:text-indigo-600 transition-colors">{item.title}</h3>
-                  <p className="text-slate-500 font-medium leading-relaxed mb-6">{item.desc}</p>
-                  <div className="h-px bg-slate-50 w-full mb-6"></div>
-                  <div className="flex items-center gap-3">
-                     <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
-                        <i className="fa-solid fa-chart-line text-xs"></i>
-                     </div>
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Confirmed Node {i+1}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+           </div>
         </div>
       </section>
 
-      {/* Strategic Roadmap */}
-      <section className="py-32 bg-slate-900 text-white relative overflow-hidden">
-        <div className="max-w-[1600px] mx-auto px-6">
-          <div className="flex flex-col lg:flex-row gap-20 items-center">
-            <div className="lg:w-1/2">
-              <span className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.5em] mb-6 block">Future Outlook</span>
-              <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-10 leading-none">Our Growth <br/> <span className="text-indigo-500">Roadmap 2025</span></h2>
-              <p className="text-slate-400 text-xl font-medium leading-relaxed mb-12">We aren't just a platform; we are a community-driven protocol. From micro-tasks to global engagement, our journey has just begun.</p>
-              
-              <div className="space-y-12 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-px before:bg-white/10">
-                {[
-                  { phase: 'Phase 01', title: 'Task Network Initialization', desc: 'Deployment of the AI task verification engine and core earning marketplace.' },
-                  { phase: 'Phase 02', title: 'Global Task Expansion', desc: 'Integrating 100+ local payment gateways for seamless cross-border withdrawals.' },
-                  { phase: 'Phase 03', title: 'Community Governance', desc: 'Transitioning task verification to top-tier user-consensus for true decentralization.' }
-                ].map((item, i) => (
-                  <div key={i} className="relative pl-16 group">
-                    <div className="absolute left-0 top-0 w-12 h-12 bg-slate-800 rounded-2xl border border-white/5 flex items-center justify-center group-hover:bg-indigo-600 transition-colors duration-500">
-                      <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+      {/* NEW SECTION: MICRO-TASKING ECOSYSTEM (FREELANCING VISUALS) */}
+      <section className="bg-white py-32 relative overflow-hidden border-t border-slate-100">
+         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+               <div className="relative">
+                  <div className="grid grid-cols-2 gap-6">
+                     <div className="space-y-6">
+                        <div className="group overflow-hidden rounded-[3rem] shadow-2xl relative">
+                           <img 
+                             src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop" 
+                             className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-700" 
+                             alt="Professional Freelancer" 
+                           />
+                           <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+                        <div className="group overflow-hidden rounded-[3rem] shadow-2xl relative">
+                           <img 
+                             src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=600&auto=format&fit=crop" 
+                             className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700" 
+                             alt="Digital Workspace" 
+                           />
+                           <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-md px-5 py-3 rounded-2xl shadow-xl">
+                              <span className="text-[8px] font-black uppercase text-indigo-600 tracking-widest">Active Job</span>
+                              <p className="text-xs font-black text-slate-900">UI/UX Audit sequence</p>
+                           </div>
+                        </div>
+                     </div>
+                     <div className="space-y-6 pt-12">
+                        <div className="group overflow-hidden rounded-[3rem] shadow-2xl relative">
+                           <img 
+                             src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=600&auto=format&fit=crop" 
+                             className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-700" 
+                             alt="Micro Jobs Environment" 
+                           />
+                        </div>
+                        <div className="group overflow-hidden rounded-[3rem] shadow-2xl relative">
+                           <img 
+                             src="https://images.unsplash.com/photo-1552581234-26160f608093?q=80&w=600&auto=format&fit=crop" 
+                             className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-700" 
+                             alt="Team Strategy" 
+                           />
+                           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent flex items-end p-8">
+                              <p className="text-white text-sm font-bold italic leading-tight">"AdsPredia transformed my spare time into a global career."</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  {/* Floating Metric Badge */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 p-10 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/10 hidden md:block z-20">
+                     <div className="text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                           <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Live Workforce</span>
+                        </div>
+                        <p className="text-5xl font-black text-white leading-none tracking-tighter">24,812</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-3">Verified Task Operators</p>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="lg:pl-12">
+                  <h2 className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-6">Workforce of the Future</h2>
+                  <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9] mb-12">The Micro-Job <br/><span className="text-indigo-600">Revolution</span></h1>
+                  <p className="text-xl text-slate-500 font-medium leading-relaxed mb-12">
+                    Monetize every digital interaction. From high-precision app testing to strategic social engagement, our marketplace connects global talent with premium brand objectives.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                     {[
+                       { title: 'Anywhere Access', desc: 'Execute tasks from any node, any country, 24/7.', icon: 'fa-earth-africa' },
+                       { title: 'Verified Payouts', desc: 'Our AI ensures your work is rewarded instantly.', icon: 'fa-shield-check' },
+                       { title: 'Skill Scaling', desc: 'Unlock higher tier tasks as your reliability grows.', icon: 'fa-chart-line' },
+                       { title: 'Daily Liquidity', desc: 'No monthly cycles. Withdraw as soon as you earn.', icon: 'fa-bolt' }
+                     ].map((item, i) => (
+                       <div key={i} className="flex flex-col gap-4 group">
+                          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-all duration-500">
+                             <i className={`fa-solid ${item.icon} text-lg`}></i>
+                          </div>
+                          <div>
+                             <h4 className="text-lg font-black text-slate-900 mb-1">{item.title}</h4>
+                             <p className="text-slate-500 text-xs font-bold leading-relaxed">{item.desc}</p>
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+                  
+                  <button 
+                    onClick={() => onStart(isLoggedIn ? 'tasks' : 'login')}
+                    className="mt-16 group flex items-center gap-6 text-[11px] font-black uppercase tracking-[0.3em] text-indigo-600 hover:text-slate-900 transition-colors"
+                  >
+                     Explore Earning Categories
+                     <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center group-hover:translate-x-3 transition-transform">
+                        <i className="fa-solid fa-arrow-right-long"></i>
+                     </div>
+                  </button>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* DOUBLE OPERATION (HOW IT WORKS) */}
+      <section className="bg-slate-50 py-32 relative">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+           <div className="text-center mb-24">
+              <h2 className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Operational Protocol</h2>
+              <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter">Choose Your <span className="text-indigo-600">Objective</span></h1>
+           </div>
+
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Earner Side */}
+              <div className="bg-white rounded-[4rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                 <div className="absolute inset-0 z-0">
+                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover opacity-[0.05] group-hover:scale-110 transition-transform duration-1000" alt="Earner Path Background" />
+                 </div>
+                 <div className="p-12 md:p-16 relative z-10">
+                    <div className="inline-flex items-center gap-3 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black uppercase tracking-widest mb-10 border border-emerald-100">
+                       <i className="fa-solid fa-coins"></i>
+                       Freelance Earner Path
                     </div>
-                    <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">{item.phase}</h4>
-                    <h3 className="text-2xl font-black mb-3">{item.title}</h3>
-                    <p className="text-slate-500 font-medium">{item.desc}</p>
-                  </div>
-                ))}
+                    <h3 className="text-4xl font-black text-slate-900 mb-12 tracking-tight leading-none">Earn with Freelance <br/>Market Place</h3>
+                    
+                    <div className="space-y-10">
+                       {[
+                         { step: '01', title: 'Identity Sync', desc: 'Register your secure node and access the global task marketplace instantly.' },
+                         { step: '02', title: 'Execute Operation', desc: 'Select high-yield micro-tasks across Video, Web, and Social platforms.' },
+                         { step: '03', title: 'Claim Yield', desc: 'Submit AI-verified proof and withdraw your coins to Payeer or Binance.' }
+                       ].map((item, idx) => (
+                         <div key={idx} className="flex gap-8 group/item">
+                            <div className="text-2xl font-black text-slate-100 group-hover/item:text-indigo-600 transition-colors">{item.step}</div>
+                            <div>
+                               <h4 className="text-xl font-black text-slate-900 mb-2">{item.title}</h4>
+                               <p className="text-slate-500 font-medium text-sm leading-relaxed">{item.desc}</p>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+                 <i className="fa-solid fa-laptop-code absolute -right-12 -bottom-12 text-[15rem] text-slate-50 rotate-12 pointer-events-none group-hover:text-indigo-50 transition-colors duration-500"></i>
               </div>
-            </div>
-            
-            <div className="lg:w-1/2 grid grid-cols-2 gap-8 relative">
-               <div className="space-y-8 mt-12">
-                  <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 backdrop-blur-md">
-                     <i className="fa-solid fa-code text-3xl text-indigo-500 mb-6"></i>
-                     <h5 className="font-black uppercase tracking-widest text-[10px] text-slate-400 mb-4">Task API</h5>
-                     <p className="text-sm font-bold text-slate-300">Integrate our high-trust engagement engine directly into your app workflow.</p>
+
+              {/* Advertiser Side */}
+              <div className="bg-slate-900 rounded-[4rem] text-white shadow-3xl relative overflow-hidden group hover:-translate-y-2 transition-all duration-500">
+                 <div className="absolute inset-0 z-0">
+                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover opacity-10 group-hover:scale-110 transition-transform duration-1000" alt="Advertiser Path Background" />
+                 </div>
+                 <div className="p-12 md:p-16 relative z-10">
+                    <div className="inline-flex items-center gap-3 px-4 py-2 bg-indigo-500 text-white rounded-full text-[9px] font-black uppercase tracking-widest mb-10">
+                       <i className="fa-solid fa-bullhorn"></i>
+                       Brand Advertiser Path
+                    </div>
+                    <h3 className="text-4xl font-black text-white mb-12 tracking-tight leading-none">Scale Your Reach <br/>with Organic Signal</h3>
+                    
+                    <div className="space-y-10">
+                       {[
+                         { step: '01', title: 'Asset Funding', desc: 'Deposit coins into your escrow-protected vault to power your campaign reach.' },
+                         { step: '02', title: 'Define Specs', desc: 'Create high-precision task instructions for our global network of verified users.' },
+                         { step: '03', title: 'Analyze Growth', desc: 'Track real-time engagement and only pay for verified, authentic interactions.' }
+                       ].map((item, idx) => (
+                         <div key={idx} className="flex gap-8 group/item">
+                            <div className="text-2xl font-black text-white/10 group-hover/item:text-indigo-400 transition-colors">{item.step}</div>
+                            <div>
+                               <h4 className="text-xl font-black text-white mb-2">{item.title}</h4>
+                               <p className="text-slate-400 font-medium text-sm leading-relaxed">{item.desc}</p>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+                 <i className="fa-solid fa-rocket absolute -right-12 -bottom-12 text-[15rem] text-white/5 -rotate-12 pointer-events-none group-hover:text-indigo-400/10 transition-colors duration-500"></i>
+              </div>
+           </div>
+        </div>
+      </section>
+
+      {/* MARKETPLACE VERTICALS */}
+      <section className="bg-white py-32 border-b border-slate-100">
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-24">
+             <div className="max-w-2xl">
+                <h2 className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Earning Spectrum</h2>
+                <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter leading-[0.9]">Marketplace <br/>Categories</h1>
+             </div>
+             <p className="text-slate-500 font-medium text-lg max-w-sm">Diverse task modalities designed for rapid completion and high unit yield.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+             {[
+               { id: 'YouTube', icon: 'fa-youtube', color: 'bg-rose-50 text-rose-500', label: 'Video Ops', desc: 'Views, subs, and engagement sequences for creators.' },
+               { id: 'Websites', icon: 'fa-globe', color: 'bg-indigo-50 text-indigo-500', label: 'Web Traffic', desc: 'Strategic navigation and authentic site engagement.' },
+               { id: 'Apps', icon: 'fa-mobile-screen', color: 'bg-emerald-50 text-emerald-500', label: 'App Installs', desc: 'Secure installs and rating audits for mobile growth.' },
+               { id: 'Social', icon: 'fa-share-nodes', color: 'bg-blue-50 text-blue-500', label: 'Social Reach', desc: 'Accelerate presence across FB, X, and Instagram.' }
+             ].map((cat, i) => (
+               <div key={i} className="bg-slate-50 p-10 rounded-[3rem] border border-transparent hover:border-slate-200 hover:bg-white transition-all duration-500 group cursor-pointer shadow-none hover:shadow-xl">
+                  <div className={`w-16 h-16 ${cat.color} rounded-[1.5rem] flex items-center justify-center text-2xl mb-8 shadow-sm group-hover:scale-110 transition-transform`}>
+                    <i className={`fa-solid ${cat.icon}`}></i>
                   </div>
-                  <div className="bg-indigo-600 p-10 rounded-[3rem] shadow-2xl">
-                     <i className="fa-solid fa-earth-americas text-3xl text-white mb-6"></i>
-                     <h5 className="font-black uppercase tracking-widest text-[10px] text-white/60 mb-4">Global Reach</h5>
-                     <p className="text-sm font-bold text-white">Active operators across 120+ countries providing genuine regional engagement.</p>
-                  </div>
+                  <h4 className="text-2xl font-black text-slate-900 mb-4">{cat.label}</h4>
+                  <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">{cat.desc}</p>
+                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 group-hover:gap-4 transition-all">
+                    Explore Verticals <i className="fa-solid fa-arrow-right-long"></i>
+                  </span>
                </div>
-               <div className="space-y-8">
-                  <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 backdrop-blur-md">
-                     <i className="fa-solid fa-fingerprint text-3xl text-emerald-500 mb-6"></i>
-                     <h5 className="font-black uppercase tracking-widest text-[10px] text-slate-400 mb-4">Identity Guard</h5>
-                     <p className="text-sm font-bold text-slate-300">Sophisticated anti-bot protocols ensuring 100% human-centric performance metrics.</p>
-                  </div>
-                  <div className="bg-white/5 p-10 rounded-[3rem] border border-white/10 backdrop-blur-md relative overflow-hidden group">
-                     <img 
-                       src="https://images.unsplash.com/photo-1518183275881-c39359c6571a?q=80&w=800&auto=format&fit=crop" 
-                       alt="Server" 
-                       className="absolute inset-0 w-full h-full object-cover opacity-10 group-hover:opacity-20 transition-opacity"
-                       loading="lazy"
-                     />
-                     <div className="relative z-10">
-                        <i className="fa-solid fa-server text-3xl text-blue-500 mb-6"></i>
-                        <h5 className="font-black uppercase tracking-widest text-[10px] text-slate-400 mb-4">High-Speed Tasks</h5>
-                        <p className="text-sm font-bold text-slate-300">Infrastructure built to handle 1M+ concurrent micro-task requests with zero latency.</p>
+             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HIGH-TRUST INFRASTRUCTURE */}
+      <section className="bg-slate-900 py-40 relative">
+         <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+         <div className="max-w-[1600px] mx-auto px-6 md:px-12 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+               <div>
+                  <h2 className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] mb-6">Security Stack</h2>
+                  <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.9] mb-12">Built on <br/><span className="text-indigo-500">Unbreakable</span> Trust</h1>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
+                     <div className="space-y-4">
+                        <div className="w-12 h-12 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-indigo-400">
+                           <i className="fa-solid fa-brain"></i>
+                        </div>
+                        <h4 className="text-lg font-black text-white">AI Proof Audit</h4>
+                        <p className="text-slate-400 text-sm leading-relaxed">Neural nodes analyze visual proof to ensure 100% human authenticity.</p>
+                     </div>
+                     <div className="space-y-4">
+                        <div className="w-12 h-12 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-emerald-400">
+                           <i className="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h4 className="text-lg font-black text-white">Escrow Protection</h4>
+                        <p className="text-slate-400 text-sm leading-relaxed">Funds are locked in high-security vaults until verification is complete.</p>
+                     </div>
+                     <div className="space-y-4">
+                        <div className="w-12 h-12 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-blue-400">
+                           <i className="fa-solid fa-bolt"></i>
+                        </div>
+                        <h4 className="text-lg font-black text-white">Instant Settlement</h4>
+                        <p className="text-slate-400 text-sm leading-relaxed">Verified tasks settle coins into your earner node in milliseconds.</p>
+                     </div>
+                     <div className="space-y-4">
+                        <div className="w-12 h-12 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-amber-400">
+                           <i className="fa-solid fa-globe"></i>
+                        </div>
+                        <h4 className="text-lg font-black text-white">Global Nodes</h4>
+                        <p className="text-slate-400 text-sm leading-relaxed">Access earnings via Binance, Payeer, or local payment hubs.</p>
                      </div>
                   </div>
                </div>
-            </div>
-          </div>
-        </div>
-        <i className="fa-solid fa-diagram-project absolute -left-20 -top-20 text-[25rem] text-white/5 pointer-events-none"></i>
-      </section>
 
-      {/* Why Choose AdsPredia Section */}
-      <section className="py-32 bg-slate-50 relative overflow-hidden">
-        <div className="max-w-[1600px] mx-auto px-6">
-          <div className="text-center mb-24 max-w-4xl mx-auto">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em] block mb-6">Core Advantage</span>
-            <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-8 leading-none">
-              Why Choose <span className="text-indigo-600">AdsPredia</span>
-            </h2>
-            <p className="text-xl text-slate-500 font-medium">We built the world's most transparent micro-tasking engine, combining advanced security with unparalleled earning potential.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[
-              {
-                title: 'AI-Verified Proof',
-                desc: 'Our neural network automatically validates completion screenshots, ensuring advertisers get real results and workers get paid instantly.',
-                icon: 'fa-microchip',
-                color: 'bg-indigo-600'
-              },
-              {
-                title: 'Instant Liquidity',
-                desc: 'No more waiting weeks for payouts. Withdraw your coins via Binance, Payeer, or local gateways within minutes of verification.',
-                icon: 'fa-bolt-lightning',
-                color: 'bg-emerald-500'
-              },
-              {
-                title: 'Escrow Security',
-                desc: 'All campaign funds are locked in our secure escrow system at launch. Your rewards are guaranteed and protected.',
-                icon: 'fa-vault',
-                color: 'bg-blue-600'
-              }
-            ].map((feature, i) => (
-              <div key={i} className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-sm hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.05)] hover:-translate-y-2 transition-all duration-500 group text-center md:text-left">
-                <div className={`w-20 h-20 ${feature.color} rounded-[2rem] flex items-center justify-center text-white text-3xl mb-10 shadow-2xl transition-transform group-hover:rotate-12 mx-auto md:mx-0`}>
-                  <i className={`fa-solid ${feature.icon}`}></i>
-                </div>
-                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-6">{feature.title}</h3>
-                <p className="text-slate-500 text-lg leading-relaxed font-medium">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16">
-             <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Frequently <span className="text-indigo-600">Asked</span></h2>
-          </div>
-          <div className="space-y-4">
-            {[
-              { q: 'How do I start earning?', a: 'Join our platform, navigate to the Task Marketplace, and start completing verified engagements.' },
-              { q: 'What is the minimum withdrawal?', a: 'The network minimum is 5,000 Coins (equivalent to $1.00 USD), allowing for high-frequency liquidity access.' },
-              { q: 'Is my advertising budget safe?', a: 'Yes. All campaign funds are held in automated smart escrow and only released upon AI-verified proof of task completion.' }
-            ].map((faq, i) => (
-              <div key={i} className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 group cursor-pointer hover:bg-white hover:shadow-xl transition-all duration-300">
-                <h4 className="font-black text-slate-900 uppercase tracking-widest text-[11px] flex justify-between items-center">
-                  {faq.q}
-                  <i className="fa-solid fa-plus text-indigo-400 group-hover:rotate-90 transition-transform"></i>
-                </h4>
-                <p className="mt-4 text-slate-500 font-medium leading-relaxed hidden group-hover:block animate-in fade-in slide-in-from-top-2">
-                  {faq.a}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="py-20 bg-slate-50">
-        <div className="max-w-[1600px] mx-auto px-6">
-          <div className="bg-slate-900 rounded-[5rem] p-12 md:p-32 text-white relative overflow-hidden shadow-3xl">
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:40px_40px]"></div>
-            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[150px] -translate-y-1/2 translate-x-1/2"></div>
-            
-            {/* Background CTA Image: Optimized 800w */}
-            <img 
-              src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?q=80&w=800&auto=format&fit=crop" 
-              alt="Earnings" 
-              className="absolute inset-0 w-full h-full object-cover opacity-5 pointer-events-none"
-              loading="lazy"
-            />
-            
-            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-16">
-              <div className="max-w-3xl text-center lg:text-left">
-                <span className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.5em] block mb-8">Onboarding Sequence</span>
-                <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-12">
-                  Start Your <br/>
-                  <span className="text-indigo-500">Journey Today</span>
-                </h2>
-                <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
-                  Join the global movement of digital freelancers and performance advertisers. Your first coin is just 60 seconds away.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-6 w-full lg:w-auto">
-                <button 
-                  onClick={() => onStart(isLoggedIn ? 'dashboard' : 'login')}
-                  className="w-full lg:w-[400px] py-8 bg-indigo-600 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.4em] shadow-2xl shadow-indigo-500/30 hover:bg-indigo-500 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-6"
-                >
-                  <i className="fa-solid fa-user-plus"></i>
-                  Get Started
-                </button>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-center backdrop-blur-md">
-                    <p className="text-3xl font-black text-white">10k+</p>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Active Users</p>
+               <div className="relative">
+                  <div className="bg-slate-800 rounded-[5rem] overflow-hidden shadow-3xl border border-white/10 relative group h-[600px]">
+                     <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000" alt="Security Infrastructure" />
+                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent flex flex-col justify-end p-12">
+                        <div className="w-24 h-24 bg-white/10 rounded-[2rem] border border-white/10 flex items-center justify-center mb-10 shadow-2xl backdrop-blur-xl">
+                           <i className="fa-solid fa-lock text-5xl text-white"></i>
+                        </div>
+                        <h3 className="text-3xl font-black text-white mb-6">Securing over <br/>$1.5M in Assets</h3>
+                        <p className="text-indigo-200 font-medium mb-12">Our multi-tier infrastructure ensures that AdsPredia remains the safest micro-tasking environment on the web.</p>
+                        <div className="flex flex-wrap gap-4">
+                           <span className="px-4 py-2 bg-black/40 rounded-xl text-[10px] font-black uppercase border border-white/10 backdrop-blur-sm">TLS 1.3 Encryption</span>
+                           <span className="px-4 py-2 bg-black/40 rounded-xl text-[10px] font-black uppercase border border-white/10 backdrop-blur-sm">AES-256 Storage</span>
+                        </div>
+                     </div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-center backdrop-blur-md">
-                    <p className="text-3xl font-black text-white">100%</p>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Secure Escrow</p>
-                  </div>
-                </div>
-              </div>
+                  {/* Decorative Elements */}
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/20 blur-[60px] rounded-full"></div>
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/20 blur-[60px] rounded-full"></div>
+               </div>
             </div>
-            <i className="fa-solid fa-rocket absolute -left-20 -bottom-20 text-[30rem] text-white/5 -rotate-12 pointer-events-none"></i>
-          </div>
-        </div>
+         </div>
       </section>
 
+      {/* FINAL DEPLOYMENT (CTA) */}
+      <section className="bg-slate-50 py-40">
+         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
+            <div className="bg-slate-950 rounded-[5rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-3xl min-h-[600px] flex items-center justify-center">
+               <div className="absolute inset-0 z-0">
+                  <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1600&auto=format&fit=crop" className="w-full h-full object-cover opacity-20" alt="Final CTA Background" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/60 to-slate-950"></div>
+               </div>
+               <div className="relative z-10 max-w-4xl mx-auto">
+                  <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-none animate-in fade-in zoom-in duration-1000">Ready for <br/><span className="text-indigo-500">Operation?</span></h1>
+                  <p className="text-indigo-100 text-xl font-medium mb-16 leading-relaxed opacity-80">Join the global elite of micro-tasking. Choose your path and start scaling your digital yield today.</p>
+                  
+                  <div className="flex flex-col sm:flex-row justify-center gap-8">
+                     <button 
+                       onClick={() => onStart(isLoggedIn ? 'tasks' : 'login')}
+                       className="px-16 py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.4em] hover:bg-white hover:text-slate-900 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4"
+                     >
+                        Start Earning <i className="fa-solid fa-arrow-right"></i>
+                     </button>
+                     <button 
+                       onClick={() => onStart(isLoggedIn ? 'create' : 'login')}
+                       className="px-16 py-8 bg-white/10 border border-white/10 text-white rounded-[2.5rem] font-black text-[11px] uppercase tracking-[0.4em] hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-4 backdrop-blur-md"
+                     >
+                        Launch Ads <i className="fa-solid fa-bullhorn"></i>
+                     </button>
+                  </div>
+               </div>
+
+               {/* Background Decorative */}
+               <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/20 rounded-full blur-[160px]"></div>
+               </div>
+               <i className="fa-solid fa-network-wired absolute -left-16 -bottom-16 text-[20rem] text-white/5 rotate-12 pointer-events-none"></i>
+               <i className="fa-solid fa-microchip absolute -right-16 -top-16 text-[20rem] text-white/5 -rotate-12 pointer-events-none"></i>
+            </div>
+         </div>
+      </section>
+      
       <style>{`
-        @keyframes shimmer {
-          100% { transform: translateX(100%); }
-        }
         @keyframes ticker {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
-        @keyframes spin-slow {
-          from { transform: translate(-50%, -50%) rotate(0deg); }
-          to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        @keyframes reverse-spin-slow {
-          from { transform: translate(-50%, -50%) rotate(360deg); }
-          to { transform: translate(-50%, -50%) rotate(0deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
-        }
-        .animate-reverse-spin-slow {
-          animation: reverse-spin-slow 25s linear infinite;
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
         }
         .animate-bounce-slow {
-          animation: bounce 3s infinite;
+          animation: bounce 4s infinite ease-in-out;
         }
         @keyframes bounce {
-          0%, 100% { transform: translateY(-5%) translateY(-10px); }
-          50% { transform: translateY(0); }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-15px); }
         }
       `}</style>
     </div>

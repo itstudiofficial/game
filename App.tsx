@@ -5,24 +5,24 @@ import Footer from './components/Footer';
 import { User, Task, Transaction } from './types';
 import { storage } from './services/storage';
 
-// Lazy load pages to optimize initial bundle size
-const Home = lazy(() => import('./pages/Home'));
-const Tasks = lazy(() => import('./pages/Tasks'));
-const MathSolver = lazy(() => import('./pages/MathSolver'));
-const CreateTask = lazy(() => import('./pages/CreateTask'));
-const Wallet = lazy(() => import('./pages/Wallet'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Login = lazy(() => import('./pages/Login'));
-const SpinWheel = lazy(() => import('./pages/SpinWheel'));
-const Referrals = lazy(() => import('./pages/Referrals'));
-const AdminPanel = lazy(() => import('./pages/AdminPanel'));
-const Features = lazy(() => import('./pages/Features'));
-const Contact = lazy(() => import('./pages/Contact'));
-const MyCampaigns = lazy(() => import('./pages/MyCampaigns'));
-const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const TermsConditions = lazy(() => import('./pages/TermsConditions'));
-const Disclaimer = lazy(() => import('./pages/Disclaimer'));
+// Lazy load pages with explicit extensions for browser ESM resolution
+const Home = lazy(() => import('./pages/Home.tsx'));
+const Tasks = lazy(() => import('./pages/Tasks.tsx'));
+const MathSolver = lazy(() => import('./pages/MathSolver.tsx'));
+const CreateTask = lazy(() => import('./pages/CreateTask.tsx'));
+const Wallet = lazy(() => import('./pages/Wallet.tsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard.tsx'));
+const Login = lazy(() => import('./pages/Login.tsx'));
+const SpinWheel = lazy(() => import('./pages/SpinWheel.tsx'));
+const Referrals = lazy(() => import('./pages/Referrals.tsx'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel.tsx'));
+const Features = lazy(() => import('./pages/Features.tsx'));
+const Contact = lazy(() => import('./pages/Contact.tsx'));
+const MyCampaigns = lazy(() => import('./pages/MyCampaigns.tsx'));
+const ProfileSettings = lazy(() => import('./pages/ProfileSettings.tsx'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.tsx'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions.tsx'));
+const Disclaimer = lazy(() => import('./pages/Disclaimer.tsx'));
 
 const PageLoader = () => (
   <div className="min-h-[60vh] flex flex-col items-center justify-center p-10 text-center animate-in fade-in duration-500">
@@ -42,12 +42,10 @@ const App: React.FC = () => {
   // Referral URL Handling & Initial Data Load
   useEffect(() => {
     const initApp = async () => {
-      // 1. Check for referral ID in URL
       const urlParams = new URLSearchParams(window.location.search);
       const referralId = urlParams.get('id');
       if (referralId) {
         sessionStorage.setItem('pending_referral', referralId);
-        // Clean URL without refresh
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
@@ -58,7 +56,6 @@ const App: React.FC = () => {
         if (user.isLoggedIn) {
           const cloudUser = await storage.syncUserFromCloud(user.id);
           if (cloudUser) {
-            // Verify session ID to prevent multi-device login issues
             const localSessionId = localStorage.getItem('ct_user_session_id');
             if (cloudUser.currentSessionId && localSessionId && cloudUser.currentSessionId !== localSessionId) {
               setSessionConflict(true);
@@ -119,7 +116,6 @@ const App: React.FC = () => {
     }
   }, [user.id, user.isLoggedIn, handleLogout]);
 
-  // Periodic Refresh (30s)
   useEffect(() => {
     if (user.isLoggedIn) {
       const interval = setInterval(refreshUserBalance, 30000); 
@@ -139,13 +135,9 @@ const App: React.FC = () => {
 
   const handleLogin = async (userData: { id: string; username: string; email: string; isLoggedIn: boolean; isAdmin?: boolean; referredBy?: string }) => {
     const newSessionId = Math.random().toString(36).substr(2, 9);
-    
-    // Ensure clean state before syncing
     localStorage.removeItem('ct_user');
     localStorage.setItem('ct_user_session_id', newSessionId);
-
     const cloudUser = await storage.syncUserFromCloud(userData.id);
-    
     const updatedUser: User = {
       id: userData.id,
       username: cloudUser?.username || userData.username,
@@ -161,11 +153,8 @@ const App: React.FC = () => {
       claimedReferrals: cloudUser?.claimedReferrals || [],
       lastMathTimestamp: cloudUser?.lastMathTimestamp || 0
     };
-    
     setUser(updatedUser);
     await storage.setUser(updatedUser);
-    
-    // Routing based on privilege
     setCurrentPage(updatedUser.isAdmin ? 'admin-overview' : 'dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -173,7 +162,6 @@ const App: React.FC = () => {
   const handleTaskComplete = async (taskId: string, proofImage?: string, timestamp?: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
-
     const tx: Transaction = {
       id: `TXN-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
@@ -184,15 +172,11 @@ const App: React.FC = () => {
       method: `${task.title} | ${task.type}`,
       proofImage,
       status: 'pending',
-      date: timestamp || new Date().toISOString() // Use ISO for reliable parsing
+      date: timestamp || new Date().toISOString()
     };
-
-    // CRITICAL: Await database write to ensure Admin Panel gets the signal
     await storage.addTransaction(tx);
-
     const updatedCompletedTasks = Array.from(new Set([...(user.completedTasks || []), taskId]));
     const updatedUser = { ...user, completedTasks: updatedCompletedTasks };
-    
     setUser(updatedUser);
     await storage.setUser(updatedUser);
     await refreshUserBalance();
@@ -211,13 +195,11 @@ const App: React.FC = () => {
       status: 'pending',
       date: new Date().toISOString()
     };
-    
     if (type === 'withdraw') {
       const updatedUser = { ...user, coins: user.coins - amt };
       await storage.setUser(updatedUser);
       setUser(updatedUser);
     }
-    
     await storage.addTransaction(tx);
     await refreshUserBalance();
   };
@@ -226,7 +208,6 @@ const App: React.FC = () => {
     const updatedUser = { ...user, coins: user.coins + win - cost };
     setUser(updatedUser);
     await storage.setUser(updatedUser);
-    
     const tx: Transaction = {
       id: `SPN-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
@@ -249,7 +230,6 @@ const App: React.FC = () => {
     };
     setUser(updatedUser);
     await storage.setUser(updatedUser);
-    
     const tx: Transaction = {
       id: `REF-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
@@ -266,14 +246,10 @@ const App: React.FC = () => {
 
   const handleMathSolve = async (reward: number, isLast: boolean) => {
     const updates: Partial<User> = { coins: user.coins + reward };
-    if (isLast) {
-      updates.lastMathTimestamp = Date.now();
-    }
-    
+    if (isLast) updates.lastMathTimestamp = Date.now();
     const updatedUser = { ...user, ...updates };
     setUser(updatedUser);
     await storage.setUser(updatedUser);
-    
     const tx: Transaction = {
       id: `MTH-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
@@ -305,11 +281,6 @@ const App: React.FC = () => {
         </div>
         <div className="space-y-4">
            <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Ads<span className="text-indigo-600">Predia</span></h1>
-           <div className="flex items-center justify-center gap-3">
-              <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-bounce"></div>
-           </div>
            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mt-4">Synchronizing Command Hub</p>
         </div>
       </div>
@@ -328,7 +299,7 @@ const App: React.FC = () => {
              </div>
              <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4 leading-none">Access Terminated</h2>
              <p className="text-slate-500 font-bold text-sm leading-relaxed mb-8">
-               Your account was recently accessed from another location. For vault safety, this current session has been locked.
+               Your account was recently accessed from another location.
              </p>
              <button onClick={() => { setSessionConflict(false); setCurrentPage('login'); }} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all">
                 Reconnect Session
@@ -383,7 +354,6 @@ const App: React.FC = () => {
           {currentPage === 'privacy-policy' && <PrivacyPolicy />}
           {currentPage === 'terms-conditions' && <TermsConditions />}
           {currentPage === 'disclaimer' && <Disclaimer />}
-          {/* Using slice(6) ensures 'admin-create-task' correctly becomes 'create-task' */}
           {currentPage.startsWith('admin-') && user.isAdmin && <AdminPanel initialView={currentPage.slice(6) as any} />}
         </Suspense>
       </main>
