@@ -51,7 +51,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       if (view === 'login') {
         if (!userId) {
-          setEmailError('Account not found please create account');
+          setEmailError('Account not found. Please register.');
           setIsSubmitting(false);
           return;
         }
@@ -63,17 +63,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           return;
         }
 
+        // FORCE CLEAN PREVIOUS SESSION
+        localStorage.removeItem('ct_user');
+
         onLogin({
           id: userId,
           username: existingUser.username,
           email: lowercaseEmail,
           isLoggedIn: true,
-          // Updated admin check
           isAdmin: existingUser.isAdmin || lowercaseEmail === 'ehtesham@adspredia.site',
           referredBy: existingUser.referredBy
         });
       } else if (view === 'register') {
-        // Enforce: No duplicate Gmails
         if (userId) {
           setEmailError('This email is already registered. Please login.');
           setIsSubmitting(false);
@@ -92,15 +93,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           return;
         }
 
-        // Use the current random session ID for the new account
-        const newUserId = storage.getUserId();
+        // Generate NEW unique node ID for the user
+        const newUserId = 'USR-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        
+        // Clean session
+        localStorage.removeItem('ct_user');
 
         onLogin({
           id: newUserId,
           username: username.trim(),
           email: lowercaseEmail,
           isLoggedIn: true,
-          // Updated admin check
           isAdmin: lowercaseEmail === 'ehtesham@adspredia.site',
           referredBy: pendingRef
         });
@@ -130,6 +133,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="w-full max-w-xl relative z-10">
         <div className="bg-white rounded-[3.5rem] shadow-[0_80px_160px_-40px_rgba(15,23,42,0.15)] border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-700">
           <div className="bg-slate-900 p-12 text-white text-center relative overflow-hidden">
+            {hasReferral && (
+               <div className="absolute top-4 left-0 right-0 z-20">
+                  <span className="px-4 py-1.5 bg-indigo-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full border border-indigo-400">
+                     Referral Sequence Active
+                  </span>
+               </div>
+            )}
             <div className="relative z-10">
               <div className="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl p-4 overflow-hidden">
                 <Logo className="h-full w-full" />
@@ -137,7 +147,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <h1 className="text-4xl font-black tracking-tighter mb-2 leading-none">
                 {view === 'register' ? 'Join Network' : 'Login Now'}
               </h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300 opacity-60">Verified AdsPredia Gateway</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300 opacity-60">Authorized AdsPredia Access</p>
             </div>
           </div>
           
@@ -150,11 +160,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </div>
               )}
               <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Email Address</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@adspredia.site" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-slate-800 shadow-inner focus:ring-2 focus:ring-indigo-100" required />
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Email Identity</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@domain.com" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-slate-800 shadow-inner focus:ring-2 focus:ring-indigo-100" required />
               </div>
               <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Secure Password</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Security Hash (Password)</label>
                 <div className="relative">
                   <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-slate-800 shadow-inner focus:ring-2 focus:ring-indigo-100" required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-600 transition-colors">
@@ -171,13 +181,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               )}
 
               <button type="submit" disabled={isSubmitting} className="w-full py-6 bg-slate-900 text-white font-black rounded-2xl hover:bg-indigo-600 transition-all shadow-xl uppercase tracking-[0.4em] text-[10px] active:scale-95 disabled:opacity-50">
-                {isSubmitting ? <i className="fa-solid fa-spinner fa-spin"></i> : view === 'register' ? 'Initialize Registration' : 'Synchronize Login'}
+                {isSubmitting ? <i className="fa-solid fa-spinner fa-spin"></i> : view === 'register' ? 'Register Node' : 'Initialize Session'}
               </button>
             </form>
 
             <div className="mt-10 text-center">
               <button onClick={() => switchView(view === 'login' ? 'register' : 'login')} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline transition-all">
-                {view === 'login' ? "Don't have a node yet? Create account" : "Already a partner? Sign in here"}
+                {view === 'login' ? "Need an Identity? Join the Network" : "Existing Partner? Sign in"}
               </button>
             </div>
           </div>

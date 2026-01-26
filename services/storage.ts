@@ -43,6 +43,7 @@ export const storage = {
         return data.filter(item => item !== null) as T[];
       }
       if (typeof data === 'object') {
+        // Firebase often returns objects with alphanumeric keys for list-like nodes
         return Object.values(data).filter(item => item !== null) as T[];
       }
     } catch (e) {
@@ -80,7 +81,9 @@ export const storage = {
   },
 
   setUser: async (user: User) => {
+    // Session isolation: update local storage first
     localStorage.setItem(KEYS.USER, JSON.stringify(user));
+    
     if (user.isLoggedIn) {
       const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
       const isAdmin = user.email.toLowerCase().trim() === 'ehtesham@adspredia.site' ? true : (user.isAdmin || false);
@@ -165,7 +168,12 @@ export const storage = {
       const snapshot = await get(ref(db, `${KEYS.USER_TXS}/${userId}`));
       if (snapshot.exists()) {
         const txs = storage.ensureArray<Transaction>(snapshot.val());
-        const sorted = txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        // Sort using a reliable date parsing
+        const sorted = txs.sort((a, b) => {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
+        });
         localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(sorted));
         return sorted;
       }
@@ -178,11 +186,11 @@ export const storage = {
   addTransaction: async (tx: Transaction) => {
     const cleanTx = storage.cleanData(tx);
     
-    // Explicitly write to Global Audit Node
+    // Explicitly write to Global Audit Node FIRST
     const globalTxRef = ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`);
     await set(globalTxRef, cleanTx);
     
-    // Explicitly write to User-specific history
+    // Then write to User-specific history
     const userTxRef = ref(db, `${KEYS.USER_TXS}/${tx.userId}`);
     await push(userTxRef, cleanTx);
     

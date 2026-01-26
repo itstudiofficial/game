@@ -39,9 +39,18 @@ const App: React.FC = () => {
   const [sessionConflict, setSessionConflict] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Initial Data Load & Session Sync
+  // Referral URL Handling & Initial Data Load
   useEffect(() => {
     const initApp = async () => {
+      // 1. Check for referral ID in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const referralId = urlParams.get('id');
+      if (referralId) {
+        sessionStorage.setItem('pending_referral', referralId);
+        // Clean URL without refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
       try {
         const initialTasks = await storage.getTasks();
         setTasks(initialTasks);
@@ -49,8 +58,14 @@ const App: React.FC = () => {
         if (user.isLoggedIn) {
           const cloudUser = await storage.syncUserFromCloud(user.id);
           if (cloudUser) {
+            // Verify session ID to prevent multi-device login issues
+            const localSessionId = localStorage.getItem('ct_user_session_id');
+            if (cloudUser.currentSessionId && localSessionId && cloudUser.currentSessionId !== localSessionId) {
+              setSessionConflict(true);
+              handleLogout();
+              return;
+            }
             setUser(cloudUser);
-            // Targeted fetch: only get this user's transactions
             const userTxs = await storage.getUserTransactions(user.id);
             setTransactions(userTxs);
           }
@@ -104,7 +119,7 @@ const App: React.FC = () => {
     }
   }, [user.id, user.isLoggedIn, handleLogout]);
 
-  // Periodic Refresh
+  // Periodic Refresh (30s)
   useEffect(() => {
     if (user.isLoggedIn) {
       const interval = setInterval(refreshUserBalance, 30000); 
@@ -124,6 +139,11 @@ const App: React.FC = () => {
 
   const handleLogin = async (userData: { id: string; username: string; email: string; isLoggedIn: boolean; isAdmin?: boolean; referredBy?: string }) => {
     const newSessionId = Math.random().toString(36).substr(2, 9);
+    
+    // Ensure clean state before syncing
+    localStorage.removeItem('ct_user');
+    localStorage.setItem('ct_user_session_id', newSessionId);
+
     const cloudUser = await storage.syncUserFromCloud(userData.id);
     
     const updatedUser: User = {
@@ -142,10 +162,10 @@ const App: React.FC = () => {
       lastMathTimestamp: cloudUser?.lastMathTimestamp || 0
     };
     
-    localStorage.setItem('ct_user_session_id', newSessionId);
     setUser(updatedUser);
     await storage.setUser(updatedUser);
     
+    // Routing based on privilege
     setCurrentPage(updatedUser.isAdmin ? 'admin-overview' : 'dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -154,7 +174,6 @@ const App: React.FC = () => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    // 1. Create a pending 'earn' transaction for the global ledger
     const tx: Transaction = {
       id: `TXN-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
       userId: user.id,
@@ -165,20 +184,17 @@ const App: React.FC = () => {
       method: `${task.title} | ${task.type}`,
       proofImage,
       status: 'pending',
-      date: timestamp || new Date().toLocaleString()
+      date: timestamp || new Date().toISOString() // Use ISO for reliable parsing
     };
 
-    // CRITICAL: We await this to ensure the Admin Panel sees it immediately
+    // CRITICAL: Await database write to ensure Admin Panel gets the signal
     await storage.addTransaction(tx);
 
-    // 2. Mark as completed for user locally
     const updatedCompletedTasks = Array.from(new Set([...(user.completedTasks || []), taskId]));
     const updatedUser = { ...user, completedTasks: updatedCompletedTasks };
     
     setUser(updatedUser);
     await storage.setUser(updatedUser);
-    
-    // 3. Sync everything
     await refreshUserBalance();
   };
 
@@ -193,7 +209,7 @@ const App: React.FC = () => {
       account: acc,
       proofImage: proof,
       status: 'pending',
-      date: new Date().toLocaleString()
+      date: new Date().toISOString()
     };
     
     if (type === 'withdraw') {
@@ -219,7 +235,7 @@ const App: React.FC = () => {
       type: 'spin',
       method: 'Lucky Wheel Spin',
       status: 'success',
-      date: new Date().toLocaleString()
+      date: new Date().toISOString()
     };
     await storage.addTransaction(tx);
     await refreshUserBalance();
@@ -242,7 +258,7 @@ const App: React.FC = () => {
       type: 'referral_claim',
       method: `Referral Bonus: Node ${partnerId}`,
       status: 'success',
-      date: new Date().toLocaleString()
+      date: new Date().toISOString()
     };
     await storage.addTransaction(tx);
     await refreshUserBalance();
@@ -266,7 +282,7 @@ const App: React.FC = () => {
       type: 'math_reward',
       method: `Math Problem Solved${isLast ? ' (Sequence Complete)' : ''}`,
       status: 'success',
-      date: new Date().toLocaleString()
+      date: new Date().toISOString()
     };
     await storage.addTransaction(tx);
     const userTxs = await storage.getUserTransactions(user.id);
@@ -361,7 +377,7 @@ const App: React.FC = () => {
           {currentPage === 'privacy-policy' && <PrivacyPolicy />}
           {currentPage === 'terms-conditions' && <TermsConditions />}
           {currentPage === 'disclaimer' && <Disclaimer />}
-          {/* FIXED: Using slice(6) to correctly extract 'create-task' instead of split('-')[1] which resulted in 'create' */}
+          {/* Using slice(6) ensures 'admin-create-task' correctly becomes 'create-task' */}
           {currentPage.startsWith('admin-') && user.isAdmin && <AdminPanel initialView={currentPage.slice(6) as any} />}
         </Suspense>
       </main>
