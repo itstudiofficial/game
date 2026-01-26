@@ -24,7 +24,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
 
   const authLinks = [
     { name: 'Dashboard', id: 'dashboard', icon: 'fa-chart-pie' },
-    { name: 'Tasks', id: 'tasks', icon: 'fa-list-check' },
+    { name: 'Task Marketplace', id: 'tasks', icon: 'fa-list-check' },
     { name: 'Math Solver', id: 'math-solver', icon: 'fa-calculator' },
     { name: 'Spin', id: 'spin', icon: 'fa-clover' },
     { name: 'Affiliate', id: 'referrals', icon: 'fa-users' },
@@ -39,7 +39,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     { name: 'New Task', id: 'admin-create-task', icon: 'fa-plus' },
     { name: 'Users', id: 'admin-users', icon: 'fa-users' },
     { name: 'Reviews', id: 'admin-reviews', icon: 'fa-camera-retro' },
-    { name: 'Tasks Audit', id: 'admin-tasks', icon: 'fa-list-check' },
+    { name: 'Manage Tasks', id: 'admin-tasks', icon: 'fa-list-check' },
     { name: 'Finance', id: 'admin-finance', icon: 'fa-wallet' },
     { name: 'SEO', id: 'admin-seo', icon: 'fa-search' },
     { name: 'Global Logs', id: 'admin-history', icon: 'fa-clock' },
@@ -68,13 +68,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     <button
       key={link.id}
       onClick={() => handleNavClick(link.id)}
-      className={`w-full text-left px-8 py-4 rounded-[1.5rem] flex items-center gap-6 transition-all ${
+      className={`w-full text-left px-6 py-3.5 rounded-[1.25rem] flex items-center gap-4 transition-all ${
         currentPage === link.id 
           ? 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50' 
           : 'text-slate-600 hover:bg-slate-50'
       }`}
     >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
         currentPage === link.id ? 'bg-white text-indigo-600 shadow-sm' : 'bg-slate-100 text-slate-400'
       }`}>
         <i className={`fa-solid ${link.icon} text-[10px]`}></i>
@@ -271,7 +271,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                 </button>
              </div>
 
-             <div className="flex-grow overflow-y-auto p-8 space-y-10">
+             <div className="flex-grow overflow-y-auto p-6 space-y-8 no-scrollbar">
                {!user.isLoggedIn ? (
                  <div className="space-y-6">
                     <div className="px-2">
@@ -290,7 +290,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                     </div>
                  </div>
                ) : (
-                 <div className="space-y-10">
+                 <div className="space-y-8 pb-10">
                     {/* Admin Section in Mobile Drawer */}
                     {user.isAdmin && (
                       <div className="space-y-1">
@@ -305,19 +305,24 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
 
                     <div className="space-y-1">
                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-6">
-                         {user.isAdmin ? 'Operator Node' : 'Main Dashboard'}
+                         {user.isAdmin ? 'User Earning Section' : 'Main Dashboard'}
                        </p>
-                       {authLinks.map(link => renderMobileLink(link))}
+                       {/* Move Task Marketplace to top of user list for higher mobile visibility */}
+                       {authLinks.sort((a,b) => {
+                          if (a.id === 'tasks') return -1;
+                          if (b.id === 'tasks') return 1;
+                          return 0;
+                       }).map(link => renderMobileLink(link))}
                     </div>
                  </div>
                )}
              </div>
 
-             <div className="p-10 bg-slate-50/50 rounded-b-[3rem]">
+             <div className="p-8 bg-slate-50/50 rounded-b-[3rem] border-t border-slate-100">
                {user.isLoggedIn ? (
                   <button 
                     onClick={onLogout} 
-                    className="w-full py-6 rounded-2xl bg-white border border-red-100 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-4 shadow-sm"
+                    className="w-full py-5 rounded-2xl bg-white border border-red-100 text-red-500 font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-4 shadow-sm"
                   >
                     <i className="fa-solid fa-power-off"></i>
                     Logout
@@ -325,7 +330,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                ) : (
                   <button 
                     onClick={() => handleNavClick('login')} 
-                    className="w-full py-6 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-colors flex items-center justify-center gap-4 shadow-sm"
+                    className="w-full py-5 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-colors flex items-center justify-center gap-4 shadow-sm"
                   >
                     <i className="fa-solid fa-user"></i>
                     Partner Login
@@ -341,6 +346,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
           100% {
             transform: translateX(100%);
           }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </>
