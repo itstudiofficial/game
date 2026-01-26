@@ -61,11 +61,10 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       const objectUrl = URL.createObjectURL(file);
       
       img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        // Increased limits for mobile portrait screenshots to ensure text is readable
-        const MAX_WIDTH = 1200; 
-        const MAX_HEIGHT = 1600; 
+        // Increased limits for mobile portrait screenshots (20:9 aspect ratios)
+        const MAX_WIDTH = 1280; 
+        const MAX_HEIGHT = 2400; 
         let width = img.width;
         let height = img.height;
 
@@ -88,8 +87,11 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.7)); // Higher quality for proof readability
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          URL.revokeObjectURL(objectUrl);
+          resolve(dataUrl);
         } else {
+          URL.revokeObjectURL(objectUrl);
           reject(new Error('Failed to create canvas context'));
         }
       };
@@ -312,9 +314,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
       {selectedTask && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-500 overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] w-full max-w-2xl shadow-3xl border border-white/20 animate-in zoom-in-95 duration-500 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] w-full max-w-2xl shadow-3xl border border-white/20 animate-in zoom-in-95 duration-500 relative max-h-[95vh] overflow-y-auto">
             <div className="p-6 md:p-12">
-              <div className="flex justify-between items-start mb-10 sticky top-0 bg-white z-10 py-2">
+              <div className="flex justify-between items-start mb-10 sticky top-0 bg-white z-20 py-2">
                 <div className="flex items-center gap-4 md:gap-6">
                    <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-900 rounded-[1rem] md:rounded-[1.75rem] flex items-center justify-center text-white text-xl md:text-2xl shadow-xl">
                       <i className={`fa-solid ${getIcon(selectedTask.type).split(' ')[0]}`}></i>
@@ -377,15 +379,15 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     <div>
                       <h5 className="font-black text-amber-900 text-xs uppercase tracking-widest mb-1">Upload Proof</h5>
                       <p className="text-[10px] text-amber-800/70 font-bold leading-relaxed">
-                        Capture or select a clear screenshot demonstrating task completion. AI nodes verify visuals instantly.
+                        Select a clear portrait screenshot. Mobile tall captures are fully supported.
                       </p>
                     </div>
                   </div>
 
                   <div className="relative group">
                     <label 
-                      className={`relative border-4 border-dashed rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[400px] md:min-h-[500px] overflow-hidden ${
-                        previewImage ? 'border-emerald-500 bg-slate-950' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
+                      className={`relative border-4 border-dashed rounded-[3rem] p-4 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[450px] overflow-hidden ${
+                        previewImage ? 'border-emerald-500 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
                       }`}
                     >
                       <input 
@@ -399,18 +401,23 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                       {isCompressing ? (
                         <div className="flex flex-col items-center gap-4">
                           <i className="fa-solid fa-circle-notch fa-spin text-5xl text-indigo-500"></i>
-                          <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Optimizing Node...</p>
+                          <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Optimizing Proof...</p>
                         </div>
                       ) : previewImage ? (
-                        <div className="flex flex-col items-center justify-center bg-slate-950 w-full">
-                          <img src={previewImage} alt="Proof" className="max-w-full max-h-[600px] object-contain" />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-6">
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <img 
+                            src={previewImage} 
+                            alt="Proof" 
+                            className="max-w-full rounded-2xl object-contain shadow-2xl" 
+                            style={{ maxHeight: '600px' }}
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-6 z-10">
                              <button 
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
                                 className="bg-rose-600 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 hover:bg-rose-700 transition-all"
                              >
-                               <i className="fa-solid fa-trash-can"></i> Choose Different File
+                               <i className="fa-solid fa-trash-can"></i> Re-pick Screenshot
                              </button>
                           </div>
                         </div>
@@ -419,8 +426,8 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                           <div className="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center text-slate-300 mb-8 mx-auto shadow-sm">
                             <i className="fa-solid fa-cloud-arrow-up text-4xl"></i>
                           </div>
-                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em] mb-4">No Screenshot Selected</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">Tap to select your proof (Portrait supported)</p>
+                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em] mb-4">No File Selected</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">Portrait screenshots supported</p>
                           
                           <button 
                             type="button"
@@ -428,7 +435,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                             className="px-12 py-6 bg-indigo-600 text-white rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-[0.3em] shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-4 mx-auto"
                           >
                             <i className="fa-solid fa-folder-open text-base"></i>
-                            Select Screenshot Proof
+                            Select from Gallery
                           </button>
                         </div>
                       )}

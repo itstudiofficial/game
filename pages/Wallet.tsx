@@ -101,10 +101,9 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
       const objectUrl = URL.createObjectURL(file);
       
       img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200; 
-        const MAX_HEIGHT = 1600;
+        const MAX_WIDTH = 1280; 
+        const MAX_HEIGHT = 2400;
         let width = img.width;
         let height = img.height;
 
@@ -127,8 +126,11 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.7));
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          URL.revokeObjectURL(objectUrl);
+          resolve(dataUrl);
         } else {
+          URL.revokeObjectURL(objectUrl);
           reject(new Error('Failed to create canvas context'));
         }
       };
