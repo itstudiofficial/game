@@ -130,9 +130,9 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
         <div className="max-w-[1600px] mx-auto px-6 md:px-12">
            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
               {[
-                { label: 'Active Tasks Daily', val: '150+', icon: 'fa-list-check', color: 'text-indigo-600' },
-                { label: 'Daily Payouts', val: '$2,500+', icon: 'fa-money-bill-trend-up', color: 'text-emerald-600' },
-                { label: 'Global Freelancers', val: '20K+', icon: 'fa-user-group', color: 'text-blue-600' },
+                { label: 'Active Tasks Daily', val: '10+', icon: 'fa-list-check', color: 'text-indigo-600' },
+                { label: 'Daily Payouts', val: '100+$', icon: 'fa-money-bill-trend-up', color: 'text-emerald-600' },
+                { label: 'Global Freelancers', val: '5k+', icon: 'fa-user-group', color: 'text-blue-600' },
                 { label: 'AI Verification', val: '99.9%', icon: 'fa-microchip', color: 'text-rose-600' }
               ].map((stat, i) => (
                 <div key={i} className="group">
@@ -201,7 +201,7 @@ const Home: React.FC<{ onStart: (p: string) => void, isLoggedIn: boolean }> = ({
                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Live Workforce</span>
                         </div>
-                        <p className="text-5xl font-black text-white leading-none tracking-tighter">24,812</p>
+                        <p className="text-5xl font-black text-white leading-none tracking-tighter">5,420</p>
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-3">Verified Task Operators</p>
                      </div>
                   </div>

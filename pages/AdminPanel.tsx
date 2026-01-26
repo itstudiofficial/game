@@ -19,7 +19,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const [liveSync, setLiveSync] = useState(false);
   
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [selectedProfileUser, setSelectedProfileUser] = useState<User | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [adjustAmount, setAdjustAmount] = useState<string>('');
   
@@ -42,12 +41,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const forceRefreshData = async () => {
     setLiveSync(true);
     try {
-      const txs = await storage.getAllGlobalTransactions();
-      setTransactions(txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-      setUsers(await storage.getAllUsers() || []);
-      const cloudTasks = await storage.getTasks();
-      setTasks(cloudTasks || []);
-      setSeo(await storage.getSEOConfig());
+      const [allTxs, allUsers, allTasks, seoConfig] = await Promise.all([
+        storage.getAllGlobalTransactions(),
+        storage.getAllUsers(),
+        storage.getTasks(),
+        storage.getSEOConfig()
+      ]);
+
+      setTransactions(allTxs.sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return db - da;
+      }));
+      setUsers(allUsers || []);
+      setTasks(allTasks || []);
+      setSeo(seoConfig);
     } catch (err) {
       console.error("Admin refresh error:", err);
     } finally {
@@ -64,7 +72,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     initAdmin();
 
     const unsubscribe = storage.subscribeToAllTransactions((txs) => {
-      if (txs) setTransactions([...txs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      if (txs) setTransactions([...txs].sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return db - da;
+      }));
     });
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
   }, []);
@@ -77,9 +89,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const pendingTasksCount = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
 
   const filteredUsers = useMemo(() => {
+    const s = searchQuery.toLowerCase().trim();
+    if (!s) return users;
     return users.filter(u => {
-      const s = searchQuery.toLowerCase();
-      return (u.username || '').toLowerCase().includes(s) || (u.email || '').toLowerCase().includes(s) || (u.id || '').toLowerCase().includes(s);
+      if (!u) return false;
+      const usernameMatch = (u.username || '').toLowerCase().includes(s);
+      const emailMatch = (u.email || '').toLowerCase().includes(s);
+      const idMatch = (u.id || '').toLowerCase().includes(s);
+      return usernameMatch || emailMatch || idMatch;
     });
   }, [users, searchQuery]);
 
@@ -216,8 +233,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
              {[
                { label: 'Network Nodes', val: users.length, icon: 'fa-users', col: 'text-indigo-600' },
                { label: 'Audit Queue', val: totalAuditQueue, icon: 'fa-clock', col: 'text-amber-500' },
-               { label: 'Escrow Vault', val: totalDepositBalance.toLocaleString(), icon: 'fa-shield', col: 'text-emerald-600' },
-               { label: 'Coins Active', val: totalCoinsInCirculation.toLocaleString(), icon: 'fa-coins', col: 'text-blue-600' }
+               { label: 'Escrow Vault', val: (totalDepositBalance || 0).toLocaleString(), icon: 'fa-shield', col: 'text-emerald-600' },
+               { label: 'Coins Active', val: (totalCoinsInCirculation || 0).toLocaleString(), icon: 'fa-coins', col: 'text-blue-600' }
              ].map((s, i) => (
                <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-6 relative z-10">{s.label}</p>
@@ -250,9 +267,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                       <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-10 py-6">
                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white text-[10px] font-black">{u.username.charAt(0)}</div>
+                              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white text-[10px] font-black">{u.username?.charAt(0) || '?'}</div>
                               <div>
-                                 <p className="text-sm font-black text-slate-900">{u.username}</p>
+                                 <p className="text-sm font-black text-slate-900">{u.username || 'Unnamed Node'}</p>
                                  <p className="text-[10px] text-indigo-400 font-mono font-black">{u.id}</p>
                               </div>
                            </div>
@@ -260,8 +277,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                         <td className="px-6 py-6 text-xs text-slate-500 font-bold">{u.email}</td>
                         <td className="px-6 py-6">
                            <div className="flex gap-3">
-                              <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[9px] font-black border border-emerald-100">{u.coins.toLocaleString()} C</span>
-                              <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black border border-indigo-100">{u.depositBalance.toLocaleString()} D</span>
+                              <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[9px] font-black border border-emerald-100">{(u.coins || 0).toLocaleString()} C</span>
+                              <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black border border-indigo-100">{(u.depositBalance || 0).toLocaleString()} D</span>
                            </div>
                         </td>
                         <td className="px-10 py-6 text-right">
@@ -407,7 +424,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                              <td className="px-6 py-6">
                                 <div className="flex items-center gap-3">
                                    <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                      <div className="h-full bg-indigo-600" style={{ width: `${(t.completedCount / t.totalWorkers) * 100}%` }}></div>
+                                      <div className="h-full bg-indigo-600" style={{ width: `${(t.completedCount / (t.totalWorkers || 1)) * 100}%` }}></div>
                                    </div>
                                    <span className="text-[9px] font-black text-slate-500">{t.completedCount}/{t.totalWorkers}</span>
                                 </div>
@@ -480,14 +497,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                                    <div className="text-[8px] font-black uppercase text-slate-400 font-mono">{tx.userId}</div>
                                 </td>
                                 <td className="px-6 py-6"><span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded text-slate-600">{tx.type}</span></td>
-                                <td className={`px-6 py-6 font-black ${tx.type === 'deposit' || tx.type === 'earn' ? 'text-emerald-600' : 'text-slate-900'}`}>{tx.amount.toLocaleString()}</td>
+                                <td className={`px-6 py-6 font-black ${tx.type === 'deposit' || tx.type === 'earn' ? 'text-emerald-600' : 'text-slate-900'}`}>{(tx.amount || 0).toLocaleString()}</td>
                                 <td className="px-6 py-6">
                                    <div className="flex items-center gap-2">
                                       <span className={`w-1.5 h-1.5 rounded-full ${tx.status === 'success' ? 'bg-emerald-500' : tx.status === 'failed' ? 'bg-rose-500' : 'bg-amber-500 animate-pulse'}`}></span>
                                       <span className={`text-[9px] font-black uppercase tracking-widest ${tx.status === 'success' ? 'text-emerald-600' : tx.status === 'failed' ? 'text-rose-600' : 'text-amber-600'}`}>{tx.status}</span>
                                    </div>
                                 </td>
-                                <td className="px-10 py-6 text-right text-[10px] text-slate-400 font-black uppercase">{tx.date.replace(',', ' |')}</td>
+                                <td className="px-10 py-6 text-right text-[10px] text-slate-400 font-black uppercase">{tx.date?.replace(',', ' |') || 'N/A'}</td>
                              </tr>
                           ))
                        )}
@@ -526,7 +543,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                                 <td className="px-6 py-6">
                                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase border ${tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>{tx.type}</span>
                                 </td>
-                                <td className="px-6 py-6 font-black text-slate-900 tabular-nums">{tx.amount.toLocaleString()} <span className="text-[9px] opacity-40 uppercase">Coins</span></td>
+                                <td className="px-6 py-6 font-black text-slate-900 tabular-nums">{(tx.amount || 0).toLocaleString()} <span className="text-[9px] opacity-40 uppercase">Coins</span></td>
                                 <td className="px-6 py-6">
                                    <div className="text-[10px] font-black text-slate-600">{tx.method}</div>
                                    <div className="text-[9px] font-bold text-indigo-400 truncate max-w-[150px]">{tx.account}</div>
