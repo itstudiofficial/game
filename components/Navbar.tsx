@@ -22,6 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Updated sequence as per user requirement
   const authLinks = [
     { name: 'Dashboard', id: 'dashboard', icon: 'fa-chart-pie' },
     { name: 'Task Marketplace', id: 'tasks', icon: 'fa-list-check' },
@@ -29,7 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
     { name: 'Spin', id: 'spin', icon: 'fa-clover' },
     { name: 'Affiliate', id: 'referrals', icon: 'fa-users' },
     { name: 'Create Task', id: 'create', icon: 'fa-bullhorn' },
-    { name: 'My Campaigns', id: 'my-campaigns', icon: 'fa-paper-plane' },
+    { name: 'My Campaign', id: 'my-campaigns', icon: 'fa-paper-plane' },
     { name: 'Wallet', id: 'wallet', icon: 'fa-wallet' },
     { name: 'Profile', id: 'profile', icon: 'fa-user-gear' },
   ];
@@ -307,12 +308,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-6">
                          {user.isAdmin ? 'User Earning Section' : 'Main Dashboard'}
                        </p>
-                       {/* Move Task Marketplace to top of user list for higher mobile visibility */}
-                       {authLinks.sort((a,b) => {
-                          if (a.id === 'tasks') return -1;
-                          if (b.id === 'tasks') return 1;
-                          return 0;
-                       }).map(link => renderMobileLink(link))}
+                       {/* Following strict sequence from authLinks as requested */}
+                       {authLinks.map(link => renderMobileLink(link))}
                     </div>
                  </div>
                )}

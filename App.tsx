@@ -24,10 +24,10 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.tsx'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions.tsx'));
 const Disclaimer = lazy(() => import('./pages/Disclaimer.tsx'));
 
+// Optimized for fast loading: Removed heavy animations and text
 const PageLoader = () => (
-  <div className="min-h-[60vh] flex flex-col items-center justify-center p-10 text-center animate-in fade-in duration-500">
-    <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
-    <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Loading Module...</h2>
+  <div className="min-h-[40vh] w-full flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
   </div>
 );
 
@@ -37,9 +37,8 @@ const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>(storage.getTransactions());
   const [sessionConflict, setSessionConflict] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
 
-  // Referral URL Handling & Initial Data Load
+  // Referral URL Handling & Background Data Load
   useEffect(() => {
     const initApp = async () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -50,8 +49,8 @@ const App: React.FC = () => {
       }
 
       try {
-        const initialTasks = await storage.getTasks();
-        setTasks(initialTasks);
+        // Load tasks in background
+        storage.getTasks().then(initialTasks => setTasks(initialTasks));
         
         if (user.isLoggedIn) {
           const cloudUser = await storage.syncUserFromCloud(user.id);
@@ -63,17 +62,14 @@ const App: React.FC = () => {
               return;
             }
             setUser(cloudUser);
-            const userTxs = await storage.getUserTransactions(user.id);
-            setTransactions(userTxs);
+            storage.getUserTransactions(user.id).then(userTxs => setTransactions(userTxs));
           }
         }
         
         const seo = await storage.getSEOConfig();
         document.title = seo.siteTitle;
       } catch (error) {
-        console.error("Initialization error:", error);
-      } finally {
-        setInitialLoading(false);
+        console.error("Data background sync error:", error);
       }
     };
     initApp();
@@ -124,8 +120,9 @@ const App: React.FC = () => {
   }, [user.isLoggedIn, refreshUserBalance]);
 
   useEffect(() => {
-    if (!initialLoading) storage.setUser(user);
-  }, [user, initialLoading]);
+    // Immediate local storage sync
+    storage.setUser(user);
+  }, [user]);
 
   useEffect(() => {
     storage.subscribeToTasks((updatedTasks) => {
@@ -269,23 +266,6 @@ const App: React.FC = () => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  if (initialLoading) {
-    return (
-      <div className="fixed inset-0 bg-white flex flex-col items-center justify-center p-6 text-center z-[1000]">
-        <div className="w-24 h-24 mb-8 animate-pulse">
-           <svg viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-             <path d="M200 70L30 310H130L200 70Z" fill="#1E293B" />
-             <path d="M200 70L370 310C320 250 250 150 200 70Z" fill="#2563EB" />
-           </svg>
-        </div>
-        <div className="space-y-4">
-           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Ads<span className="text-indigo-600">Predia</span></h1>
-           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mt-4">Synchronizing Command Hub</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
