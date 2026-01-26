@@ -28,7 +28,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     return cached ? JSON.parse(cached) : { siteTitle: '', metaDescription: '', keywords: '', ogImage: '' };
   });
 
-  const [loading, setLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [savingSeo, setSavingSeo] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,7 +86,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       console.error("Admin segmented sync error:", err);
     } finally {
       setIsSyncing(false);
-      setLoading(false);
     }
   }, [view]);
 
@@ -462,7 +460,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                                    {t.status}
                                 </span>
                              </td>
-                             <td className="px-10 py-6 text-right flex justify-end gap-3 opacity-40 group-hover:opacity-100 transition-opacity">
+                             <td className="px-10 py-6 text-right flex justify-end gap-3">
                                 <button onClick={() => setEditingTask(t)} className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all shadow-sm">Edit</button>
                                 <button onClick={() => handleTaskAction(t.id, t.status === 'active' ? 'rejected' : 'active')} className="bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-900 hover:text-white transition-all shadow-sm">{t.status === 'active' ? 'Disable' : 'Enable'}</button>
                                 <button onClick={() => handleAdminDeleteTask(t.id)} className="bg-rose-50 text-rose-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-rose-600 hover:text-white transition-all shadow-sm">Delete</button>
@@ -474,199 +472,32 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
               </div>
            </div>
         )}
-
-        {view === 'seo' && (
-           <div className="max-w-3xl mx-auto bg-white rounded-[4rem] p-12 border border-slate-200 shadow-sm animate-in fade-in duration-500">
-              <h2 className="text-3xl font-black text-slate-900 mb-10 uppercase tracking-tighter">Site Optimization Node</h2>
-              <form onSubmit={handleSaveSEO} className="space-y-10">
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Global Meta Title</label>
-                    <input type="text" value={seo.siteTitle} onChange={e => setSeo({...seo, siteTitle: e.target.value})} className="w-full px-8 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-800 shadow-inner" />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Meta Narrative (Description)</label>
-                    <textarea rows={4} value={seo.metaDescription} onChange={e => setSeo({...seo, metaDescription: e.target.value})} className="w-full px-8 py-6 bg-slate-50 border border-slate-200 rounded-[2rem] outline-none font-bold text-slate-800 shadow-inner resize-none leading-relaxed" />
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Keywords Protocol</label>
-                    <input type="text" value={seo.keywords} onChange={e => setSeo({...seo, keywords: e.target.value})} className="w-full px-8 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-800 shadow-inner" placeholder="keyword1, keyword2..." />
-                 </div>
-                 <button type="submit" disabled={savingSeo} className="w-full py-7 bg-slate-900 text-white font-black rounded-3xl uppercase text-[11px] tracking-[0.4em] hover:bg-indigo-600 transition-all shadow-3xl active:scale-95">
-                    {savingSeo ? <i className="fa-solid fa-spinner fa-spin"></i> : 'Synchronizing Metadata'}
-                 </button>
-              </form>
-           </div>
-        )}
-
-        {view === 'history' && (
-           <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
-              <div className="p-10 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center bg-slate-50/20 gap-6">
-                 <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Master Network Logs</h2>
-                 <div className="flex items-center gap-4">
-                    <button onClick={() => refreshActiveData()} className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
-                       {isSyncing ? <i className="fa-solid fa-sync fa-spin"></i> : 'Sync Logs'}
-                    </button>
-                 </div>
-              </div>
-              <div className="overflow-x-auto max-h-[70vh] no-scrollbar">
-                 <table className="w-full text-left">
-                    <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 sticky top-0 z-20">
-                       <tr><th className="px-10 py-6">Ref ID</th><th className="px-6 py-6">Node Account</th><th className="px-6 py-6">Operation</th><th className="px-6 py-6">Asset Value</th><th className="px-6 py-6">Network State</th><th className="px-10 py-6 text-right">Synchronization</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                       {transactions.length === 0 ? (
-                          <tr><td colSpan={6} className="px-10 py-20 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">No global logs recorded</td></tr>
-                       ) : (
-                          transactions.slice(0, 100).map(tx => (
-                             <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-10 py-6 font-mono text-[10px] text-indigo-600 font-black">{tx.id.substring(0, 12)}</td>
-                                <td className="px-6 py-6">
-                                   <div className="text-[11px] font-black text-slate-700">{tx.username || 'SYS_AUTH'}</div>
-                                   <div className="text-[8px] font-black uppercase text-slate-400 font-mono">{tx.userId}</div>
-                                </td>
-                                <td className="px-6 py-6"><span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded text-slate-600">{tx.type}</span></td>
-                                <td className={`px-6 py-6 font-black ${tx.type === 'deposit' || tx.type === 'earn' ? 'text-emerald-600' : 'text-slate-900'}`}>{(tx.amount || 0).toLocaleString()}</td>
-                                <td className="px-6 py-6">
-                                   <div className="flex items-center gap-2">
-                                      <span className={`w-1.5 h-1.5 rounded-full ${tx.status === 'success' ? 'bg-emerald-500' : tx.status === 'failed' ? 'bg-rose-500' : 'bg-amber-500 animate-pulse'}`}></span>
-                                      <span className={`text-[9px] font-black uppercase tracking-widest ${tx.status === 'success' ? 'text-emerald-600' : tx.status === 'failed' ? 'text-rose-600' : 'text-amber-600'}`}>{tx.status}</span>
-                                   </div>
-                                </td>
-                                <td className="px-10 py-6 text-right text-[10px] text-slate-400 font-black uppercase">{tx.date?.replace(',', ' |') || 'N/A'}</td>
-                             </tr>
-                          ))
-                       )}
-                    </tbody>
-                 </table>
-              </div>
-           </div>
-        )}
-        
-        {view === 'finance' && (
-           <div className="bg-white rounded-[3rem] border border-slate-200 overflow-hidden shadow-sm animate-in slide-in-from-bottom-6 duration-500">
-              <div className="p-10 border-b border-slate-100 bg-emerald-50/20 flex justify-between items-center">
-                 <div>
-                    <h2 className="text-2xl font-black text-slate-900 uppercase">Liquidity Audit</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Review deposit and withdrawal signals</p>
-                 </div>
-                 <div className="flex items-center gap-4">
-                    <span className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-[10px] font-black uppercase border border-emerald-200">Pending: {stats.pendingFinance}</span>
-                 </div>
-              </div>
-              <div className="overflow-x-auto">
-                 <table className="w-full text-left">
-                    <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b border-slate-100">
-                       <tr><th className="px-10 py-6">Operator Identity</th><th className="px-6 py-6">Transfer Node</th><th className="px-6 py-6">Asset Volume</th><th className="px-6 py-6">Gateway Info</th><th className="px-10 py-6 text-right">Audit Action</th></tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                       {transactions.filter(tx => (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length === 0 ? (
-                          <tr><td colSpan={5} className="px-10 py-24 text-center text-[11px] font-black text-slate-300 uppercase tracking-widest">No liquidity signals requiring audit</td></tr>
-                       ) : (
-                          transactions.filter(tx => (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').map(tx => (
-                             <tr key={tx.id} className="hover:bg-slate-50/50 group">
-                                <td className="px-10 py-6">
-                                   <div className="text-sm font-black text-slate-900">{tx.username}</div>
-                                   <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{tx.userId}</div>
-                                </td>
-                                <td className="px-6 py-6">
-                                   <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase border ${tx.type === 'deposit' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>{tx.type}</span>
-                                </td>
-                                <td className="px-6 py-6 font-black text-slate-900 tabular-nums">{(tx.amount || 0).toLocaleString()} <span className="text-[9px] opacity-40 uppercase">Coins</span></td>
-                                <td className="px-6 py-6">
-                                   <div className="text-[10px] font-black text-slate-600">{tx.method}</div>
-                                   <div className="text-[9px] font-bold text-indigo-400 truncate max-w-[150px]">{tx.account}</div>
-                                   {tx.proofImage && (
-                                      <button onClick={() => setSelectedScreenshot(tx.proofImage!)} className="text-[8px] font-black uppercase text-indigo-600 hover:underline mt-1 flex items-center gap-1"><i className="fa-solid fa-camera"></i> Inspect Transfer Proof</button>
-                                   )}
-                                </td>
-                                <td className="px-10 py-6 text-right">
-                                   <div className="flex justify-end gap-2">
-                                      <button onClick={() => handleFinanceAction(tx, 'failed')} className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all border border-rose-100 shadow-sm"><i className="fa-solid fa-xmark"></i></button>
-                                      <button onClick={() => handleFinanceAction(tx, 'success')} className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all border border-emerald-100 shadow-sm"><i className="fa-solid fa-check"></i></button>
-                                   </div>
-                                </td>
-                             </tr>
-                          ))
-                       )}
-                    </tbody>
-                 </table>
-              </div>
-           </div>
-        )}
       </div>
 
-      {/* Modals remain the same but use refreshActiveData */}
-      {editingUserId && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
-           <div className="bg-white rounded-[3.5rem] w-full max-w-lg p-12 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300">
-              <div className="flex items-center gap-5 mb-8">
-                 <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg"><i className="fa-solid fa-coins"></i></div>
-                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Vault Adjustment</h3>
-              </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Modify coin balance for node {editingUserId}</p>
-              <input type="number" value={adjustAmount} onChange={e => setAdjustAmount(e.target.value)} placeholder="Enter amount..." className="w-full px-8 py-5 bg-slate-50 border border-slate-200 rounded-2xl font-black text-2xl mb-8 outline-none shadow-inner focus:border-indigo-400" />
-              <div className="grid grid-cols-2 gap-4">
-                 <button onClick={() => handleAdjustBalance(editingUserId, users.find(u => u.id === editingUserId)?.coins || 0, 'sub')} className="py-6 bg-rose-50 text-rose-600 font-black rounded-2xl uppercase tracking-widest text-[11px] hover:bg-rose-600 hover:text-white transition-all border border-rose-100">Deduct Value</button>
-                 <button onClick={() => handleAdjustBalance(editingUserId, users.find(u => u.id === editingUserId)?.coins || 0, 'add')} className="py-6 bg-emerald-50 text-emerald-600 font-black rounded-2xl uppercase tracking-widest text-[11px] hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100">Credit Value</button>
-              </div>
-              <button onClick={() => setEditingUserId(null)} className="w-full mt-8 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-slate-900 transition-colors">Terminate Operation</button>
-           </div>
-        </div>
-      )}
-
-      {editingTask && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
-           <div className="bg-white rounded-[3.5rem] w-full max-w-xl p-12 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
-              <h3 className="text-2xl font-black text-slate-900 uppercase mb-8 tracking-tighter">Sync Deployment Specs</h3>
-              <form onSubmit={handleAdminUpdateTask} className="space-y-8">
-                 <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Asset Label</label>
-                    <input type="text" value={editingTask.title} onChange={e => setEditingTask({...editingTask, title: e.target.value})} className="w-full px-6 py-4 bg-slate-50 rounded-2xl font-bold text-slate-800 outline-none" />
-                 </div>
-                 <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Yield Unit</label>
-                       <input type="number" value={editingTask.reward} onChange={e => setEditingTask({...editingTask, reward: parseInt(e.target.value)})} className="w-full px-6 py-4 bg-slate-50 rounded-2xl font-black" />
-                    </div>
-                    <div className="space-y-3">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Quota Load</label>
-                       <input type="number" value={editingTask.totalWorkers} onChange={e => setEditingTask({...editingTask, totalWorkers: parseInt(e.target.value)})} className="w-full px-6 py-4 bg-slate-50 rounded-2xl font-black" />
-                    </div>
-                 </div>
-                 <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Protocol Summary</label>
-                    <textarea rows={4} value={editingTask.description} onChange={e => setEditingTask({...editingTask, description: e.target.value})} className="w-full px-6 py-5 bg-slate-50 rounded-[2rem] font-bold text-slate-800 outline-none resize-none" />
-                 </div>
-                 <div className="flex gap-4">
-                    <button type="button" onClick={() => setEditingTask(null)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
-                    <button type="submit" className="flex-[2] py-6 bg-slate-900 text-white font-black rounded-3xl text-[10px] uppercase tracking-[0.3em] shadow-xl hover:bg-indigo-600 transition-all">Commit Sync</button>
-                 </div>
-              </form>
-           </div>
-        </div>
-      )}
-
+      {/* Global Screenshot Viewer */}
       {selectedScreenshot && (
         <div 
-          className="fixed inset-0 z-[1000] bg-slate-950/98 backdrop-blur-3xl flex flex-col items-center justify-center p-6 md:p-12 animate-in fade-in duration-300"
+          className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-300"
           onClick={() => setSelectedScreenshot(null)}
         >
-           <div className="relative w-full max-w-5xl h-full flex items-center justify-center pointer-events-none">
-              <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[2rem] md:rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] border border-white/10 group">
-                 <img src={selectedScreenshot} alt="Audit Proof Viewer" className="max-w-full max-h-full object-contain" />
-                 <div className="absolute top-8 right-8 flex gap-4">
-                    <button onClick={(e) => { e.stopPropagation(); setSelectedScreenshot(null); }} className="w-14 h-14 bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all backdrop-blur-xl border border-rose-500/20 shadow-2xl">
-                       <i className="fa-solid fa-xmark text-2xl"></i>
-                    </button>
-                 </div>
+           <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center pointer-events-none">
+              <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[3rem] shadow-2xl border border-white/10">
+                 <img src={selectedScreenshot} alt="Full Size Proof" className="max-w-full max-h-full object-contain" />
+                 <button 
+                   onClick={(e) => { e.stopPropagation(); setSelectedScreenshot(null); }} 
+                   className="absolute top-8 right-8 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20"
+                 >
+                   <i className="fa-solid fa-xmark text-2xl"></i>
+                 </button>
               </div>
            </div>
         </div>
       )}
+
       <style>{`
-        @keyframes shimmer { 100% { transform: translateX(100%); } }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
       `}</style>
     </div>
   );

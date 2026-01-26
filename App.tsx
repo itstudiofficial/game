@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { User, Task, Transaction } from './types';
 import { storage } from './services/storage';
+import AdminPanel from './pages/AdminPanel';
 
 // Lazy load pages with explicit extensions for browser ESM resolution
 const Home = lazy(() => import('./pages/Home.tsx'));
@@ -15,7 +16,6 @@ const Dashboard = lazy(() => import('./pages/Dashboard.tsx'));
 const Login = lazy(() => import('./pages/Login.tsx'));
 const SpinWheel = lazy(() => import('./pages/SpinWheel.tsx'));
 const Referrals = lazy(() => import('./pages/Referrals.tsx'));
-const AdminPanel = lazy(() => import('./pages/AdminPanel.tsx'));
 const Features = lazy(() => import('./pages/Features.tsx'));
 const Contact = lazy(() => import('./pages/Contact.tsx'));
 const MyCampaigns = lazy(() => import('./pages/MyCampaigns.tsx'));
