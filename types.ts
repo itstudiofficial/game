@@ -16,8 +16,12 @@ export interface Task {
 
 export interface User {
   id: string;
-  username: string;
+  username: string; // Used as Full Name
+  lastName?: string;
+  nickName?: string;
   email: string;
+  city?: string;
+  country?: string;
   coins: number;
   depositBalance: number; 
   completedTasks: string[];
@@ -26,17 +30,17 @@ export interface User {
   isLoggedIn: boolean;
   isAdmin?: boolean;
   lastSpinTimestamp?: number;
-  lastMathTimestamp?: number; // New field for daily restriction
+  lastMathTimestamp?: number;
   dailySpinsCount?: number;
   status?: 'active' | 'banned';
   referredBy?: string;
-  currentSessionId?: string; // New field for single session enforcement
+  currentSessionId?: string;
 }
 
 export interface Transaction {
   id: string;
   userId: string;
-  taskId?: string; // Links submission to a campaign
+  taskId?: string; 
   username?: string;
   amount: number;
   type: 'deposit' | 'withdraw' | 'earn' | 'spend' | 'spin' | 'referral_claim' | 'math_reward';

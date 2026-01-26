@@ -43,7 +43,6 @@ export const storage = {
         return data.filter(item => item !== null) as T[];
       }
       if (typeof data === 'object') {
-        // Firebase often returns objects with alphanumeric keys for list-like nodes
         return Object.values(data).filter(item => item !== null) as T[];
       }
     } catch (e) {
@@ -53,7 +52,7 @@ export const storage = {
   },
 
   sanitizeEmail: (email: string): string => {
-    return email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_');
+    return email.toLowerCase().trim().replace(/[^a-z0-9@._-]/g, '_');
   },
 
   getUserId: (): string => {
@@ -81,24 +80,31 @@ export const storage = {
   },
 
   setUser: async (user: User) => {
-    // Session isolation: update local storage first
-    localStorage.setItem(KEYS.USER, JSON.stringify(user));
+    // Auto-format for professionalism
+    const formattedUsername = user.username.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const sanitizedUser = { ...user, username: formattedUsername };
+
+    localStorage.setItem(KEYS.USER, JSON.stringify(sanitizedUser));
     
-    if (user.isLoggedIn) {
-      const cloudRef = ref(db, `${KEYS.USERS}/${user.id}`);
-      const isAdmin = user.email.toLowerCase().trim() === 'ehtesham@adspredia.site' ? true : (user.isAdmin || false);
-      const userToSave = storage.cleanData({ ...user, isAdmin });
+    if (sanitizedUser.isLoggedIn) {
+      const cloudRef = ref(db, `${KEYS.USERS}/${sanitizedUser.id}`);
+      const isAdmin = sanitizedUser.email.toLowerCase().trim() === 'ehtesham@adspredia.site' ? true : (sanitizedUser.isAdmin || false);
+      const userToSave = storage.cleanData({ 
+        ...sanitizedUser, 
+        isAdmin, 
+        status: sanitizedUser.status || 'active' 
+      });
       await set(cloudRef, userToSave);
       
-      if (user.email) {
-        const emailKey = storage.sanitizeEmail(user.email);
-        await set(ref(db, `${KEYS.EMAIL_LOOKUP}/${emailKey}`), user.id);
+      if (sanitizedUser.email) {
+        const emailKey = storage.sanitizeEmail(sanitizedUser.email).replace(/\./g, '_');
+        await set(ref(db, `${KEYS.EMAIL_LOOKUP}/${emailKey}`), sanitizedUser.id);
       }
     }
   },
 
   getUserIdByEmail: async (email: string): Promise<string | null> => {
-    const emailKey = storage.sanitizeEmail(email);
+    const emailKey = storage.sanitizeEmail(email).replace(/\./g, '_');
     const snapshot = await get(ref(db, `${KEYS.EMAIL_LOOKUP}/${emailKey}`));
     return snapshot.exists() ? snapshot.val() : null;
   },
@@ -168,7 +174,6 @@ export const storage = {
       const snapshot = await get(ref(db, `${KEYS.USER_TXS}/${userId}`));
       if (snapshot.exists()) {
         const txs = storage.ensureArray<Transaction>(snapshot.val());
-        // Sort using a reliable date parsing
         const sorted = txs.sort((a, b) => {
           const dateA = new Date(a.date).getTime();
           const dateB = new Date(b.date).getTime();
@@ -185,16 +190,12 @@ export const storage = {
 
   addTransaction: async (tx: Transaction) => {
     const cleanTx = storage.cleanData(tx);
-    
-    // Explicitly write to Global Audit Node FIRST
     const globalTxRef = ref(db, `${KEYS.ALL_TRANSACTIONS}/${tx.id}`);
     await set(globalTxRef, cleanTx);
     
-    // Then write to User-specific history
     const userTxRef = ref(db, `${KEYS.USER_TXS}/${tx.userId}`);
     await push(userTxRef, cleanTx);
     
-    // Cache locally
     const currentTxs = storage.getTransactions();
     localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([cleanTx, ...currentTxs]));
   },
