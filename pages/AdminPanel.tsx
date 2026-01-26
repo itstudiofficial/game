@@ -34,7 +34,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
 
   useEffect(() => {
-    setView(initialView);
+    if (initialView) {
+      setView(initialView);
+    }
   }, [initialView]);
 
   const forceRefreshData = async () => {
@@ -48,6 +50,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       
       const tasksSnapshot = await storage.getTasks();
       setTasks(tasksSnapshot || []);
+      
+      const seoData = await storage.getSEOConfig();
+      setSeo(seoData);
     } catch (err) {
       console.error("Admin refresh error:", err);
     } finally {
@@ -124,7 +129,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           }
         }
       }
-      // Re-fetch to ensure UI is crisp
       forceRefreshData();
     } catch (err) {
       console.error("Audit update failed", err);
@@ -419,6 +423,65 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
            </div>
         )}
 
+        {view === 'create-task' && (
+          <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-slate-200 shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div className="flex justify-between items-start mb-12">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">System Asset Deployment</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Inject verified global tasks into the marketplace</p>
+              </div>
+              <div className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100 text-[9px] font-black uppercase tracking-widest">
+                Admin Privilege: Root Authority
+              </div>
+            </div>
+
+            <form onSubmit={handleAdminCreateTask} className="space-y-10 max-w-5xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Campaign Title</label>
+                  <input type="text" value={newTaskData.title} onChange={e => setNewTaskData({...newTaskData, title: e.target.value})} placeholder="e.g. Subscribe to Spredia TV" className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all" required />
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Destination Target Link</label>
+                  <input type="url" value={newTaskData.link} onChange={e => setNewTaskData({...newTaskData, link: e.target.value})} placeholder="https://youtube.com/..." className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all" required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Task Modality</label>
+                  <select value={newTaskData.type} onChange={e => setNewTaskData({...newTaskData, type: e.target.value as TaskType})} className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all appearance-none cursor-pointer">
+                    <option value="YouTube">YouTube</option>
+                    <option value="Websites">Websites</option>
+                    <option value="Apps">Apps</option>
+                    <option value="Social Media">Social Media</option>
+                  </select>
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Reward (Coins)</label>
+                  <input type="number" value={newTaskData.reward} onChange={e => setNewTaskData({...newTaskData, reward: parseInt(e.target.value) || 0})} className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all" required />
+                </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Slot Quota</label>
+                  <input type="number" value={newTaskData.totalWorkers} onChange={e => setNewTaskData({...newTaskData, totalWorkers: parseInt(e.target.value) || 0})} className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all" required />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Operator Instructions</label>
+                <textarea rows={4} value={newTaskData.description} onChange={e => setNewTaskData({...newTaskData, description: e.target.value})} placeholder="Detailed steps for the end-user..." className="w-full px-8 py-6 bg-slate-50 border-none rounded-[2rem] font-black text-[11px] text-slate-800 outline-none shadow-inner focus:ring-4 focus:ring-indigo-600/5 transition-all resize-none leading-relaxed" required />
+              </div>
+
+              <div className="flex justify-end pt-6">
+                 <button type="submit" disabled={isDeploying} className="px-16 py-6 bg-slate-900 text-white font-black rounded-2xl uppercase text-[10px] tracking-[0.4em] hover:bg-indigo-600 transition-all flex items-center gap-4 shadow-xl shadow-slate-200 active:scale-95 disabled:opacity-50">
+                   {isDeploying ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-rocket"></i>}
+                   Propagate System Asset
+                 </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {view === 'reviews' && (
           <div className="space-y-10 animate-in fade-in duration-500">
             {/* Real-time Diagnostics Header */}
@@ -520,7 +583,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                             </button>
                             <button 
                               onClick={() => handleAuditSubmission(tx, 'failed')} 
-                              className="flex-1 py-4 md:py-5 bg-rose-50 text-rose-500 rounded-2xl text-[9px] md:text-10 font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white border border-rose-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                              className="flex-1 py-4 md:py-5 bg-rose-50 text-rose-600 text-[9px] md:text-10 font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white border border-rose-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
                               <i className="fa-solid fa-circle-xmark"></i> Reject
                             </button>
@@ -597,7 +660,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                               </div>
                               <div className="flex gap-3">
                                  <button onClick={() => handleFinanceAction(tx, 'success')} className="flex-1 py-4 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 shadow-lg shadow-emerald-100 transition-all">Approve</button>
-                                 <button onClick={() => handleFinanceAction(tx, 'failed')} className="flex-1 py-4 bg-rose-50 text-rose-500 rounded-xl text-[9px] font-black uppercase tracking-widest border border-rose-100 hover:bg-rose-600 hover:text-white transition-all">Reject</button>
+                                 <button onClick={() => handleFinanceAction(tx, 'failed')} className="flex-1 py-4 bg-rose-50 text-rose-600 text-[9px] font-black uppercase tracking-widest border border-rose-100 hover:bg-rose-600 hover:text-white transition-all">Reject</button>
                               </div>
                            </div>
                         </div>

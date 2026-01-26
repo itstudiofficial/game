@@ -361,7 +361,8 @@ const App: React.FC = () => {
           {currentPage === 'privacy-policy' && <PrivacyPolicy />}
           {currentPage === 'terms-conditions' && <TermsConditions />}
           {currentPage === 'disclaimer' && <Disclaimer />}
-          {currentPage.startsWith('admin') && user.isAdmin && <AdminPanel initialView={currentPage.split('-')[1] as any} />}
+          {/* FIXED: Using slice(6) to correctly extract 'create-task' instead of split('-')[1] which resulted in 'create' */}
+          {currentPage.startsWith('admin-') && user.isAdmin && <AdminPanel initialView={currentPage.slice(6) as any} />}
         </Suspense>
       </main>
       <Footer setCurrentPage={navigateTo} isLoggedIn={user.isLoggedIn} />
