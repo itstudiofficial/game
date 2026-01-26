@@ -151,7 +151,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
   };
 
   const handleAdminDeleteTask = async (taskId: string) => {
-    if (!confirm('Delete this task?')) return;
+    if (!confirm('Permanently delete this campaign? This action cannot be undone.')) return;
     await storage.deleteTaskFromCloud(taskId);
     forceRefreshData();
   };
@@ -213,7 +213,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
               { id: 'users', label: 'Users', icon: 'fa-users' },
               { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro', badge: pendingTaskAudits },
               { id: 'create-task', label: 'New Task', icon: 'fa-plus' },
-              { id: 'tasks', label: 'Audit', icon: 'fa-list-check', badge: pendingTasksCount },
+              { id: 'tasks', label: 'Manage Tasks', icon: 'fa-list-check', badge: pendingTasksCount },
               { id: 'finance', label: 'Finance', icon: 'fa-wallet', badge: pendingFinanceAudits },
               { id: 'seo', label: 'SEO', icon: 'fa-search' },
               { id: 'history', label: 'Logs', icon: 'fa-clock' }
@@ -400,17 +400,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
            <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
               <div className="p-10 border-b border-slate-100 bg-slate-50/20 flex flex-col md:flex-row justify-between items-center gap-6">
                  <div>
-                    <h2 className="text-2xl font-black text-slate-900 uppercase">Audit Dashboard</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manage global marketing campaigns</p>
+                    <h2 className="text-2xl font-black text-slate-900 uppercase">Global Campaign Registry</h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manage global marketing assets and task liquidity</p>
                  </div>
                  <div className="flex bg-white p-1 rounded-xl border border-slate-200">
-                    <span className="px-4 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Assets: {tasks.length}</span>
+                    <span className="px-4 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest">Global Assets: {tasks.length}</span>
                  </div>
               </div>
               <div className="overflow-x-auto">
                  <table className="w-full text-left">
                     <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
-                       <tr><th className="px-10 py-6">ID Node</th><th className="px-6 py-6">Deployment Name</th><th className="px-6 py-6">Yield</th><th className="px-6 py-6">Quota Load</th><th className="px-6 py-6">Protocol Status</th><th className="px-10 py-6 text-right">Management</th></tr>
+                       <tr><th className="px-10 py-6">ID Node</th><th className="px-6 py-6">Campaign Identity</th><th className="px-6 py-6">Yield</th><th className="px-6 py-6">Progress</th><th className="px-6 py-6">Live Status</th><th className="px-10 py-6 text-right">Task Operations</th></tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                        {tasks.map(t => (
@@ -435,9 +435,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                                 </span>
                              </td>
                              <td className="px-10 py-6 text-right flex justify-end gap-3 opacity-40 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => setEditingTask(t)} className="text-indigo-600 text-[10px] font-black uppercase hover:underline">Specs</button>
-                                <button onClick={() => handleTaskAction(t.id, t.status === 'active' ? 'rejected' : 'active')} className="text-slate-600 text-[10px] font-black uppercase hover:underline">{t.status === 'active' ? 'Deactivate' : 'Enable'}</button>
-                                <button onClick={() => handleAdminDeleteTask(t.id)} className="text-rose-600 text-[10px] font-black uppercase hover:underline">Purge</button>
+                                <button onClick={() => setEditingTask(t)} className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all shadow-sm">Edit</button>
+                                <button onClick={() => handleTaskAction(t.id, t.status === 'active' ? 'rejected' : 'active')} className="bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-slate-900 hover:text-white transition-all shadow-sm">{t.status === 'active' ? 'Disable' : 'Enable'}</button>
+                                <button onClick={() => handleAdminDeleteTask(t.id)} className="bg-rose-50 text-rose-600 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase hover:bg-rose-600 hover:text-white transition-all shadow-sm">Delete</button>
                              </td>
                           </tr>
                        ))}
