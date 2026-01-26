@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User, Task, Transaction, TaskType, SEOConfig } from '../types';
 import { storage } from '../services/storage';
 
@@ -7,16 +7,31 @@ interface AdminPanelProps {
   initialView?: 'overview' | 'users' | 'history' | 'tasks' | 'finance' | 'reviews' | 'seo' | 'create-task';
 }
 
+const CACHE_KEY = 'admin_data_cache';
+
 const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => {
   const [view, setView] = useState(initialView);
-  const [users, setUsers] = useState<User[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [seo, setSeo] = useState<SEOConfig>({ siteTitle: '', metaDescription: '', keywords: '', ogImage: '' });
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>(() => {
+    const cached = localStorage.getItem(`${CACHE_KEY}_users`);
+    return cached ? JSON.parse(cached) : [];
+  });
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    const cached = localStorage.getItem(`${CACHE_KEY}_txs`);
+    return cached ? JSON.parse(cached) : [];
+  });
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    const cached = localStorage.getItem(`${CACHE_KEY}_tasks`);
+    return cached ? JSON.parse(cached) : [];
+  });
+  const [seo, setSeo] = useState<SEOConfig>(() => {
+    const cached = localStorage.getItem(`${CACHE_KEY}_seo`);
+    return cached ? JSON.parse(cached) : { siteTitle: '', metaDescription: '', keywords: '', ogImage: '' };
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [savingSeo, setSavingSeo] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [liveSync, setLiveSync] = useState(false);
   
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -38,66 +53,78 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     if (initialView) setView(initialView);
   }, [initialView]);
 
-  const forceRefreshData = async () => {
-    setLiveSync(true);
+  // Segmented Fetching based on Active View
+  const refreshActiveData = useCallback(async (forcedView?: string) => {
+    const targetView = forcedView || view;
+    setIsSyncing(true);
+    
     try {
-      const [allTxs, allUsers, allTasks, seoConfig] = await Promise.all([
-        storage.getAllGlobalTransactions(),
-        storage.getAllUsers(),
-        storage.getTasks(),
-        storage.getSEOConfig()
-      ]);
+      if (targetView === 'overview' || targetView === 'history' || targetView === 'reviews' || targetView === 'finance') {
+        const allTxs = await storage.getAllGlobalTransactions();
+        const sortedTxs = allTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setTransactions(sortedTxs);
+        localStorage.setItem(`${CACHE_KEY}_txs`, JSON.stringify(sortedTxs));
+      }
 
-      setTransactions(allTxs.sort((a, b) => {
-        const da = a.date ? new Date(a.date).getTime() : 0;
-        const db = b.date ? new Date(b.date).getTime() : 0;
-        return db - da;
-      }));
-      setUsers(allUsers || []);
-      setTasks(allTasks || []);
-      setSeo(seoConfig);
+      if (targetView === 'overview' || targetView === 'users') {
+        const allUsers = await storage.getAllUsers();
+        setUsers(allUsers || []);
+        localStorage.setItem(`${CACHE_KEY}_users`, JSON.stringify(allUsers));
+      }
+
+      if (targetView === 'overview' || targetView === 'tasks' || targetView === 'create-task') {
+        const allTasks = await storage.getTasks();
+        setTasks(allTasks || []);
+        localStorage.setItem(`${CACHE_KEY}_tasks`, JSON.stringify(allTasks));
+      }
+
+      if (targetView === 'seo') {
+        const seoConfig = await storage.getSEOConfig();
+        setSeo(seoConfig);
+        localStorage.setItem(`${CACHE_KEY}_seo`, JSON.stringify(seoConfig));
+      }
     } catch (err) {
-      console.error("Admin refresh error:", err);
+      console.error("Admin segmented sync error:", err);
     } finally {
-      setTimeout(() => setLiveSync(false), 1000);
-    }
-  };
-
-  useEffect(() => {
-    const initAdmin = async () => {
-      setLoading(true);
-      await forceRefreshData();
+      setIsSyncing(false);
       setLoading(false);
-    };
-    initAdmin();
+    }
+  }, [view]);
 
+  // Trigger sync on view change
+  useEffect(() => {
+    refreshActiveData();
+  }, [view, refreshActiveData]);
+
+  // Live subscription for transactions only
+  useEffect(() => {
     const unsubscribe = storage.subscribeToAllTransactions((txs) => {
-      if (txs) setTransactions([...txs].sort((a, b) => {
-        const da = a.date ? new Date(a.date).getTime() : 0;
-        const db = b.date ? new Date(b.date).getTime() : 0;
-        return db - da;
-      }));
+      if (txs) {
+        const sorted = [...txs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setTransactions(sorted);
+        localStorage.setItem(`${CACHE_KEY}_txs`, JSON.stringify(sorted));
+      }
     });
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
   }, []);
 
-  const totalCoinsInCirculation = useMemo(() => users.reduce((acc, u) => acc + (u.coins || 0), 0), [users]);
-  const totalDepositBalance = useMemo(() => users.reduce((acc, u) => acc + (u.depositBalance || 0), 0), [users]);
-  const pendingTaskAudits = useMemo(() => transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length, [transactions]);
-  const pendingFinanceAudits = useMemo(() => transactions.filter(tx => (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length, [transactions]);
-  const totalAuditQueue = pendingTaskAudits + pendingFinanceAudits;
-  const pendingTasksCount = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
+  // Performance optimized memos
+  const stats = useMemo(() => ({
+    totalCoins: users.reduce((acc, u) => acc + (u.coins || 0), 0),
+    totalDeposit: users.reduce((acc, u) => acc + (u.depositBalance || 0), 0),
+    pendingTasks: transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length,
+    pendingFinance: transactions.filter(tx => (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length,
+    pendingTasksCount: tasks.filter(t => t.status === 'pending').length
+  }), [users, transactions, tasks]);
 
   const filteredUsers = useMemo(() => {
     const s = searchQuery.toLowerCase().trim();
     if (!s) return users;
-    return users.filter(u => {
-      if (!u) return false;
-      const usernameMatch = (u.username || '').toLowerCase().includes(s);
-      const emailMatch = (u.email || '').toLowerCase().includes(s);
-      const idMatch = (u.id || '').toLowerCase().includes(s);
-      return usernameMatch || emailMatch || idMatch;
-    });
+    return users.filter(u => 
+      u?.username?.toLowerCase().includes(s) || 
+      u?.email?.toLowerCase().includes(s) || 
+      u?.id?.toLowerCase().includes(s)
+    );
   }, [users, searchQuery]);
 
   const handleAuditSubmission = async (tx: Transaction, status: 'success' | 'failed') => {
@@ -110,7 +137,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         if (t) await storage.updateTaskInCloud(tx.taskId, { completedCount: (t.completedCount || 0) + 1 });
       }
     }
-    forceRefreshData();
+    refreshActiveData();
   };
 
   const handleFinanceAction = async (tx: Transaction, status: 'success' | 'failed') => {
@@ -119,12 +146,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     if (!cloudUser) return;
     if (tx.type === 'deposit' && status === 'success') await storage.updateUserInCloud(tx.userId, { depositBalance: (cloudUser.depositBalance || 0) + tx.amount });
     else if (tx.type === 'withdraw' && status === 'failed') await storage.updateUserInCloud(tx.userId, { coins: (cloudUser.coins || 0) + tx.amount });
-    forceRefreshData();
+    refreshActiveData();
   };
 
   const handleUserStatus = async (userId: string, status: 'active' | 'banned') => {
     await storage.updateUserInCloud(userId, { status });
-    forceRefreshData();
+    refreshActiveData('users');
   };
 
   const handleAdjustBalance = async (userId: string, current: number, type: 'add' | 'sub') => {
@@ -134,7 +161,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     await storage.updateUserInCloud(userId, { coins: newBal });
     setEditingUserId(null);
     setAdjustAmount('');
-    forceRefreshData();
+    refreshActiveData('users');
   };
 
   const handleSaveSEO = async (e: React.FormEvent) => {
@@ -147,13 +174,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
   const handleTaskAction = async (taskId: string, status: 'active' | 'rejected') => {
     await storage.updateTaskInCloud(taskId, { status });
-    forceRefreshData();
+    refreshActiveData('tasks');
   };
 
   const handleAdminDeleteTask = async (taskId: string) => {
-    if (!confirm('Permanently delete this campaign? This action cannot be undone.')) return;
+    if (!confirm('Permanently delete this campaign?')) return;
     await storage.deleteTaskFromCloud(taskId);
-    forceRefreshData();
+    refreshActiveData('tasks');
   };
 
   const handleAdminUpdateTask = async (e: React.FormEvent) => {
@@ -161,7 +188,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     if (editingTask) {
       await storage.updateTaskInCloud(editingTask.id, editingTask);
       setEditingTask(null);
-      forceRefreshData();
+      refreshActiveData('tasks');
     }
   };
 
@@ -181,40 +208,41 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     setNewTaskData({ title: '', link: '', type: 'YouTube', reward: 10, totalWorkers: 100, description: '', dueDate: '' });
     setIsDeploying(false);
     setView('tasks');
-    forceRefreshData();
   };
-
-  if (loading) return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-10 text-center">
-      <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-6"></div>
-      <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Authenticating Terminal...</h2>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-20">
       <div className="max-w-[1600px] mx-auto px-6 mb-12">
-        <div className="bg-slate-900 rounded-[3rem] p-8 md:p-10 border border-slate-800 shadow-2xl flex flex-col xl:flex-row justify-between items-center gap-10">
-          <div className="flex items-center gap-6">
+        <div className="bg-slate-900 rounded-[3rem] p-8 md:p-10 border border-slate-800 shadow-2xl flex flex-col xl:flex-row justify-between items-center gap-10 relative overflow-hidden">
+          {isSyncing && (
+             <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 overflow-hidden">
+                <div className="h-full bg-indigo-300 w-1/3 animate-[shimmer_1.5s_infinite]"></div>
+             </div>
+          )}
+          
+          <div className="flex items-center gap-6 relative z-10">
              <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-2xl">
-                <i className="fa-solid fa-user-shield"></i>
+                <i className={`fa-solid ${isSyncing ? 'fa-sync fa-spin' : 'fa-user-shield'}`}></i>
              </div>
              <div>
                 <h1 className="text-3xl font-black text-white tracking-tighter uppercase">Admin <span className="text-indigo-400">Terminal</span></h1>
                 <div className="flex items-center gap-2 mt-1">
-                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Live Secure Connection</span>
+                   <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
+                   <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+                     {isSyncing ? 'Synchronizing Nodes...' : 'System Fully Operational'}
+                   </span>
                 </div>
              </div>
           </div>
-          <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar w-full xl:w-auto">
+          
+          <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar w-full xl:w-auto relative z-10">
             {[
               { id: 'overview', label: 'Dashboard', icon: 'fa-chart-pie' },
               { id: 'users', label: 'Users', icon: 'fa-users' },
-              { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro', badge: pendingTaskAudits },
+              { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro', badge: stats.pendingTasks },
               { id: 'create-task', label: 'New Task', icon: 'fa-plus' },
-              { id: 'tasks', label: 'Manage Tasks', icon: 'fa-list-check', badge: pendingTasksCount },
-              { id: 'finance', label: 'Finance', icon: 'fa-wallet', badge: pendingFinanceAudits },
+              { id: 'tasks', label: 'Manage Tasks', icon: 'fa-list-check', badge: stats.pendingTasksCount },
+              { id: 'finance', label: 'Finance', icon: 'fa-wallet', badge: stats.pendingFinance },
               { id: 'seo', label: 'SEO', icon: 'fa-search' },
               { id: 'history', label: 'Logs', icon: 'fa-clock' }
             ].map(tab => (
@@ -232,9 +260,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 animate-in fade-in duration-500">
              {[
                { label: 'Network Nodes', val: users.length, icon: 'fa-users', col: 'text-indigo-600' },
-               { label: 'Audit Queue', val: totalAuditQueue, icon: 'fa-clock', col: 'text-amber-500' },
-               { label: 'Escrow Vault', val: (totalDepositBalance || 0).toLocaleString(), icon: 'fa-shield', col: 'text-emerald-600' },
-               { label: 'Coins Active', val: (totalCoinsInCirculation || 0).toLocaleString(), icon: 'fa-coins', col: 'text-blue-600' }
+               { label: 'Audit Queue', val: stats.pendingTasks + stats.pendingFinance, icon: 'fa-clock', col: 'text-amber-500' },
+               { label: 'Escrow Vault', val: (stats.totalDeposit || 0).toLocaleString(), icon: 'fa-shield', col: 'text-emerald-600' },
+               { label: 'Coins Active', val: (stats.totalCoins || 0).toLocaleString(), icon: 'fa-coins', col: 'text-blue-600' }
              ].map((s, i) => (
                <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-6 relative z-10">{s.label}</p>
@@ -254,9 +282,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                  <input type="text" placeholder="Filter by Node ID or Name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-bold outline-none shadow-inner focus:border-indigo-400 transition-all" />
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[70vh] no-scrollbar">
               <table className="w-full text-left">
-                <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
+                <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 sticky top-0 z-20">
                   <tr><th className="px-10 py-6">Node Identity</th><th className="px-6 py-6">Credentials</th><th className="px-6 py-6">Asset Vaults</th><th className="px-10 py-6 text-right">Administrative</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -302,7 +330,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit task completion proof</p>
                  </div>
                  <div className="px-4 py-2 bg-amber-100 text-amber-700 rounded-xl text-[10px] font-black uppercase border border-amber-200">
-                    Pending: {pendingTaskAudits}
+                    Pending: {stats.pendingTasks}
                  </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 p-8 gap-8">
@@ -475,14 +503,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
               <div className="p-10 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center bg-slate-50/20 gap-6">
                  <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Master Network Logs</h2>
                  <div className="flex items-center gap-4">
-                    <button onClick={forceRefreshData} className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
-                       {liveSync ? <i className="fa-solid fa-sync fa-spin"></i> : 'Sync Logs'}
+                    <button onClick={() => refreshActiveData()} className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">
+                       {isSyncing ? <i className="fa-solid fa-sync fa-spin"></i> : 'Sync Logs'}
                     </button>
                  </div>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[70vh] no-scrollbar">
                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
+                    <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 sticky top-0 z-20">
                        <tr><th className="px-10 py-6">Ref ID</th><th className="px-6 py-6">Node Account</th><th className="px-6 py-6">Operation</th><th className="px-6 py-6">Asset Value</th><th className="px-6 py-6">Network State</th><th className="px-10 py-6 text-right">Synchronization</th></tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -522,7 +550,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Review deposit and withdrawal signals</p>
                  </div>
                  <div className="flex items-center gap-4">
-                    <span className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-[10px] font-black uppercase border border-emerald-200">Pending: {pendingFinanceAudits}</span>
+                    <span className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-[10px] font-black uppercase border border-emerald-200">Pending: {stats.pendingFinance}</span>
                  </div>
               </div>
               <div className="overflow-x-auto">
@@ -567,7 +595,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         )}
       </div>
 
-      {/* Edit User Balance Modal */}
+      {/* Modals remain the same but use refreshActiveData */}
       {editingUserId && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
            <div className="bg-white rounded-[3.5rem] w-full max-w-lg p-12 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300">
@@ -586,10 +614,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         </div>
       )}
 
-      {/* Edit Task Modal */}
       {editingTask && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
-           <div className="bg-white rounded-[3.5rem] w-full max-w-xl p-12 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+           <div className="bg-white rounded-[3.5rem] w-full max-w-xl p-12 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
               <h3 className="text-2xl font-black text-slate-900 uppercase mb-8 tracking-tighter">Sync Deployment Specs</h3>
               <form onSubmit={handleAdminUpdateTask} className="space-y-8">
                  <div className="space-y-3">
@@ -619,7 +646,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         </div>
       )}
 
-      {/* Global Screenshot Viewer */}
       {selectedScreenshot && (
         <div 
           className="fixed inset-0 z-[1000] bg-slate-950/98 backdrop-blur-3xl flex flex-col items-center justify-center p-6 md:p-12 animate-in fade-in duration-300"
@@ -628,30 +654,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
            <div className="relative w-full max-w-5xl h-full flex items-center justify-center pointer-events-none">
               <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[2rem] md:rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] border border-white/10 group">
                  <img src={selectedScreenshot} alt="Audit Proof Viewer" className="max-w-full max-h-full object-contain" />
-                 
                  <div className="absolute top-8 right-8 flex gap-4">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); const link = document.createElement('a'); link.href = selectedScreenshot; link.download = 'audit_proof.jpg'; link.click(); }}
-                      className="w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20 shadow-2xl"
-                      title="Download Proof"
-                    >
-                       <i className="fa-solid fa-download text-xl"></i>
-                    </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setSelectedScreenshot(null); }} 
-                      className="w-14 h-14 bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all backdrop-blur-xl border border-rose-500/20 shadow-2xl"
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); setSelectedScreenshot(null); }} className="w-14 h-14 bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all backdrop-blur-xl border border-rose-500/20 shadow-2xl">
                        <i className="fa-solid fa-xmark text-2xl"></i>
                     </button>
-                 </div>
-
-                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-black/60 backdrop-blur-xl rounded-2xl border border-white/10 text-[10px] font-black text-white uppercase tracking-[0.4em] opacity-0 group-hover:opacity-100 transition-opacity">
-                    Authorized Inspection Mode
                  </div>
               </div>
            </div>
         </div>
       )}
+      <style>{`
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 };
