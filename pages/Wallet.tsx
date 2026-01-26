@@ -95,16 +95,19 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
     if (tab === 'deposit' && (method === 'JazzCash' || method === 'Bank Account')) setMethod('Easypaisa');
   };
 
-  const compressImage = (base64Str: string): Promise<string> => {
-    return new Promise((resolve) => {
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
       const img = new Image();
-      img.src = base64Str;
+      const objectUrl = URL.createObjectURL(file);
+      
       img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1000;
-        const MAX_HEIGHT = 1000;
+        const MAX_WIDTH = 1200; 
+        const MAX_HEIGHT = 1600;
         let width = img.width;
         let height = img.height;
+
         if (width > height) {
           if (width > MAX_WIDTH) {
             height *= MAX_WIDTH / width;
@@ -116,16 +119,26 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
             height = MAX_HEIGHT;
           }
         }
+        
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.6));
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
         } else {
-          resolve(base64Str);
+          reject(new Error('Failed to create canvas context'));
         }
       };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Failed to load image'));
+      };
+      
+      img.src = objectUrl;
     });
   };
 
@@ -139,13 +152,15 @@ const Wallet: React.FC<WalletProps> = ({ coins, depositBalance = 0, onAction, tr
     const file = e.target.files?.[0];
     if (file) {
       setIsCompressing(true);
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const compressed = await compressImage(reader.result as string);
+      try {
+        const compressed = await compressImage(file);
         setProofImage(compressed);
+      } catch (error) {
+        console.error("Compression error:", error);
+        alert("Error processing file. Please ensure it is a valid image.");
+      } finally {
         setIsCompressing(false);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 

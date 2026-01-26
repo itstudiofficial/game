@@ -63,8 +63,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 640; 
-        const MAX_HEIGHT = 800;
+        // Increased limits for mobile portrait screenshots to ensure text is readable
+        const MAX_WIDTH = 1200; 
+        const MAX_HEIGHT = 1600; 
         let width = img.width;
         let height = img.height;
 
@@ -85,9 +86,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'medium';
+          ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.5));
+          resolve(canvas.toDataURL('image/jpeg', 0.7)); // Higher quality for proof readability
         } else {
           reject(new Error('Failed to create canvas context'));
         }
@@ -383,7 +384,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
                   <div className="relative group">
                     <label 
-                      className={`relative border-4 border-dashed rounded-[3rem] p-8 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[400px] overflow-hidden ${
+                      className={`relative border-4 border-dashed rounded-[3rem] p-4 md:p-8 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[400px] md:min-h-[500px] overflow-hidden ${
                         previewImage ? 'border-emerald-500 bg-slate-950' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
                       }`}
                     >
@@ -398,11 +399,11 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                       {isCompressing ? (
                         <div className="flex flex-col items-center gap-4">
                           <i className="fa-solid fa-circle-notch fa-spin text-5xl text-indigo-500"></i>
-                          <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Optimizing...</p>
+                          <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Optimizing Node...</p>
                         </div>
                       ) : previewImage ? (
-                        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-950">
-                          <img src={previewImage} alt="Proof" className="w-full h-full object-contain" />
+                        <div className="flex flex-col items-center justify-center bg-slate-950 w-full">
+                          <img src={previewImage} alt="Proof" className="max-w-full max-h-[600px] object-contain" />
                           <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-6">
                              <button 
                                 type="button"
@@ -419,7 +420,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                             <i className="fa-solid fa-cloud-arrow-up text-4xl"></i>
                           </div>
                           <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em] mb-4">No Screenshot Selected</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">Tap the button below or drag file here</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">Tap to select your proof (Portrait supported)</p>
                           
                           <button 
                             type="button"
