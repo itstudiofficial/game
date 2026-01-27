@@ -29,7 +29,7 @@ const Contact: React.FC = () => {
               </div>
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">General Inquiries</p>
-                <p className="text-lg font-black text-slate-800">support@adspredia.site</p>
+                <p className="text-lg font-black text-slate-800">adspredia@gmail.com</p>
               </div>
             </div>
             <div className="flex items-center gap-6 p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
