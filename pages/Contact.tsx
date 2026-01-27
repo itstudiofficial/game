@@ -22,32 +22,54 @@ const Contact: React.FC = () => {
             Have questions about payouts, campaign targeting, or enterprise bulk pricing? Our global support team is ready to assist you.
           </p>
 
-          <div className="space-y-6">
-            <div className="flex items-center gap-6 p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
-              <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 text-xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
+              <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 text-lg group-hover:bg-indigo-600 group-hover:text-white transition-all">
                 <i className="fa-solid fa-envelope"></i>
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">General Inquiries</p>
-                <p className="text-lg font-black text-slate-800">adspredia@gmail.com</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Email Identity</p>
+                <p className="text-base font-black text-slate-800">adspredia@gmail.com</p>
               </div>
             </div>
-            <div className="flex items-center gap-6 p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
-              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-xl group-hover:bg-emerald-600 group-hover:text-white transition-all">
+
+            <div className="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-blue-200 transition-all group">
+              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
+                <i className="fa-brands fa-facebook"></i>
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Facebook Node</p>
+                <p className="text-base font-black text-slate-800">AdsPredia Official</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-rose-200 transition-all group">
+              <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 text-lg group-hover:bg-rose-600 group-hover:text-white transition-all">
+                <i className="fa-brands fa-instagram"></i>
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Instagram Feed</p>
+                <p className="text-base font-black text-slate-800">@adspredia_official</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-emerald-200 transition-all group">
+              <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 text-lg group-hover:bg-emerald-600 group-hover:text-white transition-all">
                 <i className="fa-brands fa-telegram"></i>
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Telegram Community</p>
-                <p className="text-lg font-black text-slate-800">@adspredia_official</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Telegram Signal</p>
+                <p className="text-base font-black text-slate-800">@adspredia_official</p>
               </div>
             </div>
-            <div className="flex items-center gap-6 p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
-              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+
+            <div className="flex items-center gap-6 p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
+              <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 text-lg group-hover:bg-indigo-600 group-hover:text-white transition-all">
                 <i className="fa-solid fa-headset"></i>
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">24/7 Ticketing</p>
-                <p className="text-lg font-black text-slate-800">Open a Help Desk Ticket</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Help Desk</p>
+                <p className="text-base font-black text-slate-800">Open 24/7 Support Ticket</p>
               </div>
             </div>
           </div>
@@ -73,7 +95,7 @@ const Contact: React.FC = () => {
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Email Identity</label>
-                    <input required type="email" placeholder="john@example.com" className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 font-bold text-slate-700 shadow-inner" />
+                    <input required type="email" placeholder="adspredia@gmail.com" className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-600 font-bold text-slate-700 shadow-inner" />
                   </div>
                 </div>
                 <div className="space-y-3">
