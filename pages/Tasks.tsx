@@ -6,7 +6,7 @@ interface TasksProps {
   user: User;
   tasks: Task[];
   transactions: Transaction[];
-  onComplete: (taskId: string, proofImage?: string, timestamp?: string) => Promise<void> | void;
+  onComplete: (taskId: string, proofImage?: string, proofImage2?: string, timestamp?: string) => Promise<void> | void;
 }
 
 const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) => {
@@ -16,10 +16,13 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [viewingHistoryScreenshot, setViewingHistoryScreenshot] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCompressing, setIsCompressing] = useState<number | null>(null);
+  const [proof1, setProof1] = useState<string | null>(null);
+  const [proof2, setProof2] = useState<string | null>(null);
+  const [viewingHistoryScreenshots, setViewingHistoryScreenshots] = useState<string[] | null>(null);
+  
+  const fileInputRef1 = useRef<HTMLInputElement>(null);
+  const fileInputRef2 = useRef<HTMLInputElement>(null);
 
   const marketCategories: {id: TaskType | 'All', label: string, icon: string}[] = [
     { id: 'All', label: 'All Tasks', icon: 'fa-layer-group' },
@@ -62,7 +65,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        // Increased limits for mobile portrait screenshots (20:9 aspect ratios)
         const MAX_WIDTH = 1280; 
         const MAX_HEIGHT = 2400; 
         let width = img.width;
@@ -105,30 +107,31 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
     });
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, slot: 1 | 2) => {
     const file = e.target.files?.[0];
     if (file) {
-      setIsCompressing(true);
+      setIsCompressing(slot);
       try {
         const compressed = await compressImage(file);
-        setPreviewImage(compressed);
+        if (slot === 1) setProof1(compressed);
+        else setProof2(compressed);
       } catch (error) {
         console.error("Compression error:", error);
         alert("Error processing file. Please ensure it is a valid image.");
       } finally {
-        setIsCompressing(false);
+        setIsCompressing(null);
         if (e.target) e.target.value = '';
       }
     }
   };
 
   const handleFinalSubmit = async () => {
-    if (!previewImage) return alert("Please select a screenshot proof first.");
+    if (!proof1 || !proof2) return alert("Please upload both required screenshots for verification.");
     if (!selectedTask) return;
 
     setIsUploading(true);
     try {
-      await onComplete(selectedTask.id, previewImage, new Date().toLocaleString());
+      await onComplete(selectedTask.id, proof1, proof2, new Date().toLocaleString());
       handleCloseModal();
     } catch (error) {
       console.error("Submission failed:", error);
@@ -142,8 +145,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
     setSelectedTask(null);
     setIsSubmittingProof(false);
     setIsUploading(false);
-    setIsCompressing(false);
-    setPreviewImage(null);
+    setIsCompressing(null);
+    setProof1(null);
+    setProof2(null);
   };
 
   const getIcon = (type: string) => {
@@ -168,7 +172,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
               </h1>
               <p className="text-slate-500 font-medium text-lg leading-relaxed">
                 {activeView === 'Marketplace' 
-                  ? 'Identify micro-tasks to generate daily coin yield.' 
+                  ? 'Identify micro-tasks to generate daily coin yield. Dual-proof verification required.' 
                   : 'Track your verification status and audit history.'}
               </p>
             </div>
@@ -296,14 +300,21 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     </div>
                     <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">ID: {tx.id.substring(0, 8)}</span>
-                       {tx.proofImage && (
-                          <button 
-                            onClick={() => setViewingHistoryScreenshot(tx.proofImage || null)}
-                            className="text-indigo-500 hover:text-indigo-700 font-black text-[9px] uppercase tracking-widest flex items-center gap-2"
-                          >
-                             <i className="fa-solid fa-camera"></i> View Proof
-                          </button>
-                       )}
+                       <div className="flex gap-4">
+                          {(tx.proofImage || tx.proofImage2) && (
+                              <button 
+                                onClick={() => {
+                                  const list = [];
+                                  if (tx.proofImage) list.push(tx.proofImage);
+                                  if (tx.proofImage2) list.push(tx.proofImage2);
+                                  setViewingHistoryScreenshots(list);
+                                }}
+                                className="text-indigo-500 hover:text-indigo-700 font-black text-[9px] uppercase tracking-widest flex items-center gap-2"
+                              >
+                                <i className="fa-solid fa-camera"></i> View Proofs
+                              </button>
+                          )}
+                       </div>
                     </div>
                  </div>
                ))
@@ -314,7 +325,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
       {selectedTask && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-500 overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] w-full max-w-2xl shadow-3xl border border-white/20 animate-in zoom-in-95 duration-500 relative max-h-[95vh] overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] w-full max-w-5xl shadow-3xl border border-white/20 animate-in zoom-in-95 duration-500 relative max-h-[95vh] overflow-y-auto no-scrollbar">
             <div className="p-6 md:p-12">
               <div className="flex justify-between items-start mb-10 sticky top-0 bg-white z-20 py-2">
                 <div className="flex items-center gap-4 md:gap-6">
@@ -366,97 +377,140 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                       onClick={() => setIsSubmittingProof(true)}
                       className="flex-1 py-6 bg-slate-900 text-white font-black rounded-3xl text-[10px] md:text-xs uppercase tracking-[0.3em] hover:bg-slate-800 transition-all"
                     >
-                      Start Proof
+                      Continue to Proof
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6 md:space-y-8 animate-in slide-in-from-right-12 duration-500">
-                  <div className="bg-amber-50 p-6 rounded-[2.5rem] border border-amber-100 flex items-center gap-6">
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-amber-500 text-xl shadow-sm shrink-0">
-                      <i className="fa-solid fa-camera"></i>
+                <div className="space-y-6 md:space-y-10 animate-in slide-in-from-right-12 duration-500">
+                  <div className="bg-amber-50 p-6 md:p-8 rounded-[2.5rem] border border-amber-100 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-amber-500 text-2xl shadow-sm shrink-0">
+                      <i className="fa-solid fa-camera-retro"></i>
                     </div>
                     <div>
-                      <h5 className="font-black text-amber-900 text-xs uppercase tracking-widest mb-1">Upload Proof</h5>
-                      <p className="text-[10px] text-amber-800/70 font-bold leading-relaxed">
-                        Select a clear portrait screenshot. Mobile tall captures are fully supported.
+                      <h5 className="font-black text-amber-900 text-sm md:text-base uppercase tracking-widest mb-1">Dual-Proof Protocol</h5>
+                      <p className="text-[10px] md:text-[11px] text-amber-800/70 font-bold leading-relaxed max-w-2xl">
+                        Submit two high-resolution screenshots verifying completion. 
+                        Use the buttons below to select images for each slot. Clear mobile captures preferred.
                       </p>
                     </div>
                   </div>
 
-                  <div className="relative group">
-                    <label 
-                      className={`relative border-4 border-dashed rounded-[3rem] p-4 flex flex-col items-center justify-center transition-all cursor-pointer min-h-[450px] overflow-hidden ${
-                        previewImage ? 'border-emerald-500 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:border-indigo-400'
-                      }`}
-                    >
-                      <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        onChange={handleFileChange} 
-                        className="hidden" 
-                        accept="image/*" 
-                      />
-                      
-                      {isCompressing ? (
-                        <div className="flex flex-col items-center gap-4">
-                          <i className="fa-solid fa-circle-notch fa-spin text-5xl text-indigo-500"></i>
-                          <p className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Optimizing Proof...</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                     {/* Proof 1 Slot */}
+                     <div className="space-y-4">
+                        <div className="flex justify-between items-center px-4">
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Proof</label>
+                           {proof1 && <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1"><i className="fa-solid fa-circle-check"></i> Loaded</span>}
                         </div>
-                      ) : previewImage ? (
-                        <div className="w-full h-full flex flex-col items-center justify-center">
-                          <img 
-                            src={previewImage} 
-                            alt="Proof" 
-                            className="max-w-full rounded-2xl object-contain shadow-2xl" 
-                            style={{ maxHeight: '600px' }}
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-6 z-10">
-                             <button 
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setPreviewImage(null); }}
-                                className="bg-rose-600 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl flex items-center gap-3 hover:bg-rose-700 transition-all"
-                             >
-                               <i className="fa-solid fa-trash-can"></i> Re-pick Screenshot
-                             </button>
-                          </div>
+                        <div className="relative group h-[300px] md:h-[450px] w-full">
+                           <div className={`w-full h-full border-4 border-dashed rounded-[2.5rem] flex flex-col items-center justify-center transition-all overflow-hidden bg-slate-50 ${
+                             proof1 ? 'border-emerald-500' : 'border-slate-200'
+                           }`}>
+                              {isCompressing === 1 ? (
+                                <div className="flex flex-col items-center gap-4">
+                                   <i className="fa-solid fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
+                                   <span className="text-[10px] font-black text-slate-400 uppercase">Processing...</span>
+                                </div>
+                              ) : proof1 ? (
+                                <div className="relative w-full h-full">
+                                   <img src={proof1} className="w-full h-full object-cover" alt="Proof 1" />
+                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                      <button onClick={() => fileInputRef1.current?.click()} className="w-12 h-12 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                         <i className="fa-solid fa-rotate"></i>
+                                      </button>
+                                      <button onClick={() => setProof1(null)} className="w-12 h-12 bg-rose-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                         <i className="fa-solid fa-trash"></i>
+                                      </button>
+                                   </div>
+                                </div>
+                              ) : (
+                                <div className="text-center p-8">
+                                  <i className="fa-solid fa-image text-5xl text-slate-200 mb-6 block"></i>
+                                  <button 
+                                    onClick={() => fileInputRef1.current?.click()}
+                                    className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-indigo-600 transition-all flex items-center gap-3"
+                                  >
+                                     <i className="fa-solid fa-file-arrow-up"></i>
+                                     Choose Screenshot 1
+                                  </button>
+                                </div>
+                              )}
+                              <input type="file" ref={fileInputRef1} onChange={(e) => handleFileChange(e, 1)} className="hidden" accept="image/*" />
+                           </div>
                         </div>
-                      ) : (
-                        <div className="text-center p-4">
-                          <div className="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center text-slate-300 mb-8 mx-auto shadow-sm">
-                            <i className="fa-solid fa-cloud-arrow-up text-4xl"></i>
-                          </div>
-                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em] mb-4">No File Selected</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">Portrait screenshots supported</p>
-                          
-                          <button 
-                            type="button"
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRef.current?.click(); }}
-                            className="px-12 py-6 bg-indigo-600 text-white rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-[0.3em] shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-4 mx-auto"
-                          >
-                            <i className="fa-solid fa-folder-open text-base"></i>
-                            Select from Gallery
-                          </button>
+                     </div>
+
+                     {/* Proof 2 Slot */}
+                     <div className="space-y-4">
+                        <div className="flex justify-between items-center px-4">
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Secondary Proof</label>
+                           {proof2 && <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1"><i className="fa-solid fa-circle-check"></i> Loaded</span>}
                         </div>
-                      )}
-                    </label>
+                        <div className="relative group h-[300px] md:h-[450px] w-full">
+                           <div className={`w-full h-full border-4 border-dashed rounded-[2.5rem] flex flex-col items-center justify-center transition-all overflow-hidden bg-slate-50 ${
+                             proof2 ? 'border-emerald-500' : 'border-slate-200'
+                           }`}>
+                              {isCompressing === 2 ? (
+                                <div className="flex flex-col items-center gap-4">
+                                   <i className="fa-solid fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
+                                   <span className="text-[10px] font-black text-slate-400 uppercase">Processing...</span>
+                                </div>
+                              ) : proof2 ? (
+                                <div className="relative w-full h-full">
+                                   <img src={proof2} className="w-full h-full object-cover" alt="Proof 2" />
+                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                      <button onClick={() => fileInputRef2.current?.click()} className="w-12 h-12 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                         <i className="fa-solid fa-rotate"></i>
+                                      </button>
+                                      <button onClick={() => setProof2(null)} className="w-12 h-12 bg-rose-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                         <i className="fa-solid fa-trash"></i>
+                                      </button>
+                                   </div>
+                                </div>
+                              ) : (
+                                <div className="text-center p-8">
+                                  <i className="fa-solid fa-image text-5xl text-slate-200 mb-6 block"></i>
+                                  <button 
+                                    onClick={() => fileInputRef2.current?.click()}
+                                    className="px-8 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-indigo-600 transition-all flex items-center gap-3"
+                                  >
+                                     <i className="fa-solid fa-file-arrow-up"></i>
+                                     Choose Screenshot 2
+                                  </button>
+                                </div>
+                              )}
+                              <input type="file" ref={fileInputRef2} onChange={(e) => handleFileChange(e, 2)} className="hidden" accept="image/*" />
+                           </div>
+                        </div>
+                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex flex-col md:flex-row gap-6 pt-8 border-t border-slate-100">
                     <button 
                       onClick={() => setIsSubmittingProof(false)} 
-                      className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[10px] md:text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                      className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all"
                     >
-                      Back
+                      Back to Specs
                     </button>
                     <button 
                       onClick={handleFinalSubmit} 
-                      disabled={isUploading || isCompressing || !previewImage} 
-                      className={`flex-[2] py-6 text-white font-black rounded-3xl text-[10px] md:text-xs uppercase tracking-[0.4em] shadow-2xl transition-all flex items-center justify-center gap-4 active:scale-95 ${
-                        previewImage ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      disabled={isUploading || isCompressing !== null || !proof1 || !proof2} 
+                      className={`flex-[2] py-6 text-white font-black rounded-3xl text-[11px] uppercase tracking-[0.4em] shadow-2xl transition-all flex items-center justify-center gap-4 active:scale-95 ${
+                        proof1 && proof2 ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
-                      {isUploading ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-paper-plane"></i> Finalize Submission</>}
+                      {isUploading ? (
+                        <>
+                          <i className="fa-solid fa-spinner fa-spin"></i>
+                          Deploying Identity Signal...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fa-solid fa-paper-plane"></i>
+                          Initialize Global Audit
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -466,22 +520,27 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         </div>
       )}
 
-      {/* GLOBAL SCREENSHOT VIEWER */}
-      {viewingHistoryScreenshot && (
+      {/* GLOBAL SCREENSHOT VIEWER (SUPPORT FOR MULTIPLE) */}
+      {viewingHistoryScreenshots && (
         <div 
-          className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-300"
-          onClick={() => setViewingHistoryScreenshot(null)}
+          className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300"
+          onClick={() => setViewingHistoryScreenshots(null)}
         >
-           <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center pointer-events-none">
-              <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[3rem] shadow-2xl border border-white/10">
-                 <img src={viewingHistoryScreenshot} alt="Full Size Proof" className="max-w-full max-h-full object-contain" />
-                 <button 
-                   onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshot(null); }} 
-                   className="absolute top-8 right-8 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20"
-                 >
-                   <i className="fa-solid fa-xmark text-2xl"></i>
-                 </button>
+           <div className="relative w-full max-w-6xl h-full flex flex-col items-center justify-center pointer-events-none">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-h-full pointer-events-auto overflow-y-auto no-scrollbar py-12">
+                 {viewingHistoryScreenshots.map((src, i) => (
+                    <div key={i} className="relative rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 bg-white/5 p-2 md:p-4">
+                       <p className="absolute top-4 left-4 md:top-8 md:left-8 z-10 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-lg text-[8px] md:text-[9px] font-black uppercase text-white border border-white/10">PROOF {i+1}</p>
+                       <img src={src} alt={`Proof ${i+1}`} className="w-full h-auto object-contain rounded-[1.5rem] md:rounded-[2rem]" />
+                    </div>
+                 ))}
               </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshots(null); }} 
+                className="absolute top-4 right-4 md:top-8 md:right-8 w-10 h-10 md:w-12 md:h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20 pointer-events-auto"
+              >
+                <i className="fa-solid fa-xmark text-xl md:text-2xl"></i>
+              </button>
            </div>
         </div>
       )}

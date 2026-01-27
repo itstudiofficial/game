@@ -46,13 +46,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     dueDate: ''
   });
   const [isDeploying, setIsDeploying] = useState(false);
-  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
+  const [selectedScreenshots, setSelectedScreenshots] = useState<string[] | null>(null);
 
   useEffect(() => {
     if (initialView) setView(initialView);
   }, [initialView]);
 
-  // Segmented Fetching based on Active View
   const refreshActiveData = useCallback(async (forcedView?: string) => {
     const targetView = forcedView || view;
     setIsSyncing(true);
@@ -89,12 +88,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     }
   }, [view]);
 
-  // Trigger sync on view change
   useEffect(() => {
     refreshActiveData();
   }, [view, refreshActiveData]);
 
-  // Live subscription for transactions only
   useEffect(() => {
     const unsubscribe = storage.subscribeToAllTransactions((txs) => {
       if (txs) {
@@ -106,13 +103,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
   }, []);
 
-  // Performance optimized memos
   const stats = useMemo(() => ({
-    totalCoins: users.reduce((acc, u) => acc + (u.coins || 0), 0),
-    totalDeposit: users.reduce((acc, u) => acc + (u.depositBalance || 0), 0),
+    totalCoins: users.reduce((acc, u) => acc + (Number(u.coins) || 0), 0),
+    totalDeposit: users.reduce((acc, u) => acc + (Number(u.depositBalance) || 0), 0),
     pendingTasks: transactions.filter(tx => tx.type === 'earn' && tx.status === 'pending').length,
     pendingFinance: transactions.filter(tx => (tx.type === 'deposit' || tx.type === 'withdraw') && tx.status === 'pending').length,
-    pendingTasksCount: tasks.filter(t => t.status === 'pending').length
+    pendingTasksCount: tasks.filter(t => t.status === 'pending').length,
+    
+    taskDistribution: tasks.reduce((acc, t) => {
+      acc[t.type] = (acc[t.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>),
+    
+    financialFlow: {
+      deposits: transactions.filter(tx => tx.type === 'deposit' && tx.status === 'success').reduce((s, tx) => s + (Number(tx.amount) || 0), 0),
+      withdrawals: transactions.filter(tx => tx.type === 'withdraw' && tx.status === 'success').reduce((s, tx) => s + (Number(tx.amount) || 0), 0),
+    },
+    
+    completionAudit: {
+      done: tasks.reduce((s, t) => s + (Number(t.completedCount) || 0), 0),
+      total: tasks.reduce((s, t) => s + (Number(t.totalWorkers) || 0), 0),
+    }
   }), [users, transactions, tasks]);
 
   const filteredUsers = useMemo(() => {
@@ -147,11 +158,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     const cloudUser = await storage.syncUserFromCloud(tx.userId);
     if (!cloudUser) return;
     
-    // For deposits: on success, increase depositBalance
     if (tx.type === 'deposit' && status === 'success') {
       await storage.updateUserInCloud(tx.userId, { depositBalance: (cloudUser.depositBalance || 0) + tx.amount });
     } 
-    // For withdrawals: if rejected (failed), refund the coins to main balance
     else if (tx.type === 'withdraw' && status === 'failed') {
       await storage.updateUserInCloud(tx.userId, { coins: (cloudUser.coins || 0) + tx.amount });
     }
@@ -219,6 +228,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     setView('tasks');
   };
 
+  const getIcon = (type: string) => {
+    if (type.includes('YouTube')) return 'fa-youtube text-red-500';
+    if (type.includes('Websites')) return 'fa-globe text-indigo-500';
+    if (type.includes('Apps')) return 'fa-mobile-screen text-emerald-500';
+    if (type.includes('Social Media')) return 'fa-share-nodes text-blue-500';
+    return 'fa-tasks text-slate-400';
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-20">
       <div className="max-w-[1600px] mx-auto px-6 mb-12">
@@ -266,20 +283,126 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
       <div className="max-w-[1600px] mx-auto px-6">
         {view === 'overview' && (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 animate-in fade-in duration-500">
-             {[
-               { label: 'Network Nodes', val: users.length, icon: 'fa-users', col: 'text-indigo-600' },
-               { label: 'Audit Queue', val: stats.pendingTasks + stats.pendingFinance, icon: 'fa-clock', col: 'text-amber-500' },
-               { label: 'Escrow Vault', val: (stats.totalDeposit || 0).toLocaleString(), icon: 'fa-shield', col: 'text-emerald-600' },
-               { label: 'Coins Active', val: (stats.totalCoins || 0).toLocaleString(), icon: 'fa-coins', col: 'text-blue-600' }
-             ].map((s, i) => (
-               <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
-                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-6 relative z-10">{s.label}</p>
-                 <h4 className="text-4xl font-black text-slate-900 tracking-tighter relative z-10">{s.val}</h4>
-                 <i className={`fa-solid ${s.icon} absolute -right-4 -bottom-4 text-7xl opacity-5 group-hover:opacity-10 transition-opacity ${s.col}`}></i>
+          <div className="space-y-12 animate-in fade-in duration-500">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { label: 'Network Nodes', val: users.length, icon: 'fa-users', col: 'text-indigo-600' },
+                { label: 'Audit Queue', val: stats.pendingTasks + stats.pendingFinance, icon: 'fa-clock', col: 'text-amber-500' },
+                { label: 'Escrow Vault', val: (stats.totalDeposit || 0).toLocaleString(), icon: 'fa-shield', col: 'text-emerald-600' },
+                { label: 'Coins Active', val: (stats.totalCoins || 0).toLocaleString(), icon: 'fa-coins', col: 'text-blue-600' }
+              ].map((s, i) => (
+                <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-6 relative z-10">{s.label}</p>
+                  <h4 className="text-4xl font-black text-slate-900 tracking-tighter relative z-10">{s.val}</h4>
+                  <i className={`fa-solid ${s.icon} absolute -right-4 -bottom-4 text-7xl opacity-5 group-hover:opacity-10 transition-opacity ${s.col}`}></i>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-4 bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
+                <div className="flex justify-between items-center mb-10">
+                  <div>
+                    <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-1">Asset Analysis</h3>
+                    <h4 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Campaign Mix</h4>
+                  </div>
+                  <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                    <i className="fa-solid fa-chart-pie"></i>
+                  </div>
+                </div>
+                
+                <div className="space-y-8">
+                  {Object.entries(stats.taskDistribution).length === 0 ? (
+                    <p className="text-[10px] font-black text-slate-300 uppercase py-10 text-center">No campaign data recorded</p>
+                  ) : (
+                    Object.entries(stats.taskDistribution).map(([type, count]) => (
+                      <div key={type} className="space-y-3">
+                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+                          <div className="flex items-center gap-2">
+                             <i className={`fa-solid ${getIcon(type).split(' ')[0]} ${getIcon(type).split(' ')[1]} text-[10px]`}></i>
+                             <span className="text-slate-600">{type}</span>
+                          </div>
+                          <span className="text-slate-900">{count} Active</span>
+                        </div>
+                        <div className="w-full h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-0.5">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-1000 ${
+                              type === 'YouTube' ? 'bg-rose-500' : 
+                              type === 'Websites' ? 'bg-indigo-500' : 
+                              type === 'Apps' ? 'bg-emerald-500' : 'bg-blue-500'
+                            }`} 
+                            style={{ width: `${tasks.length > 0 ? (count / tasks.length) * 100 : 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="lg:col-span-8 bg-slate-900 p-10 md:p-14 rounded-[3.5rem] text-white relative overflow-hidden shadow-3xl">
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-8">Financial Flow Audit</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                       <div>
+                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Verified Inbound (Deposits)</p>
+                         <h4 className="text-5xl font-black text-emerald-400 tracking-tighter mb-4">+{stats.financialFlow.deposits.toLocaleString()}</h4>
+                         <p className="text-[10px] font-bold text-slate-400 leading-relaxed">Total authorized coins injected into the AdsPredia escrow network.</p>
+                       </div>
+                       <div>
+                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Verified Outbound (Payouts)</p>
+                         <h4 className="text-5xl font-black text-indigo-400 tracking-tighter mb-4">-{stats.financialFlow.withdrawals.toLocaleString()}</h4>
+                         <p className="text-[10px] font-bold text-slate-400 leading-relaxed">Total authorized coins settled via global payment gateways.</p>
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-16 pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+                     <div className="flex-1 w-full">
+                        <div className="flex justify-between items-center mb-4 text-[9px] font-black uppercase tracking-widest">
+                           <span className="text-indigo-300">Network Task Fulfillment</span>
+                           {/* Simplified arithmetic to ensure correct type inference for numbers */}
+                           <span>{Math.round(((stats.completionAudit.done || 0) / (stats.completionAudit.total || 1)) * 100)}%</span>
+                        </div>
+                        <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/10 p-0.5">
+                           <div 
+                            className="h-full bg-indigo-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(79,70,229,0.4)]" 
+                            /* Simplified arithmetic to ensure correct type inference for numbers */
+                            style={{ width: `${((stats.completionAudit.done || 0) / (stats.completionAudit.total || 1)) * 100}%` }}
+                           ></div>
+                        </div>
+                     </div>
+                     <div className="text-right shrink-0">
+                        <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Global Load</p>
+                        <p className="text-xl font-black">{stats.completionAudit.done.toLocaleString()} / {stats.completionAudit.total.toLocaleString()}</p>
+                     </div>
+                  </div>
+                </div>
+                <i className="fa-solid fa-chart-line absolute -right-16 -bottom-16 text-[25rem] text-white/5 -rotate-12 pointer-events-none"></i>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-[3rem] border border-slate-200 overflow-hidden shadow-sm">
+               <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Recent Network Pulses</h3>
+                  <button onClick={() => setView('history')} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">View All Logs</button>
                </div>
-             ))}
-           </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-x divide-slate-100">
+                  {transactions.slice(0, 4).map(tx => (
+                    <div key={tx.id} className="p-8 hover:bg-slate-50/50 transition-colors">
+                       <div className="flex items-center gap-3 mb-4">
+                          <span className={`w-2 h-2 rounded-full ${tx.status === 'success' ? 'bg-emerald-500' : tx.status === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'}`}></span>
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{tx.type} node</span>
+                       </div>
+                       <p className="text-sm font-black text-slate-900 mb-1">{tx.username || 'System Node'}</p>
+                       <p className="text-[10px] font-black text-indigo-600 mb-4">{tx.amount.toLocaleString()} Coins</p>
+                       <p className="text-[8px] font-bold text-slate-300 uppercase">{tx.date.split(',')[0]}</p>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          </div>
         )}
 
         {view === 'users' && (
@@ -422,12 +545,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                              <p className="text-sm font-bold text-slate-700 truncate">{tx.method}</p>
                           </div>
                           
-                          {tx.proofImage && (
+                          {(tx.proofImage || tx.proofImage2) && (
                              <button 
-                               onClick={() => setSelectedScreenshot(tx.proofImage!)}
+                               onClick={() => {
+                                 const list = [];
+                                 if (tx.proofImage) list.push(tx.proofImage);
+                                 if (tx.proofImage2) list.push(tx.proofImage2);
+                                 setSelectedScreenshots(list);
+                               }}
                                className="w-full py-4 bg-white border border-slate-200 rounded-2xl mb-8 flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm"
                              >
-                                <i className="fa-solid fa-eye"></i> Inspect Proof
+                                <i className="fa-solid fa-eye"></i> Inspect Dual Proofs
                              </button>
                           )}
 
@@ -485,7 +613,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                               <td className="px-6 py-6">
                                  {tx.account ? <p className="text-[10px] font-mono font-black text-indigo-600 break-all max-w-[150px]">{tx.account}</p> : <span className="text-slate-200">N/A</span>}
                                  {tx.proofImage && (
-                                   <button onClick={() => setSelectedScreenshot(tx.proofImage!)} className="mt-2 flex items-center gap-2 text-[9px] font-black text-indigo-500 uppercase hover:underline">
+                                   <button onClick={() => setSelectedScreenshots([tx.proofImage!])} className="mt-2 flex items-center gap-2 text-[9px] font-black text-indigo-500 uppercase hover:underline">
                                       <i className="fa-solid fa-image"></i> View Proof
                                    </button>
                                  )}
@@ -657,7 +785,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                              <td className="px-6 py-6">
                                 <div className="flex items-center gap-3">
                                    <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                      <div className="h-full bg-indigo-600" style={{ width: `${(t.completedCount / (t.totalWorkers || 1)) * 100}%` }}></div>
+                                      <div className="h-full bg-indigo-600" style={{ width: `${t.totalWorkers > 0 ? (t.completedCount / t.totalWorkers) * 100 : 0}%` }}></div>
                                    </div>
                                    <span className="text-[9px] font-black text-slate-500">{t.completedCount}/{t.totalWorkers}</span>
                                 </div>
@@ -681,22 +809,26 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         )}
       </div>
 
-      {/* Global Screenshot Viewer */}
-      {selectedScreenshot && (
+      {selectedScreenshots && (
         <div 
           className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-300"
-          onClick={() => setSelectedScreenshot(null)}
+          onClick={() => setSelectedScreenshots(null)}
         >
-           <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center pointer-events-none">
-              <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[3rem] shadow-2xl border border-white/10">
-                 <img src={selectedScreenshot} alt="Full Size Proof" className="max-w-full max-h-full object-contain" />
-                 <button 
-                   onClick={(e) => { e.stopPropagation(); setSelectedScreenshot(null); }} 
-                   className="absolute top-8 right-8 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20"
-                 >
-                   <i className="fa-solid fa-xmark text-2xl"></i>
-                 </button>
+           <div className="relative w-full max-w-6xl h-full flex flex-col items-center justify-center pointer-events-none">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full pointer-events-auto overflow-y-auto no-scrollbar py-20">
+                 {selectedScreenshots.map((src, idx) => (
+                    <div key={idx} className="relative rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 bg-white/5 p-4">
+                       <p className="absolute top-8 left-8 z-10 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-lg text-[9px] font-black uppercase text-white border border-white/10">PROOF {idx+1}</p>
+                       <img src={src} alt={`Proof ${idx+1}`} className="w-full h-auto object-contain rounded-[2rem]" />
+                    </div>
+                 ))}
               </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setSelectedScreenshots(null); }} 
+                className="absolute top-8 right-8 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20 pointer-events-auto"
+              >
+                <i className="fa-solid fa-xmark text-2xl"></i>
+              </button>
            </div>
         </div>
       )}

@@ -48,6 +48,7 @@ export interface Transaction {
   method?: string;
   account?: string; 
   proofImage?: string; 
+  proofImage2?: string; // Support for dual-verification
   status: 'pending' | 'success' | 'failed';
   date: string;
 }

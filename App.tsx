@@ -156,7 +156,7 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleTaskComplete = async (taskId: string, proofImage?: string, timestamp?: string) => {
+  const handleTaskComplete = async (taskId: string, proofImage?: string, proofImage2?: string, timestamp?: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
     const tx: Transaction = {
@@ -168,6 +168,7 @@ const App: React.FC = () => {
       type: 'earn',
       method: `${task.title} | ${task.type}`,
       proofImage,
+      proofImage2,
       status: 'pending',
       date: timestamp || new Date().toISOString()
     };
