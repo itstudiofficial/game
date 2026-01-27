@@ -120,7 +120,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     if (!s) return users;
     return users.filter(u => 
       u?.username?.toLowerCase().includes(s) || 
+      u?.lastName?.toLowerCase().includes(s) ||
+      u?.nickName?.toLowerCase().includes(s) ||
       u?.email?.toLowerCase().includes(s) || 
+      u?.city?.toLowerCase().includes(s) ||
+      u?.country?.toLowerCase().includes(s) ||
       u?.id?.toLowerCase().includes(s)
     );
   }, [users, searchQuery]);
@@ -284,39 +288,95 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
               <h2 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Operator Registry</h2>
               <div className="relative w-full md:w-80">
                  <i className="fa-solid fa-search absolute left-6 top-1/2 -translate-y-1/2 text-slate-300"></i>
-                 <input type="text" placeholder="Filter by Node ID or Name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-bold outline-none shadow-inner focus:border-indigo-400 transition-all" />
+                 <input type="text" placeholder="Filter by ID, Name, City, Nick..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-bold outline-none shadow-inner focus:border-indigo-400 transition-all" />
               </div>
             </div>
             <div className="overflow-x-auto max-h-[70vh] no-scrollbar">
-              <table className="w-full text-left">
+              <table className="w-full text-left min-w-[1200px]">
                 <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 sticky top-0 z-20">
-                  <tr><th className="px-10 py-6">Node Identity</th><th className="px-6 py-6">Credentials</th><th className="px-6 py-6">Asset Vaults</th><th className="px-10 py-6 text-right">Administrative</th></tr>
+                  <tr>
+                    <th className="px-10 py-6">Node Identity</th>
+                    <th className="px-6 py-6">Personal Details</th>
+                    <th className="px-6 py-6">Location Hub</th>
+                    <th className="px-6 py-6">Asset Vaults</th>
+                    <th className="px-6 py-6">Network Info</th>
+                    <th className="px-10 py-6 text-right">Administrative</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {filteredUsers.length === 0 ? (
-                    <tr><td colSpan={4} className="px-10 py-20 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">No nodes found in directory</td></tr>
+                    <tr><td colSpan={6} className="px-10 py-20 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">No nodes found in directory</td></tr>
                   ) : (
                     filteredUsers.map(u => (
                       <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-10 py-6">
                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white text-[10px] font-black">{u.username?.charAt(0) || '?'}</div>
+                              <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white text-[10px] font-black shadow-lg">
+                                {u.username?.charAt(0) || '?'}
+                              </div>
                               <div>
                                  <p className="text-sm font-black text-slate-900">{u.username || 'Unnamed Node'}</p>
                                  <p className="text-[10px] text-indigo-400 font-mono font-black">{u.id}</p>
+                                 <div className="mt-1">
+                                   <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${u.status === 'banned' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                     {u.status || 'active'}
+                                   </span>
+                                 </div>
                               </div>
                            </div>
                         </td>
-                        <td className="px-6 py-6 text-xs text-slate-500 font-bold">{u.email}</td>
                         <td className="px-6 py-6">
-                           <div className="flex gap-3">
-                              <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[9px] font-black border border-emerald-100">{(u.coins || 0).toLocaleString()} C</span>
-                              <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black border border-indigo-100">{(u.depositBalance || 0).toLocaleString()} D</span>
+                          <div className="space-y-1">
+                            <p className="text-xs font-bold text-slate-700">L.Name: <span className="font-black">{u.lastName || 'N/A'}</span></p>
+                            <p className="text-xs font-bold text-slate-700">Nick: <span className="font-black text-indigo-600">@{u.nickName || 'N/A'}</span></p>
+                            <p className="text-[10px] font-bold text-slate-400 truncate max-w-[150px]">{u.email}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-6">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <i className="fa-solid fa-city text-slate-300 text-[10px]"></i>
+                              <span className="text-xs font-black text-slate-900">{u.city || 'Unknown City'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <i className="fa-solid fa-earth-americas text-indigo-300 text-[10px]"></i>
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{u.country || 'Unknown Country'}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-6">
+                           <div className="flex flex-col gap-2">
+                              <div className="flex items-center justify-between gap-4 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
+                                <span className="text-[8px] font-black uppercase">Coins</span>
+                                <span className="text-xs font-black">{(u.coins || 0).toLocaleString()}</span>
+                              </div>
+                              <div className="flex items-center justify-between gap-4 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100">
+                                <span className="text-[8px] font-black uppercase">Deposit</span>
+                                <span className="text-xs font-black">{(u.depositBalance || 0).toLocaleString()}</span>
+                              </div>
                            </div>
                         </td>
+                        <td className="px-6 py-6">
+                          <div className="space-y-1">
+                            <p className="text-[9px] font-black text-slate-400 uppercase">Referred By:</p>
+                            <p className="text-[10px] font-mono font-black text-indigo-500">{u.referredBy || 'Organic'}</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase mt-2">Active Tasks: <span className="text-slate-900">{u.completedTasks?.length || 0}</span></p>
+                          </div>
+                        </td>
                         <td className="px-10 py-6 text-right">
-                          <button onClick={() => setEditingUserId(u.id)} className="text-indigo-600 mr-4 text-xs font-black uppercase hover:underline">Adjust</button>
-                          <button onClick={() => handleUserStatus(u.id, u.status === 'banned' ? 'active' : 'banned')} className={`${u.status === 'banned' ? 'text-emerald-600' : 'text-rose-600'} text-xs font-black uppercase hover:underline`}>{u.status === 'banned' ? 'Unban' : 'Suspend'}</button>
+                          <div className="flex justify-end gap-4">
+                            <button onClick={() => setEditingUserId(u.id)} className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg hover:bg-indigo-600 transition-all shadow-sm">Adjust</button>
+                            <button 
+                              onClick={() => handleUserStatus(u.id, u.status === 'banned' ? 'active' : 'banned')} 
+                              className={`px-4 py-2 text-[9px] font-black uppercase rounded-lg border transition-all ${
+                                u.status === 'banned' 
+                                  ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white' 
+                                  : 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-600 hover:text-white'
+                              }`}
+                            >
+                              {u.status === 'banned' ? 'Restore' : 'Suspend'}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
