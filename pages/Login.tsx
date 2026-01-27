@@ -36,6 +36,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [hasReferral, setHasReferral] = useState(false);
 
@@ -77,6 +78,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
+    setAuthSuccess('');
     setIsSubmitting(true);
 
     const lowercaseEmail = email.toLowerCase().trim();
@@ -178,6 +180,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           isAdmin: lowercaseEmail === 'ehtesham@adspredia.site',
           referredBy: pendingRef
         });
+      } else if (view === 'forgot-password') {
+        if (!userId) {
+          setAuthError('Identity Protocol: No account associated with this email.');
+        } else {
+          setAuthSuccess('Recovery signal dispatched. Please check your email for reset instructions.');
+        }
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Critical Auth Error:", error);
@@ -190,6 +199,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const switchView = (newView: AuthView) => {
     setView(newView);
     setAuthError('');
+    setAuthSuccess('');
     setFullName('');
     setLastName('');
     setNickName('');
@@ -225,10 +235,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <Logo className="h-full w-full" />
               </div>
               <h1 className="text-3xl font-black tracking-tighter mb-2 leading-none">
-                {view === 'register' ? 'Sign Up Now' : 'Login Now'}
+                {view === 'register' ? 'Sign Up Now' : view === 'forgot-password' ? 'Reset Password' : 'Login Now'}
               </h1>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300 opacity-60">
-                Authorized AdsPredia Access
+                {view === 'forgot-password' ? 'Identity Recovery Protocol' : 'Authorized AdsPredia Access'}
               </p>
             </div>
           </div>
@@ -237,7 +247,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {view === 'register' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-4">
-                  {/* Registration Fields Grid */}
                   <div className="space-y-2">
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Full Name</label>
                     <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="e.g. John" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-transparent outline-none font-bold text-slate-800 shadow-inner focus:border-indigo-100 transition-all" required />
@@ -275,15 +284,27 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat password" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-transparent outline-none font-bold text-slate-800 shadow-inner focus:border-indigo-100 transition-all" required />
                   </div>
                 </div>
+              ) : view === 'forgot-password' ? (
+                <div className="space-y-6 animate-in slide-in-from-top-4">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Registered Email Identity</label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@domain.com" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-transparent outline-none font-bold text-slate-800 shadow-inner focus:border-indigo-100 transition-all" required />
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium px-2 leading-relaxed">
+                    Provide your primary email node. If an account exists, a recovery token will be generated and dispatched to your inbox.
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Login Fields */}
                   <div className="space-y-2">
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Email Identity</label>
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@domain.com" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-transparent outline-none font-bold text-slate-800 shadow-inner focus:border-indigo-100 transition-all" required />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Security Credential</label>
+                    <div className="flex justify-between items-center px-2">
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Security Credential</label>
+                      <button type="button" onClick={() => switchView('forgot-password')} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Forgot password?</button>
+                    </div>
                     <div className="relative">
                       <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-2 border-transparent outline-none font-bold text-slate-800 shadow-inner focus:border-indigo-100 transition-all" required />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-600 transition-colors">
@@ -301,6 +322,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 </div>
               )}
 
+              {authSuccess && (
+                <div className="p-4 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase text-center rounded-2xl border border-emerald-100 flex items-center justify-center gap-3 animate-in zoom-in duration-300">
+                  <i className="fa-solid fa-circle-check text-sm"></i>
+                  <span className="flex-1">{authSuccess}</span>
+                </div>
+              )}
+
               <button type="submit" disabled={isSubmitting} className="w-full py-6 bg-slate-900 text-white font-black rounded-2xl hover:bg-indigo-600 transition-all shadow-xl uppercase tracking-[0.4em] text-[10px] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-4">
                 {isSubmitting ? (
                   <>
@@ -309,17 +337,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   </>
                 ) : (
                   <>
-                    {view === 'register' ? 'Sign Up Now' : 'Login Now'}
-                    <i className="fa-solid fa-arrow-right-to-bracket"></i>
+                    {view === 'register' ? 'Sign Up Now' : view === 'forgot-password' ? 'Transmit Recovery Signal' : 'Login Now'}
+                    <i className={`fa-solid ${view === 'forgot-password' ? 'fa-paper-plane' : 'fa-arrow-right-to-bracket'}`}></i>
                   </>
                 )}
               </button>
             </form>
 
-            <div className="mt-10 text-center">
+            <div className="mt-10 text-center space-y-4">
               <button onClick={() => switchView(view === 'login' ? 'register' : 'login')} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline transition-all group">
                 {view === 'login' ? (
                   <>No Identity? <span className="text-slate-900 group-hover:text-indigo-600">Create account</span></>
+                ) : view === 'forgot-password' ? (
+                  <>Ready to Authenticate? <span className="text-slate-900 group-hover:text-indigo-600">Return to Login Hub</span></>
                 ) : (
                   <>Existing Partner? <span className="text-slate-900 group-hover:text-indigo-600">Sign in Here</span></>
                 )}
