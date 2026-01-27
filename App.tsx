@@ -170,7 +170,7 @@ const App: React.FC = () => {
       proofImage,
       proofImage2,
       status: 'pending',
-      date: timestamp || new Date().toISOString()
+      date: timestamp || new Date().toLocaleString() // Use LocalString for date and time
     };
     await storage.addTransaction(tx);
     const updatedCompletedTasks = Array.from(new Set([...(user.completedTasks || []), taskId]));
@@ -191,7 +191,7 @@ const App: React.FC = () => {
       account: acc,
       proofImage: proof,
       status: 'pending',
-      date: new Date().toISOString()
+      date: new Date().toLocaleString() // Use LocalString for date and time
     };
     if (type === 'withdraw') {
       const updatedUser = { ...user, coins: user.coins - amt };
@@ -214,7 +214,7 @@ const App: React.FC = () => {
       type: 'spin',
       method: 'Lucky Wheel Spin',
       status: 'success',
-      date: new Date().toISOString()
+      date: new Date().toLocaleString() // Use LocalString for date and time
     };
     await storage.addTransaction(tx);
     await refreshUserBalance();
@@ -236,7 +236,7 @@ const App: React.FC = () => {
       type: 'referral_claim',
       method: `Referral Bonus: Node ${partnerId}`,
       status: 'success',
-      date: new Date().toISOString()
+      date: new Date().toLocaleString() // Use LocalString for date and time
     };
     await storage.addTransaction(tx);
     await refreshUserBalance();
@@ -256,7 +256,7 @@ const App: React.FC = () => {
       type: 'math_reward',
       method: `Math Problem Solved${isLast ? ' (Sequence Complete)' : ''}`,
       status: 'success',
-      date: new Date().toISOString()
+      date: new Date().toLocaleString() // Use LocalString for date and time
     };
     await storage.addTransaction(tx);
     const userTxs = await storage.getUserTransactions(user.id);
@@ -309,7 +309,8 @@ const App: React.FC = () => {
               ...data,
               creatorId: user.id,
               completedCount: 0,
-              status: 'pending'
+              status: 'pending',
+              createdAt: new Date().toLocaleString() // Set creation date and time
             };
             const updatedUser = { ...user, depositBalance: user.depositBalance - totalCost, createdTasks: [...(user.createdTasks || []), newTask.id] };
             const updatedTasks = [...tasks, newTask];

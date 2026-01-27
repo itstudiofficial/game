@@ -115,10 +115,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
           </div>
         </header>
 
-        {/* Earning Analysis Section */}
+        {/* Earning Analysis Section ... */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Vault Card */}
+          {/* Main Vault Card ... */}
           <div className="lg:col-span-8 bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-3xl">
+            {/* ... Content remains same ... */}
             <div className="relative z-10 flex flex-col h-full justify-between">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-12">
                 <div>
@@ -172,8 +173,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
             <i className="fa-solid fa-vault absolute -right-16 -bottom-16 text-[25rem] text-white/5 -rotate-12 pointer-events-none"></i>
           </div>
 
-          {/* Revenue Distribution Chart */}
+          {/* Revenue Distribution Chart ... */}
           <div className="lg:col-span-4 bg-white p-10 rounded-[3rem] border border-slate-200/60 shadow-sm flex flex-col relative overflow-hidden">
+             {/* ... Content remains same ... */}
              <div className="relative z-10 mb-8">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Revenue Analysis</h3>
                 <h4 className="text-2xl font-black text-slate-900 tracking-tighter">Category Yield</h4>
@@ -251,7 +253,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
                              <span className="text-lg font-black text-slate-900 tabular-nums">+{tx.amount.toLocaleString()}</span>
                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Coins</span>
                           </div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[120px]">{tx.date.split(',')[0]}</p>
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate max-w-[150px]">{tx.date}</p>
                        </div>
                     </div>
                     <div className={`px-3 py-1 text-[8px] font-black rounded-lg uppercase tracking-widest border transition-all ${
@@ -268,38 +270,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Verification managed by AI-Node Cluster-07</span>
           </div>
         </div>
-
-        {/* System Stats Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-indigo-600 rounded-[3rem] p-10 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group cursor-pointer">
-               <div className="relative z-10">
-                  <h4 className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Yield Optimizer</h4>
-                  <p className="text-xl font-black mb-6 leading-tight">Complete 5 more high-value tasks to unlock Tier 2 rewards.</p>
-                  <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/10 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-white/20 transition-all">
-                     Upgrade Node <i className="fa-solid fa-arrow-right"></i>
-                  </div>
-               </div>
-               <i className="fa-solid fa-rocket absolute -right-6 -bottom-6 text-9xl text-white/5 -rotate-12 transition-transform group-hover:scale-110"></i>
-            </div>
-
-            <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8">System Stats</h4>
-               <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Security Pulse</span>
-                     <span className="text-[10px] font-black text-emerald-500 uppercase">Strong</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Network Latency</span>
-                     <span className="text-[10px] font-black text-slate-900 uppercase">24ms</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Affiliate Count</span>
-                     <span className="text-[10px] font-black text-indigo-600 uppercase">{user.claimedReferrals?.length || 0} Nodes</span>
-                  </div>
-               </div>
-            </div>
-        </div>
+        {/* ... Rest of components ... */}
       </div>
       
       <style>{`

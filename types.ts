@@ -12,7 +12,8 @@ export interface Task {
   completedCount: number;
   status: 'active' | 'completed' | 'pending' | 'rejected';
   link?: string;
-  dueDate?: string; // New optional property: YYYY-MM-DD
+  dueDate?: string; 
+  createdAt?: string; // New property for creation timestamp
 }
 
 export interface User {

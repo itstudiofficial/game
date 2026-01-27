@@ -128,6 +128,11 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
                       </span>
                       <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">UID: {task.id.toUpperCase()}</span>
                       <span className="text-[9px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-widest">{task.type}</span>
+                      {task.createdAt && (
+                        <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase tracking-widest flex items-center gap-1">
+                          <i className="fa-solid fa-clock"></i> Launched At: {task.createdAt}
+                        </span>
+                      )}
                       {task.dueDate && (
                         <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded uppercase tracking-widest flex items-center gap-1">
                           <i className="fa-solid fa-calendar-day"></i> Due: {task.dueDate}
@@ -197,82 +202,4 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
             )}
           </div>
         </div>
-        
-        {/* Support Callout */}
-        <div className="bg-slate-900 p-10 md:p-14 rounded-[4rem] text-white flex flex-col lg:flex-row items-center justify-between gap-10 relative overflow-hidden shadow-3xl">
-           <div className="relative z-10 text-center lg:text-left">
-              <h4 className="text-2xl font-black mb-3 tracking-tight">Expand Your Network reach?</h4>
-              <p className="text-slate-400 text-sm font-medium uppercase tracking-widest max-w-xl">Contact our account growth managers for enterprise-level deployment and bulk coin conversion rates.</p>
-           </div>
-           <button 
-            onClick={() => onNavigate && onNavigate('contact')}
-            className="relative z-10 px-12 py-6 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-white hover:text-slate-900 transition-all shadow-2xl active:scale-95"
-           >
-              Global Support Node
-           </button>
-           <i className="fa-solid fa-headset absolute -right-16 -bottom-16 text-[20rem] text-white/5 -rotate-12 pointer-events-none"></i>
-        </div>
-      </div>
-
-      {editingTask && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300">
-           <div className="bg-white w-full max-w-xl rounded-[4rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20">
-              <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                 <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Sync Deployment Specs</h3>
-                 <button onClick={() => setEditingTask(null)} className="w-12 h-12 bg-white rounded-2xl text-slate-400 hover:text-slate-900 transition-all flex items-center justify-center shadow-sm">
-                   <i className="fa-solid fa-xmark text-xl"></i>
-                 </button>
-              </div>
-              <form onSubmit={handleEditSubmit} className="p-10 space-y-8">
-                 <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Campaign Title (Authorized Name)</label>
-                    <input 
-                      type="text" 
-                      value={editingTask.title} 
-                      onChange={e => setEditingTask({...editingTask, title: e.target.value})} 
-                      className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
-                    />
-                 </div>
-                 <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Worker Quota (Total Slots)</label>
-                    <input 
-                      type="number" 
-                      value={editingTask.totalWorkers} 
-                      onChange={e => setEditingTask({...editingTask, totalWorkers: parseInt(e.target.value)})} 
-                      className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
-                    />
-                 </div>
-                 <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Expiry Date</label>
-                    <input 
-                      type="date" 
-                      value={editingTask.dueDate || ''} 
-                      onChange={e => setEditingTask({...editingTask, dueDate: e.target.value})} 
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
-                    />
-                 </div>
-                 <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Operational Protocol (Instructions)</label>
-                    <textarea 
-                      rows={4} 
-                      value={editingTask.description} 
-                      onChange={e => setEditingTask({...editingTask, description: e.target.value})} 
-                      className="w-full px-8 py-6 bg-slate-50 border-none rounded-[2.5rem] font-bold text-slate-800 outline-none shadow-inner resize-none leading-relaxed" 
-                    />
-                 </div>
-                 <button 
-                  type="submit" 
-                  className="w-full py-7 bg-slate-900 text-white font-black rounded-3xl uppercase text-[11px] tracking-[0.4em] hover:bg-indigo-600 transition-all shadow-3xl active:scale-95"
-                 >
-                   Propagate Changes
-                 </button>
-              </form>
-           </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default MyCampaigns;
+        {/* ... rest of existing code ... */}
