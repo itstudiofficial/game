@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo } from 'react';
 import { Task, TaskType, User, Transaction } from '../types';
 
@@ -116,7 +117,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         else setProof2(compressed);
       } catch (error) {
         console.error("Compression error:", error);
-        alert("Error processing file. Please ensure it is a valid image.");
       } finally {
         setIsCompressing(null);
         if (e.target) e.target.value = '';
@@ -134,7 +134,6 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       handleCloseModal();
     } catch (error) {
       console.error("Submission failed:", error);
-      alert("Verification signal failed. Please retry.");
     } finally {
       setIsUploading(false);
     }
@@ -219,7 +218,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         </div>
 
         {activeView === 'Marketplace' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 animate-in fade-in duration-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {availableTasks.length === 0 ? (
               <div className="col-span-full py-40 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-200">
                 <i className="fa-solid fa-box-open text-6xl text-slate-100 mb-6"></i>
@@ -230,9 +229,9 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                 <div 
                   key={task.id} 
                   onClick={() => setSelectedTask(task)}
-                  className="group bg-white rounded-[3rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer flex flex-col h-full relative overflow-hidden"
+                  className="group bg-white rounded-[3rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer flex flex-col h-full relative overflow-hidden"
                 >
-                  <div className="flex justify-between items-start mb-8 relative z-10">
+                  <div className="flex justify-between items-start mb-8">
                     <div className="w-14 h-14 bg-slate-50 rounded-[1.25rem] flex items-center justify-center text-xl group-hover:bg-indigo-600 group-hover:text-white transition-all">
                       <i className={`fa-solid ${getIcon(task.type)}`}></i>
                     </div>
@@ -241,7 +240,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                       <span className="text-xl font-black">{task.reward}</span>
                     </div>
                   </div>
-                  <div className="flex-grow mb-8 relative z-10">
+                  <div className="flex-grow mb-8">
                     <div className="flex justify-between items-center mb-2">
                        <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">{task.type}</span>
                        {task.createdAt && <span className="text-[7px] font-black text-slate-300 uppercase tracking-widest">Posted: {task.createdAt}</span>}
@@ -249,7 +248,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors">{task.title}</h3>
                     <p className="text-slate-400 text-xs font-medium line-clamp-2">{task.description}</p>
                   </div>
-                  <div className="pt-6 border-t border-slate-50 relative z-10">
+                  <div className="pt-6 border-t border-slate-50">
                     <div className="flex justify-between items-center mb-4 text-[9px] font-black uppercase text-slate-400 tracking-widest">
                        <span>Progress</span>
                        <span>{Math.floor((task.completedCount / (task.totalWorkers || 1)) * 100)}%</span>
@@ -258,7 +257,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                        <div className="h-full bg-indigo-600" style={{ width: `${(task.completedCount / (task.totalWorkers || 1)) * 100}%` }}></div>
                     </div>
                     <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest group-hover:bg-indigo-600 transition-all">
-                      View Task Details
+                      View Details
                     </button>
                   </div>
                 </div>
@@ -266,7 +265,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in slide-in-from-bottom-6 duration-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
              {userHistoryItems.length === 0 ? (
                <div className="col-span-full py-40 text-center bg-white rounded-[4rem] border-2 border-dashed border-slate-200">
                   <i className="fa-solid fa-receipt text-6xl text-slate-100 mb-6"></i>
@@ -325,13 +324,13 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
         )}
       </div>
 
-      {/* Task Details Modal */}
+      {/* Task detail modal */}
       {selectedTask && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300">
-           <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300 relative flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 bg-slate-950/90 backdrop-blur-2xl">
+           <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-3xl overflow-hidden relative flex flex-col max-h-[90vh]">
               <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-lg shadow-xl">
+                    <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-lg">
                        <i className={`fa-solid ${getIcon(selectedTask.type)}`}></i>
                     </div>
                     <div>
@@ -346,12 +345,12 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
 
               <div className="p-8 overflow-y-auto no-scrollbar space-y-10 flex-grow">
                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Objective Node (Target Link)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Objective Node</label>
                     <a 
                       href={selectedTask.link} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between p-6 bg-indigo-50 border border-indigo-100 rounded-3xl group hover:bg-indigo-600 transition-all"
+                      className="flex items-center justify-between p-6 bg-indigo-50 border border-indigo-100 rounded-3xl hover:bg-indigo-600 transition-all group"
                     >
                        <span className="text-xs font-black text-indigo-600 group-hover:text-white truncate max-w-[80%]">{selectedTask.link}</span>
                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
@@ -361,15 +360,15 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                  </div>
 
                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Operational Protocol (Instructions)</label>
-                    <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-                       <p className="text-slate-600 text-sm font-medium leading-relaxed whitespace-pre-line">{selectedTask.description}</p>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Instructions</label>
+                    <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 text-slate-600 text-sm font-medium leading-relaxed whitespace-pre-line">
+                       {selectedTask.description}
                     </div>
                  </div>
 
                  {isSubmittingProof ? (
                     <div className="space-y-8 animate-in slide-in-from-bottom-6">
-                       <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-4 block text-center">Dual-Proof Verification Required</label>
+                       <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-4 block text-center">Verification Required</label>
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div className="space-y-3">
                              <input type="file" ref={fileInputRef1} onChange={e => handleFileChange(e, 1)} className="hidden" accept="image/*" />
@@ -399,7 +398,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                             disabled={!proof1 || !proof2 || isUploading}
                             className="flex-[2] py-6 bg-slate-900 text-white font-black rounded-3xl text-[10px] uppercase tracking-widest shadow-2xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                           >
-                             {isUploading ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-cloud-arrow-up"></i> Submit for Audit</>}
+                             {isUploading ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-cloud-arrow-up"></i> Submit Audit</>}
                           </button>
                        </div>
                     </div>
@@ -412,22 +411,21 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                     </button>
                  )}
               </div>
-              <i className="fa-solid fa-id-card absolute -right-12 -bottom-12 text-[15rem] text-slate-50 rotate-12 pointer-events-none"></i>
            </div>
         </div>
       )}
 
-      {/* Screenshot Viewer Modal */}
+      {/* History screenshots modal */}
       {viewingHistoryScreenshots && (
         <div 
-          className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-300"
+          className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-6"
           onClick={() => setViewingHistoryScreenshots(null)}
         >
            <div className="relative w-full max-w-6xl h-full flex flex-col items-center justify-center pointer-events-none">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full pointer-events-auto overflow-y-auto no-scrollbar py-20">
                  {viewingHistoryScreenshots.map((src, idx) => (
                     <div key={idx} className="relative rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 bg-white/5 p-4">
-                       <p className="absolute top-8 left-8 z-10 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-lg text-[9px] font-black uppercase text-white border border-white/10">AUDIT PROOF {idx+1}</p>
+                       <p className="absolute top-8 left-8 z-10 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-lg text-[9px] font-black uppercase text-white border border-white/10">PROOF {idx+1}</p>
                        <img src={src} alt={`Audit ${idx+1}`} className="w-full h-auto object-contain rounded-[2rem]" />
                     </div>
                  ))}
