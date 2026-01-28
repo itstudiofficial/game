@@ -84,7 +84,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
         <div className="max-w-[1700px] mx-auto px-4 md:px-10">
           <div className="flex justify-between items-center h-16">
             
-            {/* Brand Logo Section */}
             <div className="flex items-center gap-5">
               <button 
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -106,22 +105,21 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                       Ads<span className="text-indigo-600">Predia</span>
                     </span>
                     <span className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-400 mt-1.5 block">
-                      {user.isAdmin ? 'Admin Global Access' : 'Secure Micro-Jobs'}
+                      {user.isAdmin ? 'Admin Global Hub' : 'Verified Partner'}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Desktop Navigation Links */}
             <div className="hidden lg:flex items-center bg-slate-900/5 p-1.5 rounded-[1.75rem] border border-slate-200/30 backdrop-blur-sm">
-              {(user.isLoggedIn ? (user.isAdmin ? [...adminLinks, ...authLinks] : authLinks) : publicLinks).slice(0, 7).map(link => (
+              {(user.isLoggedIn ? (user.isAdmin ? [...adminLinks, ...authLinks] : authLinks) : publicLinks).slice(0, 8).map(link => (
                 <button
                   key={link.id}
                   onClick={() => handleNavClick(link.id)}
                   className={`px-5 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap ${
                     currentPage === link.id 
-                      ? 'text-indigo-600 bg-white shadow-lg shadow-slate-200/50' 
+                      ? 'text-indigo-600 bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-100' 
                       : 'text-slate-500 hover:text-slate-900 hover:bg-white/40'
                   }`}
                 >
@@ -133,56 +131,38 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
               ))}
             </div>
 
-            {/* Desktop Session Hub (Authorized Node Section) */}
             <div className="flex items-center gap-4">
               {!user.isLoggedIn ? (
                 <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => handleNavClick('login')} 
-                    className="hidden md:block px-6 py-4 text-slate-600 font-black text-[10px] uppercase tracking-widest hover:text-indigo-600 transition-colors"
-                  >
-                    Login
-                  </button>
-                  <button 
-                    onClick={() => handleNavClick('login')} 
-                    className="group h-14 px-8 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-indigo-600 transition-all active:scale-95 flex items-center gap-4"
-                  >
-                    <span>Get Started</span>
-                    <i className="fa-solid fa-chevron-right text-[10px]"></i>
-                  </button>
+                  <button onClick={() => handleNavClick('login')} className="hidden md:block px-6 py-4 text-slate-600 font-black text-[10px] uppercase tracking-widest hover:text-indigo-600">Login</button>
+                  <button onClick={() => handleNavClick('login')} className="h-14 px-8 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-indigo-600 transition-all flex items-center gap-4">Get Started</button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  {/* Coin Vault Quick Glance */}
-                  <div 
-                    onClick={() => handleNavClick('wallet')}
-                    className="hidden sm:flex flex-col items-end pr-4 cursor-pointer group"
-                  >
-                    <span className="text-[13px] font-black text-slate-900 group-hover:text-indigo-600 transition-colors tabular-nums">{user.coins.toLocaleString()}</span>
-                    <span className="text-[7px] font-black uppercase tracking-widest text-slate-400">Vault Balance</span>
+                  <div onClick={() => handleNavClick('wallet')} className="hidden sm:flex flex-col items-end pr-4 cursor-pointer group">
+                    <span className="text-[13px] font-black text-slate-900 group-hover:text-indigo-600 tabular-nums">{user.coins.toLocaleString()}</span>
+                    <span className="text-[7px] font-black uppercase tracking-widest text-slate-400">Vault Units</span>
                   </div>
 
-                  {/* Authorized Node Trigger */}
                   <div className="relative">
                     <button 
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                      className={`flex items-center gap-4 pl-4 pr-1.5 py-1.5 rounded-2xl border transition-all shadow-sm active:scale-95 ${
+                      className={`flex items-center gap-4 pl-5 pr-1.5 py-1.5 rounded-[1.5rem] border transition-all shadow-sm active:scale-95 ${
                         isUserMenuOpen ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex flex-col items-start">
                         <div className="flex items-center gap-2">
-                           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
-                           <span className="text-[9px] font-black uppercase tracking-widest text-slate-900">Authorized Node</span>
+                           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                           <span className="text-[9px] font-black uppercase tracking-widest text-slate-900">Authorized</span>
                         </div>
-                        <span className="text-[8px] font-bold text-slate-400 mt-0.5">UID: {user.id.substring(0, 8)}</span>
+                        <span className="text-[8px] font-bold text-slate-400">UID: {user.id.substring(0, 8)}</span>
                       </div>
-                      <div className="w-11 h-11 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-xs shadow-lg">
+                      <div className="w-11 h-11 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-xs shadow-lg ring-4 ring-white">
                         {user.username.charAt(0)}
                       </div>
                     </button>
 
-                    {/* Session Hub Dropdown */}
                     {isUserMenuOpen && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setIsUserMenuOpen(false)}></div>
@@ -190,42 +170,33 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                           
                           <div className="p-6 mb-6 rounded-[2rem] bg-slate-900 text-white relative overflow-hidden shadow-2xl">
                              <div className="relative z-10">
-                                <p className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-400 mb-2">Authenticated Account</p>
+                                <p className="text-[8px] font-black uppercase tracking-[0.3em] text-indigo-400 mb-2">Authenticated Identity</p>
                                 <p className="text-xl font-black truncate tracking-tighter mb-4">{user.username}</p>
-                                
-                                <div className="flex flex-col gap-2.5 pt-4 border-t border-white/10">
-                                   <div className="flex items-center justify-between">
-                                      <span className="text-[9px] font-black uppercase text-slate-500">Vault Units</span>
-                                      <span className="text-sm font-black text-white tabular-nums">{user.coins.toLocaleString()}</span>
-                                   </div>
-                                   <div className="flex items-center justify-between">
-                                      <span className="text-[9px] font-black uppercase text-slate-500">Node Rank</span>
-                                      <span className={`text-[8px] font-black px-2 py-0.5 rounded border ${user.isAdmin ? 'bg-indigo-600 border-indigo-400' : 'bg-slate-800 border-slate-700'}`}>
-                                        {user.isAdmin ? 'ADMIN' : 'PARTNER'}
-                                      </span>
-                                   </div>
+                                <div className="h-px bg-white/10 mb-4"></div>
+                                <div className="flex justify-between items-center">
+                                   <span className="text-[9px] font-black uppercase text-slate-500">Node Balance</span>
+                                   <span className="text-sm font-black text-indigo-400">{user.coins.toLocaleString()} C</span>
                                 </div>
                              </div>
-                             <i className="fa-solid fa-fingerprint absolute -right-6 -bottom-6 text-7xl opacity-10 rotate-12"></i>
+                             <i className="fa-solid fa-fingerprint absolute -right-6 -bottom-6 text-7xl opacity-5"></i>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2 mb-6">
-                            <button onClick={() => handleNavClick('profile')} className="flex flex-col items-start p-4 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100">
-                               <i className="fa-solid fa-user-gear text-xs mb-3 text-slate-300 group-hover:text-indigo-600 transition-colors"></i>
-                               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Profile Settings</span>
+                            <button onClick={() => handleNavClick('profile')} className="flex flex-col items-start p-4 rounded-2xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all">
+                               <i className="fa-solid fa-user-gear text-xs mb-3 text-slate-300"></i>
+                               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Settings</span>
                             </button>
-                            <button onClick={() => handleNavClick('wallet')} className="flex flex-col items-start p-4 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100">
-                               <i className="fa-solid fa-wallet text-xs mb-3 text-slate-300 group-hover:text-indigo-600 transition-colors"></i>
-                               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Withdraw Hub</span>
+                            <button onClick={() => handleNavClick('wallet')} className="flex flex-col items-start p-4 rounded-2xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all">
+                               <i className="fa-solid fa-wallet text-xs mb-3 text-slate-300"></i>
+                               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Withdraw</span>
                             </button>
                           </div>
 
                           <div className="h-px bg-slate-100 mb-6"></div>
 
-                          {/* Terminate Session (Logout) Button */}
                           <button 
                             onClick={() => { onLogout(); setIsUserMenuOpen(false); }}
-                            className="w-full py-5 rounded-[1.5rem] bg-rose-50 text-rose-500 font-black text-[11px] uppercase tracking-[0.2em] hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 flex items-center justify-center gap-3 border border-rose-100"
+                            className="w-full py-5 rounded-[1.5rem] bg-rose-50 text-rose-600 font-black text-[11px] uppercase tracking-[0.2em] hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 flex items-center justify-center gap-3 border border-rose-100"
                           >
                             <i className="fa-solid fa-power-off"></i>
                             Terminate Session
@@ -241,7 +212,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
         </div>
       </nav>
 
-      {/* Mobile Menu Drawer */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-[200]">
           <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md animate-in fade-in" onClick={() => setIsMobileMenuOpen(false)}></div>
@@ -292,10 +262,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                       )}
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-6">Earning Hub</p>
                       {authLinks.map(link => renderMobileLink(link))}
-                      <button onClick={() => handleNavClick('profile')} className="w-full text-left px-6 py-4 rounded-2xl flex items-center gap-4 text-slate-600 hover:bg-slate-50 transition-all mt-4">
-                         <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400"><i className="fa-solid fa-user-gear text-xs"></i></div>
-                         <span className="text-[11px] font-black uppercase tracking-widest">Settings</span>
-                      </button>
                     </>
                  )}
                </div>
@@ -305,7 +271,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                {user.isLoggedIn ? (
                   <button 
                     onClick={() => { onLogout(); setIsMobileMenuOpen(false); }}
-                    className="w-full py-5 rounded-2xl bg-white border border-rose-100 text-rose-500 font-black text-[11px] uppercase tracking-widest hover:bg-rose-50 transition-all flex items-center justify-center gap-4 shadow-sm"
+                    className="w-full py-5 rounded-2xl bg-white border border-rose-100 text-rose-500 font-black text-[11px] uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm active:scale-95 flex items-center justify-center gap-3"
                   >
                     <i className="fa-solid fa-power-off"></i>
                     Terminate Session
@@ -320,11 +286,6 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
           </div>
         </div>
       )}
-      
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </>
   );
 };
