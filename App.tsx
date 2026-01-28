@@ -184,7 +184,7 @@ const App: React.FC = () => {
           {currentPage === 'features' && <Features />}
           {currentPage === 'contact' && <Contact />}
           {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={handleTaskComplete} />}
-          {currentPage === 'math-solver' && user.isLoggedIn && <MathSolver user={user} onSolve={() => refreshUserBalance()} transactions={transactions} />}
+          {currentPage === 'math-solver' && user.isLoggedIn && <MathSolver user={user} onSolve={(reward, isLast) => refreshUserBalance()} transactions={transactions} />}
           {currentPage === 'create' && <CreateTask tasks={tasks} user={user} onDeleteTask={async (tid) => { await storage.deleteTaskFromCloud(tid); }} onUpdateTask={async (tid, data) => { await storage.updateTaskInCloud(tid, data); }} onCreate={async (data) => {
             const newTask: Task = { id: `TASK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`, ...data, creatorId: user.id, completedCount: 0, status: 'pending', createdAt: new Date().toLocaleString() };
             const updatedUser = { ...user, depositBalance: user.depositBalance - (data.reward * data.totalWorkers), createdTasks: [...(user.createdTasks || []), newTask.id] };

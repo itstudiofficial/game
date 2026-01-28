@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { Task, TaskType, User, Transaction } from '../types';
 
@@ -9,7 +8,7 @@ interface TasksProps {
   onComplete: (taskId: string, proofImage?: string, proofImage2?: string, timestamp?: string) => Promise<void> | void;
 }
 
-const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) => {
+export default function Tasks({ user, tasks, transactions, onComplete }: TasksProps) {
   const [activeView, setActiveView] = useState<'Marketplace' | 'My History'>('Marketplace');
   const [categoryFilter, setCategoryFilter] = useState<TaskType | 'All'>('All');
   const [historyFilter, setHistoryFilter] = useState<'Pending' | 'Approved' | 'Rejected'>('Pending');
@@ -446,6 +445,4 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
       `}</style>
     </div>
   );
-};
-
-export default Tasks;
+}

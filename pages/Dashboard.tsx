@@ -1,5 +1,4 @@
-
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { User, Task, Transaction } from '../types';
 
 interface DashboardProps {
@@ -12,22 +11,14 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
   const [ledgerTab, setLedgerTab] = useState<'all' | 'pending' | 'verified'>('all');
+  const [isClient, setIsClient] = useState(false);
 
-  // Guard clause for non-logged in state
-  if (!user || !user.isLoggedIn) {
-    return (
-      <div className="pt-40 pb-20 flex flex-col items-center justify-center text-center px-6">
-        <div className="w-24 h-24 bg-slate-100 rounded-[2.5rem] flex items-center justify-center text-slate-300 mb-8">
-          <i className="fa-solid fa-lock text-4xl"></i>
-        </div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4">Secure Area</h2>
-        <p className="text-slate-500 max-w-sm font-medium">Please synchronize your identity via the login gateway to access the analytics hub.</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  // Economic Policy Update: 3,000 Coins = $1.00 (Withdrawal/Earning Rate)
   const COIN_RATE = 3000;
+  
   const earnings = useMemo(() => {
     const total = user.coins || 0;
     const usd = (total / COIN_RATE).toFixed(2);
@@ -40,28 +31,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
 
   const progressToNextDollar = ((earnings.total % COIN_RATE) / COIN_RATE) * 100;
 
-  // Filtered Earning Ledger
   const ledgerList = useMemo(() => {
     let filtered = transactions.filter(tx => tx.type === 'earn');
-    
-    if (ledgerTab === 'pending') {
-      filtered = filtered.filter(tx => tx.status === 'pending');
-    } else if (ledgerTab === 'verified') {
-      filtered = filtered.filter(tx => tx.status === 'success');
-    }
+    if (ledgerTab === 'pending') filtered = filtered.filter(tx => tx.status === 'pending');
+    else if (ledgerTab === 'verified') filtered = filtered.filter(tx => tx.status === 'success');
     
     return filtered
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 10);
   }, [transactions, ledgerTab]);
 
-  // Analysis Data: Earnings by Category
   const categoryStats = useMemo(() => {
     const counts: Record<string, number> = { 'YouTube': 0, 'Websites': 0, 'Apps': 0, 'Social Media': 0 };
     transactions
       .filter(tx => tx.type === 'earn' && tx.status === 'success')
       .forEach(tx => {
-        const cat = tx.method?.split(': ')[1] || 'Websites';
+        const cat = tx.method?.split('|')[1]?.trim() || 'Websites';
         if (counts[cat] !== undefined) counts[cat] += tx.amount;
       });
     return counts;
@@ -77,11 +62,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
     return 'fa-coins text-amber-500';
   };
 
+  if (!isClient) return null;
+
+  if (!user || !user.isLoggedIn) {
+    return (
+      <div className="pt-40 pb-20 flex flex-col items-center justify-center text-center px-6">
+        <div className="w-24 h-24 bg-slate-100 rounded-[2.5rem] flex items-center justify-center text-slate-300 mb-8">
+          <i className="fa-solid fa-lock text-4xl"></i>
+        </div>
+        <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4">Secure Area</h2>
+        <p className="text-slate-500 max-w-sm font-medium">Please synchronize your identity via the login gateway to access the analytics hub.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-24 pb-20 min-h-screen bg-slate-50">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
         
-        {/* Header Block: Identity Hub */}
         <header className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-200/60 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div className="flex items-center gap-6">
             <div className="relative group">
@@ -115,11 +113,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
           </div>
         </header>
 
-        {/* Earning Analysis Section ... */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Vault Card ... */}
           <div className="lg:col-span-8 bg-slate-900 rounded-[3.5rem] p-10 md:p-14 text-white relative overflow-hidden shadow-3xl">
-            {/* ... Content remains same ... */}
             <div className="relative z-10 flex flex-col h-full justify-between">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-12">
                 <div>
@@ -146,7 +141,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
                   </div>
                   <div className="bg-white/5 p-6 rounded-[2rem] border border-white/5 backdrop-blur-md flex flex-col justify-center text-center">
                      <p className="text-[8px] font-black uppercase text-slate-500 mb-2 tracking-widest">Deposit Bal</p>
-                     <p className="text-3xl font-black">{user.depositBalance || 0}</p>
+                     <p className="text-3xl font-black tabular-nums">{user.depositBalance || 0}</p>
                   </div>
                 </div>
               </div>
@@ -173,9 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
             <i className="fa-solid fa-vault absolute -right-16 -bottom-16 text-[25rem] text-white/5 -rotate-12 pointer-events-none"></i>
           </div>
 
-          {/* Revenue Distribution Chart ... */}
           <div className="lg:col-span-4 bg-white p-10 rounded-[3rem] border border-slate-200/60 shadow-sm flex flex-col relative overflow-hidden">
-             {/* ... Content remains same ... */}
              <div className="relative z-10 mb-8">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Revenue Analysis</h3>
                 <h4 className="text-2xl font-black text-slate-900 tracking-tighter">Category Yield</h4>
@@ -208,7 +201,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
           </div>
         </div>
 
-        {/* INCOME ANALYSIS (Recently Earning) */}
         <div className="bg-white rounded-[3.5rem] border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-8 md:p-12 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center bg-slate-50/20 gap-6">
              <div>
@@ -235,7 +227,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
              {ledgerList.length === 0 ? (
-               <div className="col-span-full py-32 text-center animate-in fade-in">
+               <div className="col-span-full py-32 text-center">
                   <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 text-slate-100">
                     <i className="fa-solid fa-receipt text-4xl"></i>
                   </div>
@@ -270,13 +262,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Verification managed by AI-Node Cluster-07</span>
           </div>
         </div>
-        {/* ... Rest of components ... */}
       </div>
       
       <style>{`
-        @keyframes shimmer {
-          100% { transform: translateX(100%); }
-        }
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
       `}</style>
     </div>
   );

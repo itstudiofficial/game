@@ -7,33 +7,33 @@ interface AdminPanelProps {
 }
 
 const CACHE_KEY = 'admin_data_cache';
-const MAX_CACHE_ITEMS = 100;
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => {
   const [view, setView] = useState(initialView);
   
-  const [users, setUsers] = useState<User[]>(() => {
-    try {
-      const cached = localStorage.getItem(`${CACHE_KEY}_users`);
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    try {
-      const cached = localStorage.getItem(`${CACHE_KEY}_txs`);
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    try {
-      const cached = localStorage.getItem(`${CACHE_KEY}_tasks`);
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  });
+  const [users, setUsers] = useState<User[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   const [isSyncing, setIsSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+
+  // Correct hydration-safe data loading
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cachedUsers = localStorage.getItem(`${CACHE_KEY}_users`);
+        const cachedTxs = localStorage.getItem(`${CACHE_KEY}_txs`);
+        const cachedTasks = localStorage.getItem(`${CACHE_KEY}_tasks`);
+        if (cachedUsers) setUsers(JSON.parse(cachedUsers));
+        if (cachedTxs) setTransactions(JSON.parse(cachedTxs));
+        if (cachedTasks) setTasks(JSON.parse(cachedTasks));
+      } catch (e) {
+        console.warn("Cache parsing error", e);
+      }
+    }
+  }, []);
 
   const refreshActiveData = useCallback(async (forcedView?: string) => {
     const targetView = forcedView || view;
@@ -43,17 +43,46 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
       if (targetView === 'overview' || targetView === 'history' || targetView === 'reviews' || targetView === 'finance' || targetView === 'tasks') {
         const allTxs = await storage.getAllGlobalTransactions();
         const sortedTxs = allTxs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        // Update live state with full data (including images)
         setTransactions(sortedTxs);
+
+        // Cache light data only (remove base64 strings)
+        if (typeof window !== 'undefined') {
+          try {
+            const lightTxs = sortedTxs.slice(0, 100).map(tx => {
+              const { proofImage, proofImage2, ...rest } = tx;
+              return rest;
+            });
+            localStorage.setItem(`${CACHE_KEY}_txs`, JSON.stringify(lightTxs));
+          } catch (e) {
+            console.warn("Failed to cache transactions: Storage Quota reached.");
+          }
+        }
       }
 
       if (targetView === 'overview' || targetView === 'users') {
         const allUsers = await storage.getAllUsers();
         setUsers(allUsers || []);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`${CACHE_KEY}_users`, JSON.stringify(allUsers));
+          } catch (e) {
+             console.warn("Failed to cache users: Storage Quota reached.");
+          }
+        }
       }
 
       if (targetView === 'overview' || targetView === 'tasks' || targetView === 'create-task') {
         const allTasks = await storage.getTasks();
         setTasks(allTasks || []);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`${CACHE_KEY}_tasks`, JSON.stringify(allTasks));
+          } catch (e) {
+            console.warn("Failed to cache tasks: Storage Quota reached.");
+          }
+        }
       }
     } catch (err) {
       console.error("Sync error:", err);
@@ -83,6 +112,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
     );
   }, [users, searchQuery]);
 
+  const tabs = [
+    { id: 'overview', label: 'Dashboard', icon: 'fa-chart-pie' },
+    { id: 'users', label: 'Users', icon: 'fa-users' },
+    { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro', badge: stats.pendingTasks },
+    { id: 'tasks', label: 'Manage Tasks', icon: 'fa-list-check', badge: stats.pendingTasksCount },
+    { id: 'finance', label: 'Finance', icon: 'fa-wallet', badge: stats.pendingFinance },
+    { id: 'history', label: 'Logs', icon: 'fa-clock' }
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 pt-32 pb-20">
       <div className="max-w-[1600px] mx-auto px-6 mb-12">
@@ -101,17 +139,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
           </div>
           
           <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar relative z-10">
-            {[
-              { id: 'overview', label: 'Dashboard', icon: 'fa-chart-pie' },
-              { id: 'users', label: 'Users', icon: 'fa-users' },
-              { id: 'reviews', label: 'Reviews', icon: 'fa-camera-retro', badge: stats.pendingTasks },
-              { id: 'tasks', label: 'Manage Tasks', icon: 'fa-list-check', badge: stats.pendingTasksCount },
-              { id: 'finance', label: 'Finance', icon: 'fa-wallet', badge: stats.pendingFinance },
-              { id: 'history', label: 'Logs', icon: 'fa-clock' }
-            ].map(tab => (
-              <button key={tab.id} onClick={() => setView(tab.id as any)} className={`relative flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${view === tab.id ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-white'}`}>
+            {tabs.map(tab => (
+              <button 
+                key={tab.id} 
+                onClick={() => setView(tab.id as any)} 
+                className={`relative flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${view === tab.id ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-white'}`}
+              >
                 <i className={`fa-solid ${tab.icon}`}></i> {tab.label}
-                {tab.badge !== undefined && tab.badge > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border border-slate-900">{tab.badge}</span>}
+                {tab.badge !== undefined && tab.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border border-slate-900">
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -140,9 +179,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
 
         {view === 'users' && (
           <div className="bg-white rounded-[3rem] border border-slate-200 overflow-hidden shadow-sm">
-            <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+            <div className="p-10 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center bg-slate-50/30 gap-6">
               <h2 className="text-2xl font-black text-slate-900 uppercase">Operator Registry</h2>
-              <input type="text" placeholder="Search ID/Name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-80 px-6 py-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-bold outline-none" />
+              <input 
+                type="text" 
+                placeholder="Search ID/Name..." 
+                value={searchQuery} 
+                onChange={e => setSearchQuery(e.target.value)} 
+                className="w-full sm:w-80 px-6 py-4 bg-white border border-slate-200 rounded-2xl text-[11px] font-bold outline-none" 
+              />
             </div>
             <div className="overflow-x-auto no-scrollbar">
               <table className="w-full text-left min-w-[1000px]">
@@ -160,9 +205,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
                         <p className="text-sm font-black text-slate-900">{u.username}</p>
                         <p className="text-[10px] text-indigo-400 font-mono">{u.id}</p>
                       </td>
-                      <td className="px-6 py-6 font-black text-slate-900">{u.coins.toLocaleString()} C</td>
+                      <td className="px-6 py-6 font-black text-slate-900">
+                        <div className="space-y-1">
+                          <p>{u.coins?.toLocaleString() || 0} C (Earn)</p>
+                          <p className="text-indigo-500">{u.depositBalance?.toLocaleString() || 0} C (Deposit)</p>
+                        </div>
+                      </td>
                       <td className="px-10 py-6 text-right">
-                        <button onClick={() => setEditingUserId(u.id)} className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg hover:bg-indigo-600 transition-all">Edit</button>
+                        <button onClick={() => setEditingUserId(u.id)} className="px-4 py-2 bg-slate-900 text-white text-[9px] font-black uppercase rounded-lg hover:bg-indigo-600 transition-all">Edit Node</button>
                       </td>
                     </tr>
                   ))}

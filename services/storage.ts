@@ -1,4 +1,3 @@
-
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, get, onValue, push, update, remove } from 'firebase/database';
 import { User, Task, Transaction, SEOConfig } from '../types';
@@ -20,6 +19,22 @@ const KEYS = {
   SEO: 'seo_config',
   EMAIL_LOOKUP: 'email_to_id',
   USER_TXS: 'user_transactions'
+};
+
+const isBrowser = typeof window !== 'undefined';
+
+const safeSetItem = (key: string, value: string) => {
+  if (!isBrowser) return;
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn(`Storage quota exceeded for key: ${key}. Clearing old cache to make room.`);
+    // If it's a quota error, we might want to clear some space, 
+    // but at minimum we must not crash the app.
+    if (key.includes('cache')) {
+       localStorage.removeItem(key);
+    }
+  }
 };
 
 export const storage = {
@@ -56,15 +71,21 @@ export const storage = {
   },
 
   getUserId: (): string => {
+    if (!isBrowser) return 'SERVER';
     let id = localStorage.getItem('ap_local_id');
     if (!id) {
       id = 'USR-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-      localStorage.setItem('ap_local_id', id);
+      safeSetItem('ap_local_id', id);
     }
     return id;
   },
 
   getUser: (): User => {
+    if (!isBrowser) return { 
+      id: 'SERVER', username: 'Guest', email: '', coins: 0, depositBalance: 0,
+      completedTasks: [], createdTasks: [], isLoggedIn: false 
+    };
+    
     const data = localStorage.getItem(KEYS.USER);
     if (!data) return { 
       id: storage.getUserId(), 
@@ -76,15 +97,23 @@ export const storage = {
       createdTasks: [], 
       isLoggedIn: false 
     };
-    return JSON.parse(data);
+    try {
+      return JSON.parse(data);
+    } catch {
+      return { 
+        id: storage.getUserId(), username: 'Guest', email: '', coins: 0, depositBalance: 0,
+        completedTasks: [], createdTasks: [], isLoggedIn: false 
+      };
+    }
   },
 
   setUser: async (user: User) => {
-    // Auto-format for professionalism
     const formattedUsername = user.username.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     const sanitizedUser = { ...user, username: formattedUsername };
 
-    localStorage.setItem(KEYS.USER, JSON.stringify(sanitizedUser));
+    if (isBrowser) {
+      safeSetItem(KEYS.USER, JSON.stringify(sanitizedUser));
+    }
     
     if (sanitizedUser.isLoggedIn) {
       const cloudRef = ref(db, `${KEYS.USERS}/${sanitizedUser.id}`);
@@ -114,7 +143,9 @@ export const storage = {
     const snapshot = await get(cloudRef);
     if (snapshot.exists()) {
       const cloudData = snapshot.val();
-      localStorage.setItem(KEYS.USER, JSON.stringify(cloudData));
+      if (isBrowser) {
+        safeSetItem(KEYS.USER, JSON.stringify(cloudData));
+      }
       return cloudData;
     }
     return null;
@@ -125,25 +156,32 @@ export const storage = {
       const snapshot = await get(ref(db, KEYS.TASKS));
       if (snapshot.exists()) {
         const cloudTasks = storage.ensureArray<Task>(snapshot.val());
-        localStorage.setItem(KEYS.TASKS, JSON.stringify(cloudTasks));
+        if (isBrowser) {
+          safeSetItem(KEYS.TASKS, JSON.stringify(cloudTasks));
+        }
         return cloudTasks;
       }
     } catch (error) {
       console.error("Cloud task fetch error:", error);
     }
     
-    const data = localStorage.getItem(KEYS.TASKS);
-    try {
-      const parsed = data ? JSON.parse(data) : [];
-      return storage.ensureArray<Task>(parsed);
-    } catch (e) {
-      return [];
+    if (isBrowser) {
+      const data = localStorage.getItem(KEYS.TASKS);
+      try {
+        const parsed = data ? JSON.parse(data) : [];
+        return storage.ensureArray<Task>(parsed);
+      } catch (e) {
+        return [];
+      }
     }
+    return [];
   },
 
   setTasks: (tasks: Task[]) => {
     const cleanTasks = storage.ensureArray<Task>(tasks).map(storage.cleanData);
-    localStorage.setItem(KEYS.TASKS, JSON.stringify(cleanTasks));
+    if (isBrowser) {
+      safeSetItem(KEYS.TASKS, JSON.stringify(cleanTasks));
+    }
     set(ref(db, KEYS.TASKS), cleanTasks);
   },
 
@@ -165,8 +203,11 @@ export const storage = {
   },
   
   getTransactions: (): Transaction[] => {
-    const data = localStorage.getItem(KEYS.TRANSACTIONS);
-    return data ? JSON.parse(data) : [];
+    if (isBrowser) {
+      const data = localStorage.getItem(KEYS.TRANSACTIONS);
+      return data ? JSON.parse(data) : [];
+    }
+    return [];
   },
 
   getUserTransactions: async (userId: string): Promise<Transaction[]> => {
@@ -179,7 +220,9 @@ export const storage = {
           const dateB = new Date(b.date).getTime();
           return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
         });
-        localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify(sorted));
+        if (isBrowser) {
+          safeSetItem(KEYS.TRANSACTIONS, JSON.stringify(sorted));
+        }
         return sorted;
       }
     } catch (error) {
@@ -197,7 +240,9 @@ export const storage = {
     await push(userTxRef, cleanTx);
     
     const currentTxs = storage.getTransactions();
-    localStorage.setItem(KEYS.TRANSACTIONS, JSON.stringify([cleanTx, ...currentTxs]));
+    if (isBrowser) {
+      safeSetItem(KEYS.TRANSACTIONS, JSON.stringify([cleanTx, ...currentTxs]));
+    }
   },
 
   getAllUsers: async (): Promise<User[]> => {
@@ -261,7 +306,9 @@ export const storage = {
     onValue(tasksRef, (snapshot) => {
       const data = snapshot.val();
       const tasksArray = storage.ensureArray<Task>(data);
-      localStorage.setItem(KEYS.TASKS, JSON.stringify(tasksArray));
+      if (isBrowser) {
+        safeSetItem(KEYS.TASKS, JSON.stringify(tasksArray));
+      }
       callback(tasksArray);
     });
   },
