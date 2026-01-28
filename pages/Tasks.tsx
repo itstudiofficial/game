@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { Task, TaskType, User, Transaction } from '../types';
 
@@ -253,10 +252,10 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                   <div className="pt-6 border-t border-slate-50 relative z-10">
                     <div className="flex justify-between items-center mb-4 text-[9px] font-black uppercase text-slate-400 tracking-widest">
                        <span>Progress</span>
-                       <span>{Math.floor((task.completedCount / task.totalWorkers) * 100)}%</span>
+                       <span>{Math.floor((task.completedCount / (task.totalWorkers || 1)) * 100)}%</span>
                     </div>
                     <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-6">
-                       <div className="h-full bg-indigo-600" style={{ width: `${(task.completedCount / task.totalWorkers) * 100}%` }}></div>
+                       <div className="h-full bg-indigo-600" style={{ width: `${(task.completedCount / (task.totalWorkers || 1)) * 100}%` }}></div>
                     </div>
                     <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest group-hover:bg-indigo-600 transition-all">
                       View Task Details
@@ -296,7 +295,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                              <div className="text-3xl font-black text-slate-900">+{tx.amount}</div>
                           </div>
                           <div className="text-right">
-                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date & Time</p>
+                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Submission Date</p>
                              <div className="text-[10px] font-black text-slate-500 uppercase">{tx.date}</div>
                           </div>
                        </div>
@@ -307,7 +306,7 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
                           {(tx.proofImage || tx.proofImage2) && (
                               <button 
                                 onClick={() => {
-                                  const list = [];
+                                  const list: string[] = [];
                                   if (tx.proofImage) list.push(tx.proofImage);
                                   if (tx.proofImage2) list.push(tx.proofImage2);
                                   setViewingHistoryScreenshots(list);
@@ -325,4 +324,130 @@ const Tasks: React.FC<TasksProps> = ({ user, tasks, transactions, onComplete }) 
           </div>
         )}
       </div>
-      {/* ... rest of existing modal code ... */}
+
+      {/* Task Details Modal */}
+      {selectedTask && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300">
+           <div className="bg-white w-full max-w-2xl rounded-[3.5rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300 relative flex flex-col max-h-[90vh]">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                 <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center text-lg shadow-xl">
+                       <i className={`fa-solid ${getIcon(selectedTask.type)}`}></i>
+                    </div>
+                    <div>
+                       <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">{selectedTask.title}</h3>
+                       <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Reward: {selectedTask.reward} Coins</p>
+                    </div>
+                 </div>
+                 <button onClick={handleCloseModal} className="w-10 h-10 bg-white rounded-xl text-slate-400 hover:text-slate-900 transition-all flex items-center justify-center shadow-sm">
+                   <i className="fa-solid fa-xmark text-xl"></i>
+                 </button>
+              </div>
+
+              <div className="p-8 overflow-y-auto no-scrollbar space-y-10 flex-grow">
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Objective Node (Target Link)</label>
+                    <a 
+                      href={selectedTask.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-6 bg-indigo-50 border border-indigo-100 rounded-3xl group hover:bg-indigo-600 transition-all"
+                    >
+                       <span className="text-xs font-black text-indigo-600 group-hover:text-white truncate max-w-[80%]">{selectedTask.link}</span>
+                       <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm group-hover:scale-110 transition-transform">
+                          <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                       </div>
+                    </a>
+                 </div>
+
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Operational Protocol (Instructions)</label>
+                    <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                       <p className="text-slate-600 text-sm font-medium leading-relaxed whitespace-pre-line">{selectedTask.description}</p>
+                    </div>
+                 </div>
+
+                 {isSubmittingProof ? (
+                    <div className="space-y-8 animate-in slide-in-from-bottom-6">
+                       <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-4 block text-center">Dual-Proof Verification Required</label>
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div className="space-y-3">
+                             <input type="file" ref={fileInputRef1} onChange={e => handleFileChange(e, 1)} className="hidden" accept="image/*" />
+                             <button 
+                               onClick={() => fileInputRef1.current?.click()}
+                               className={`w-full py-10 rounded-[2.5rem] border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all ${proof1 ? 'border-emerald-500 bg-emerald-50/20 text-emerald-600' : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-indigo-400'}`}
+                             >
+                                {isCompressing === 1 ? <i className="fa-solid fa-spinner fa-spin text-2xl"></i> : <i className={`fa-solid ${proof1 ? 'fa-check-circle' : 'fa-camera'} text-2xl`}`}></i>}
+                                <span className="text-[9px] font-black uppercase tracking-widest">{proof1 ? 'Proof 1 Loaded' : 'Primary Proof'}</span>
+                             </button>
+                          </div>
+                          <div className="space-y-3">
+                             <input type="file" ref={fileInputRef2} onChange={e => handleFileChange(e, 2)} className="hidden" accept="image/*" />
+                             <button 
+                               onClick={() => fileInputRef2.current?.click()}
+                               className={`w-full py-10 rounded-[2.5rem] border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all ${proof2 ? 'border-emerald-500 bg-emerald-50/20 text-emerald-600' : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-indigo-400'}`}
+                             >
+                                {isCompressing === 2 ? <i className="fa-solid fa-spinner fa-spin text-2xl"></i> : <i className={`fa-solid ${proof2 ? 'fa-check-circle' : 'fa-camera'} text-2xl`}`}></i>}
+                                <span className="text-[9px] font-black uppercase tracking-widest">{proof2 ? 'Proof 2 Loaded' : 'Secondary Proof'}</span>
+                             </button>
+                          </div>
+                       </div>
+                       <div className="flex gap-4">
+                          <button onClick={() => setIsSubmittingProof(false)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-3xl text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">Back</button>
+                          <button 
+                            onClick={handleFinalSubmit}
+                            disabled={!proof1 || !proof2 || isUploading}
+                            className="flex-[2] py-6 bg-slate-900 text-white font-black rounded-3xl text-[10px] uppercase tracking-widest shadow-2xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                          >
+                             {isUploading ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-cloud-arrow-up"></i> Submit for Audit</>}
+                          </button>
+                       </div>
+                    </div>
+                 ) : (
+                    <button 
+                      onClick={() => setIsSubmittingProof(true)}
+                      className="w-full py-8 bg-slate-900 text-white rounded-[2.5rem] font-black text-xs uppercase tracking-[0.4em] shadow-2xl hover:bg-indigo-600 transition-all active:scale-95 flex items-center justify-center gap-4"
+                    >
+                       Initialize Completion <i className="fa-solid fa-bolt"></i>
+                    </button>
+                 )}
+              </div>
+              <i className="fa-solid fa-id-card absolute -right-12 -bottom-12 text-[15rem] text-slate-50 rotate-12 pointer-events-none"></i>
+           </div>
+        </div>
+      )}
+
+      {/* Screenshot Viewer Modal */}
+      {viewingHistoryScreenshots && (
+        <div 
+          className="fixed inset-0 z-[2000] bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-6 animate-in fade-in duration-300"
+          onClick={() => setViewingHistoryScreenshots(null)}
+        >
+           <div className="relative w-full max-w-6xl h-full flex flex-col items-center justify-center pointer-events-none">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full pointer-events-auto overflow-y-auto no-scrollbar py-20">
+                 {viewingHistoryScreenshots.map((src, idx) => (
+                    <div key={idx} className="relative rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 bg-white/5 p-4">
+                       <p className="absolute top-8 left-8 z-10 px-4 py-1.5 bg-black/40 backdrop-blur-md rounded-lg text-[9px] font-black uppercase text-white border border-white/10">AUDIT PROOF {idx+1}</p>
+                       <img src={src} alt={`Audit ${idx+1}`} className="w-full h-auto object-contain rounded-[2rem]" />
+                    </div>
+                 ))}
+              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setViewingHistoryScreenshots(null); }} 
+                className="absolute top-8 right-8 w-12 h-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-xl border border-white/20 pointer-events-auto"
+              >
+                <i className="fa-solid fa-xmark text-2xl"></i>
+              </button>
+           </div>
+        </div>
+      )}
+      
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </div>
+  );
+};
+
+export default Tasks;

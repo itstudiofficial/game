@@ -325,7 +325,7 @@ const App: React.FC = () => {
           {currentPage === 'login' && <Login onLogin={handleLogin} />}
           {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={handleSpinResult} transactions={transactions} />}
           {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={handleReferralClaim} />}
-          {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} onDeleteTask={async (tid) => {
+          {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} transactions={transactions} onDeleteTask={async (tid) => {
             await storage.deleteTaskFromCloud(tid);
             await refreshUserBalance();
           }} onUpdateTask={async (tid, data) => {

@@ -1,16 +1,17 @@
 
 import React, { useState } from 'react';
-import { User, Task } from '../types';
+import { User, Task, Transaction } from '../types';
 
 interface MyCampaignsProps {
   user: User;
   tasks: Task[];
+  transactions: Transaction[];
   onDeleteTask: (id: string) => void;
   onUpdateTask: (id: string, data: Partial<Task>) => void;
   onNavigate?: (page: string) => void;
 }
 
-const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, onUpdateTask, onNavigate }) => {
+const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, transactions, onDeleteTask, onUpdateTask, onNavigate }) => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'active' | 'rejected'>('all');
   
@@ -23,6 +24,16 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
     if (statusFilter === 'all') return true;
     return t.status === statusFilter;
   });
+
+  const getLastSubmissionDate = (taskId: string) => {
+    // Find latest "earn" transaction for this task across global history
+    const taskTxs = transactions
+      .filter(tx => tx.taskId === taskId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    if (taskTxs.length === 0) return 'No Submissions Yet';
+    return taskTxs[0].date;
+  };
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,24 +144,30 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
                           <i className="fa-solid fa-clock"></i> Launched At: {task.createdAt}
                         </span>
                       )}
-                      {task.dueDate && (
-                        <span className="text-[9px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded uppercase tracking-widest flex items-center gap-1">
-                          <i className="fa-solid fa-calendar-day"></i> Due: {task.dueDate}
-                        </span>
-                      )}
                     </div>
                     
-                    <h4 className="text-2xl font-black text-slate-900 tracking-tight mb-2 group-hover:text-indigo-600 transition-colors truncate">{task.title}</h4>
+                    <h4 className="text-2xl font-black text-slate-900 tracking-tight mb-4 group-hover:text-indigo-600 transition-colors truncate">{task.title}</h4>
                     
-                    <div className="flex flex-wrap items-center gap-6 mt-4">
-                       <div className="flex items-center gap-2">
-                          <i className="fa-solid fa-coins text-yellow-500 text-[10px]"></i>
-                          <span className="text-sm font-black text-slate-700">{task.reward} <span className="text-[8px] text-slate-400 uppercase">Coins / Work</span></span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                       <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                          <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                             <i className="fa-solid fa-signal"></i> Latest Submission Signal
+                          </p>
+                          <p className="text-[12px] font-black text-slate-900 font-mono">
+                             {getLastSubmissionDate(task.id)}
+                          </p>
                        </div>
-                       <div className="flex items-center gap-2 max-w-[200px] truncate">
-                          <i className="fa-solid fa-link text-slate-300 text-[10px]"></i>
-                          <a href={task.link} target="_blank" rel="noreferrer" className="text-xs font-bold text-indigo-400 hover:underline truncate">{task.link}</a>
-                       </div>
+                       
+                       {task.dueDate && (
+                          <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100/50">
+                            <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                               <i className="fa-solid fa-calendar-xmark"></i> Deployment Expiry
+                            </p>
+                            <p className="text-[12px] font-black text-slate-900 font-mono">
+                               {task.dueDate}
+                            </p>
+                          </div>
+                       )}
                     </div>
                     
                     <div className="mt-6">
@@ -202,4 +219,58 @@ const MyCampaigns: React.FC<MyCampaignsProps> = ({ user, tasks, onDeleteTask, on
             )}
           </div>
         </div>
-        {/* ... rest of existing code ... */}
+
+        {/* RE-USING EDIT MODAL */}
+        {editingTask && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300">
+             <div className="bg-white w-full max-w-xl rounded-[4rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20">
+                <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                   <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Campaign Sync Hub</h3>
+                   <button onClick={() => setEditingTask(null)} className="w-12 h-12 bg-white rounded-2xl text-slate-400 hover:text-slate-900 transition-all flex items-center justify-center shadow-sm">
+                     <i className="fa-solid fa-xmark text-xl"></i>
+                   </button>
+                </div>
+                <form onSubmit={handleEditSubmit} className="p-10 space-y-8">
+                   <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Campaign Title</label>
+                      <input 
+                        type="text" 
+                        value={editingTask.title} 
+                        onChange={e => setEditingTask({...editingTask, title: e.target.value})} 
+                        className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
+                      />
+                   </div>
+                   <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Worker Cap</label>
+                      <input 
+                        type="number" 
+                        value={editingTask.totalWorkers} 
+                        onChange={e => setEditingTask({...editingTask, totalWorkers: parseInt(e.target.value)})} 
+                        className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
+                      />
+                   </div>
+                   <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">Expiry Date</label>
+                      <input 
+                        type="date" 
+                        value={editingTask.dueDate || ''} 
+                        onChange={e => setEditingTask({...editingTask, dueDate: e.target.value})} 
+                        className="w-full px-8 py-5 bg-slate-50 border-none rounded-2xl font-bold text-slate-800 outline-none shadow-inner" 
+                      />
+                   </div>
+                   <button 
+                    type="submit" 
+                    className="w-full py-7 bg-slate-900 text-white font-black rounded-3xl uppercase text-[11px] tracking-[0.4em] hover:bg-indigo-600 transition-all shadow-3xl"
+                   >
+                     Update Campaign Parameters
+                   </button>
+                </form>
+             </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default MyCampaigns;

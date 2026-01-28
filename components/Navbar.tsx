@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Logo from './Logo';
 
@@ -97,12 +96,12 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
                 onClick={() => handleNavClick('home')}
               >
                 <div className="flex items-center bg-white/60 pr-5 pl-1.5 py-1.5 rounded-2xl border border-slate-200/50 shadow-sm group-hover:shadow-md group-hover:bg-white transition-all duration-300">
-                  <div className="h-10 w-10 overflow-hidden rounded-xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6 bg-slate-900 p-2">
+                  <div className="h-10 w-10 overflow-hidden rounded-xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6 bg-slate-900 p-2 shadow-[0_0_20px_rgba(37,99,235,0.6)] relative ring-2 ring-indigo-500/20 ring-offset-2 ring-offset-transparent animate-[pulse_3s_infinite]">
                     <Logo className="h-full w-full" />
                   </div>
                   <div className="ml-3">
                     <span className="text-xl font-black tracking-tighter text-slate-900 block leading-none">
-                      Ads<span className="text-indigo-600">Predia</span>
+                      Ads<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-400">Predia</span>
                     </span>
                     <span className="text-[7px] font-black uppercase tracking-[0.3em] text-slate-400 mt-1.5 block">
                       {user.isAdmin ? 'Admin Global Hub' : 'Verified Partner'}
@@ -218,7 +217,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage, user, onLo
           <div className="fixed top-4 left-4 bottom-4 w-[85%] max-w-sm bg-white shadow-2xl flex flex-col animate-in slide-in-from-left-8 duration-500 rounded-[2.5rem] border border-slate-100 overflow-hidden">
              <div className="p-8 flex items-center justify-between border-b border-slate-50 bg-white">
                 <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 flex items-center justify-center bg-slate-900 rounded-xl p-2">
+                  <div className="h-10 w-10 flex items-center justify-center bg-slate-900 rounded-xl p-2 shadow-[0_0_15px_rgba(37,99,235,0.4)]">
                     <Logo className="h-full w-full" />
                   </div>
                   <span className="text-xl font-black text-slate-900 tracking-tighter">AdsPredia</span>
