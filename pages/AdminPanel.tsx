@@ -47,42 +47,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ initialView = 'overview' }) => 
         // Update live state with full data (including images)
         setTransactions(sortedTxs);
 
-        // Cache light data only (remove base64 strings)
-        if (typeof window !== 'undefined') {
-          try {
-            const lightTxs = sortedTxs.slice(0, 100).map(tx => {
-              const { proofImage, proofImage2, ...rest } = tx;
-              return rest;
-            });
-            localStorage.setItem(`${CACHE_KEY}_txs`, JSON.stringify(lightTxs));
-          } catch (e) {
-            console.warn("Failed to cache transactions: Storage Quota reached.");
-          }
-        }
+        // Cache light data only using safeSetItem
+        const lightTxs = sortedTxs.slice(0, 100).map(tx => {
+          const { proofImage, proofImage2, ...rest } = tx;
+          return rest;
+        });
+        storage.safeSetItem(`${CACHE_KEY}_txs`, JSON.stringify(lightTxs));
       }
 
       if (targetView === 'overview' || targetView === 'users') {
         const allUsers = await storage.getAllUsers();
         setUsers(allUsers || []);
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem(`${CACHE_KEY}_users`, JSON.stringify(allUsers));
-          } catch (e) {
-             console.warn("Failed to cache users: Storage Quota reached.");
-          }
-        }
+        storage.safeSetItem(`${CACHE_KEY}_users`, JSON.stringify(allUsers));
       }
 
       if (targetView === 'overview' || targetView === 'tasks' || targetView === 'create-task') {
         const allTasks = await storage.getTasks();
         setTasks(allTasks || []);
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem(`${CACHE_KEY}_tasks`, JSON.stringify(allTasks));
-          } catch (e) {
-            console.warn("Failed to cache tasks: Storage Quota reached.");
-          }
-        }
+        storage.safeSetItem(`${CACHE_KEY}_tasks`, JSON.stringify(allTasks));
       }
     } catch (err) {
       console.error("Sync error:", err);

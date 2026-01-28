@@ -23,21 +23,30 @@ const KEYS = {
 
 const isBrowser = typeof window !== 'undefined';
 
-const safeSetItem = (key: string, value: string) => {
-  if (!isBrowser) return;
-  try {
-    localStorage.setItem(key, value);
-  } catch (e) {
-    console.warn(`Storage quota exceeded for key: ${key}. Clearing old cache to make room.`);
-    // If it's a quota error, we might want to clear some space, 
-    // but at minimum we must not crash the app.
-    if (key.includes('cache')) {
-       localStorage.removeItem(key);
-    }
-  }
-};
-
 export const storage = {
+  safeSetItem: (key: string, value: string) => {
+    if (!isBrowser) return;
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn(`Storage quota exceeded for key: ${key}. Initiating emergency cache purge.`);
+      
+      // Attempt to clear non-critical admin caches to make space
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('admin_data_cache_')) {
+          localStorage.removeItem(k);
+        }
+      });
+      
+      // Try one last time after purge
+      try {
+        localStorage.setItem(key, value);
+      } catch (retryError) {
+        console.error("Critical: Storage still full after purge. Item not saved:", key);
+      }
+    }
+  },
+
   cleanData: (obj: any): any => {
     if (Array.isArray(obj)) {
       return obj.map(storage.cleanData);
@@ -75,7 +84,7 @@ export const storage = {
     let id = localStorage.getItem('ap_local_id');
     if (!id) {
       id = 'USR-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-      safeSetItem('ap_local_id', id);
+      storage.safeSetItem('ap_local_id', id);
     }
     return id;
   },
@@ -112,7 +121,7 @@ export const storage = {
     const sanitizedUser = { ...user, username: formattedUsername };
 
     if (isBrowser) {
-      safeSetItem(KEYS.USER, JSON.stringify(sanitizedUser));
+      storage.safeSetItem(KEYS.USER, JSON.stringify(sanitizedUser));
     }
     
     if (sanitizedUser.isLoggedIn) {
@@ -144,7 +153,7 @@ export const storage = {
     if (snapshot.exists()) {
       const cloudData = snapshot.val();
       if (isBrowser) {
-        safeSetItem(KEYS.USER, JSON.stringify(cloudData));
+        storage.safeSetItem(KEYS.USER, JSON.stringify(cloudData));
       }
       return cloudData;
     }
@@ -157,7 +166,7 @@ export const storage = {
       if (snapshot.exists()) {
         const cloudTasks = storage.ensureArray<Task>(snapshot.val());
         if (isBrowser) {
-          safeSetItem(KEYS.TASKS, JSON.stringify(cloudTasks));
+          storage.safeSetItem(KEYS.TASKS, JSON.stringify(cloudTasks));
         }
         return cloudTasks;
       }
@@ -180,7 +189,7 @@ export const storage = {
   setTasks: (tasks: Task[]) => {
     const cleanTasks = storage.ensureArray<Task>(tasks).map(storage.cleanData);
     if (isBrowser) {
-      safeSetItem(KEYS.TASKS, JSON.stringify(cleanTasks));
+      storage.safeSetItem(KEYS.TASKS, JSON.stringify(cleanTasks));
     }
     set(ref(db, KEYS.TASKS), cleanTasks);
   },
@@ -221,7 +230,7 @@ export const storage = {
           return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
         });
         if (isBrowser) {
-          safeSetItem(KEYS.TRANSACTIONS, JSON.stringify(sorted));
+          storage.safeSetItem(KEYS.TRANSACTIONS, JSON.stringify(sorted));
         }
         return sorted;
       }
@@ -241,7 +250,7 @@ export const storage = {
     
     const currentTxs = storage.getTransactions();
     if (isBrowser) {
-      safeSetItem(KEYS.TRANSACTIONS, JSON.stringify([cleanTx, ...currentTxs]));
+      storage.safeSetItem(KEYS.TRANSACTIONS, JSON.stringify([cleanTx, ...currentTxs]));
     }
   },
 
@@ -307,7 +316,7 @@ export const storage = {
       const data = snapshot.val();
       const tasksArray = storage.ensureArray<Task>(data);
       if (isBrowser) {
-        safeSetItem(KEYS.TASKS, JSON.stringify(tasksArray));
+        storage.safeSetItem(KEYS.TASKS, JSON.stringify(tasksArray));
       }
       callback(tasksArray);
     });

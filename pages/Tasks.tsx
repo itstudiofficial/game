@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo } from 'react';
 import { Task, TaskType, User, Transaction } from '../types';
 
@@ -439,10 +440,10 @@ export default function Tasks({ user, tasks, transactions, onComplete }: TasksPr
         </div>
       )}
       
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+      ` }} />
     </div>
   );
 }
