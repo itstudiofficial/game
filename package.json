@@ -1,10 +1,10 @@
-
 {
   "name": "ads-predia",
   "version": "1.0.0",
-  "description": "Professional micro-freelancing and advertising platform",
-  "main": "index.tsx",
+  "private": true,
+  "type": "module",
   "scripts": {
+    "dev": "vite",
     "start": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
@@ -16,6 +16,7 @@
     "framer-motion": "^11.0.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.0.0",

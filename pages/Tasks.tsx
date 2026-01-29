@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { Task, TaskType, User, Transaction } from '../types';
 
