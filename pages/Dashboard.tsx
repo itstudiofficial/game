@@ -32,7 +32,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
   const progressToNextDollar = ((earnings.total % COIN_RATE) / COIN_RATE) * 100;
 
   const ledgerList = useMemo(() => {
-    let filtered = transactions.filter(tx => tx.type === 'earn');
+    let filtered = transactions.filter(tx => ['earn', 'spin', 'referral_claim'].includes(tx.type));
     if (ledgerTab === 'pending') filtered = filtered.filter(tx => tx.status === 'pending');
     else if (ledgerTab === 'verified') filtered = filtered.filter(tx => tx.status === 'success');
     
@@ -41,24 +41,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
       .slice(0, 10);
   }, [transactions, ledgerTab]);
 
-  const categoryStats = useMemo(() => {
-    const counts: Record<string, number> = { 'YouTube': 0, 'Websites': 0, 'Apps': 0, 'Social Media': 0 };
+  const activityStats = useMemo(() => {
+    const counts: Record<string, number> = { 'Lucky Spin': 0, 'Referrals': 0 };
     transactions
-      .filter(tx => tx.type === 'earn' && tx.status === 'success')
+      .filter(tx => tx.status === 'success')
       .forEach(tx => {
-        const cat = tx.method?.split('|')[1]?.trim() || 'Websites';
-        if (counts[cat] !== undefined) counts[cat] += tx.amount;
+        if (tx.type === 'spin') counts['Lucky Spin'] += tx.amount;
+        else if (tx.type === 'referral_claim') counts['Referrals'] += tx.amount;
       });
     return counts;
   }, [transactions]);
 
-  const maxCatValue = Math.max(...(Object.values(categoryStats) as number[]), 1);
+  const maxActivityValue = Math.max(...(Object.values(activityStats) as number[]), 1);
 
-  const getCategoryIcon = (methodStr: string = '') => {
-    if (methodStr.includes('YouTube')) return 'fa-youtube text-rose-500';
-    if (methodStr.includes('Websites')) return 'fa-globe text-indigo-500';
-    if (methodStr.includes('Apps')) return 'fa-mobile-screen text-emerald-500';
-    if (methodStr.includes('Social Media')) return 'fa-share-nodes text-blue-500';
+  const getActivityIcon = (type: string = '') => {
+    if (type === 'spin') return 'fa-clover text-emerald-500';
+    if (type === 'referral_claim') return 'fa-users text-blue-500';
     return 'fa-coins text-amber-500';
   };
 
@@ -128,20 +126,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
                        <i className="fa-solid fa-coins text-yellow-500"></i>
                        {earnings.total.toLocaleString()} <span className="opacity-40 text-[10px]">COINS</span>
                      </div>
-                     <div className={`px-5 py-3 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all ${earnings.pending > 0 ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 animate-pulse' : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'}`}>
-                       Pending Vault: {earnings.pending.toLocaleString()}
-                     </div>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 w-full sm:w-auto">
                   <div className="bg-white/5 p-6 rounded-[2rem] border border-white/5 backdrop-blur-md flex flex-col justify-center text-center">
-                     <p className="text-[8px] font-black uppercase text-slate-500 mb-2 tracking-widest">Tasks Done</p>
-                     <p className="text-3xl font-black">{user.completedTasks?.length || 0}</p>
+                     <p className="text-[8px] font-black uppercase text-slate-500 mb-2 tracking-widest">Vault Units</p>
+                     <p className="text-3xl font-black">{earnings.total.toLocaleString()}</p>
                   </div>
                   <div className="bg-white/5 p-6 rounded-[2rem] border border-white/5 backdrop-blur-md flex flex-col justify-center text-center">
-                     <p className="text-[8px] font-black uppercase text-slate-500 mb-2 tracking-widest">Deposit Bal</p>
-                     <p className="text-3xl font-black tabular-nums">{user.depositBalance || 0}</p>
+                     <p className="text-[8px] font-black uppercase text-slate-500 mb-2 tracking-widest">Ref Partners</p>
+                     <p className="text-3xl font-black tabular-nums">{user.claimedReferrals?.length || 0}</p>
                   </div>
                 </div>
               </div>
@@ -165,30 +160,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
               </div>
             </div>
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/4 pointer-events-none opacity-50"></div>
-            <i className="fa-solid fa-vault absolute -right-16 -bottom-16 text-[25rem] text-white/5 -rotate-12 pointer-events-none"></i>
           </div>
 
           <div className="lg:col-span-4 bg-white p-10 rounded-[3rem] border border-slate-200/60 shadow-sm flex flex-col relative overflow-hidden">
              <div className="relative z-10 mb-8">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Revenue Analysis</h3>
-                <h4 className="text-2xl font-black text-slate-900 tracking-tighter">Category Yield</h4>
+                <h4 className="text-2xl font-black text-slate-900 tracking-tighter">Activity Yield</h4>
              </div>
              
              <div className="flex-grow flex flex-col justify-center gap-6 relative z-10">
-                {Object.entries(categoryStats).map(([cat, val], i) => (
-                  <div key={cat} className="space-y-2">
+                {Object.entries(activityStats).map(([act, val], i) => (
+                  <div key={act} className="space-y-2">
                     <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
-                       <span className="text-slate-500">{cat}</span>
+                       <span className="text-slate-500">{act}</span>
                        <span className="text-slate-900">{(val as number).toLocaleString()}</span>
                     </div>
                     <div className="w-full h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
                       <div 
                         className={`h-full rounded-full transition-all duration-1000 ${
-                          cat === 'YouTube' ? 'bg-red-500' : 
-                          cat === 'Websites' ? 'bg-indigo-500' : 
-                          cat === 'Apps' ? 'bg-emerald-500' : 'bg-blue-500'
+                          act === 'Lucky Spin' ? 'bg-emerald-500' : 'bg-blue-500'
                         }`}
-                        style={{ width: `${((val as number) / maxCatValue) * 100}%` }}
+                        style={{ width: `${((val as number) / maxActivityValue) * 100}%` }}
                       ></div>
                     </div>
                   </div>
@@ -238,7 +230,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
                  <div key={tx.id} className="p-8 hover:bg-slate-50/50 transition-all flex items-center justify-between group">
                     <div className="flex items-center gap-5">
                        <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">
-                          <i className={`fa-solid ${getCategoryIcon(tx.method)}`}></i>
+                          <i className={`fa-solid ${getActivityIcon(tx.type)}`}></i>
                        </div>
                        <div>
                           <div className="flex items-center gap-2 mb-1">
@@ -256,10 +248,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, tasks, transactions }) => {
                  </div>
                ))
              )}
-          </div>
-          
-          <div className="p-6 bg-slate-50 text-center border-t border-slate-100">
-             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Verification managed by AI-Node Cluster-07</span>
           </div>
         </div>
       </div>

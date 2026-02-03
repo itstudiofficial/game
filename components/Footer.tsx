@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Logo from './Logo';
 
@@ -40,34 +39,22 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
           </div>
 
           {/* Links Columns */}
-          <div className="md:col-span-2">
-            <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Earning</h4>
+          <div className="md:col-span-3">
+            <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Earning Hub</h4>
             <ul className="space-y-4 text-sm font-medium">
-              <li><button onClick={() => handleNavClick('tasks')} className="hover:text-indigo-400 transition-colors text-left">Browse Tasks</button></li>
               <li><button onClick={() => handleNavClick('spin')} className="hover:text-indigo-400 transition-colors text-left">Daily Lucky Spin</button></li>
               <li><button onClick={() => handleNavClick('referrals')} className="hover:text-indigo-400 transition-colors text-left">Affiliate Program</button></li>
               <li><button onClick={() => handleNavClick('wallet')} className="hover:text-indigo-400 transition-colors text-left">Wallet / Payout</button></li>
-            </ul>
-          </div>
-
-          {/* Advertising Column */}
-          <div className="md:col-span-2">
-            <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Advertising</h4>
-            <ul className="space-y-4 text-sm font-medium">
-              <li><button onClick={() => handleNavClick('create')} className="hover:text-indigo-400 transition-colors text-left">Create Campaign</button></li>
-              <li><button onClick={() => handleNavClick('bulk-pricing')} className="hover:text-indigo-400 transition-colors text-left">Bulk Pricing</button></li>
-              <li><button onClick={() => handleNavClick('targeting-guide')} className="hover:text-indigo-400 transition-colors text-left">Targeting Guide</button></li>
-              <li><button onClick={() => handleNavClick('case-studies')} className="hover:text-indigo-400 transition-colors text-left">Case Studies</button></li>
+              <li><button onClick={() => handleNavClick('dashboard')} className="hover:text-indigo-400 transition-colors text-left">My Analytics</button></li>
             </ul>
           </div>
 
           {/* Support Column */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-3">
             <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Support</h4>
             <ul className="space-y-4 text-sm font-medium">
               <li><button onClick={() => handleNavClick('contact')} className="hover:text-indigo-400 transition-colors text-left">Contact Us</button></li>
-              <li><button onClick={() => handleNavClick('features')} className="hover:text-indigo-400 transition-colors text-left">Features</button></li>
-              <li><button onClick={() => handleNavClick('api-docs')} className="hover:text-indigo-400 transition-colors text-left">API Docs</button></li>
+              <li><button onClick={() => handleNavClick('features')} className="hover:text-indigo-400 transition-colors text-left">Platform Features</button></li>
               <li><button onClick={() => handleNavClick('payment-faq')} className="hover:text-indigo-400 transition-colors text-left">Payment FAQ</button></li>
             </ul>
           </div>
@@ -79,7 +66,6 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
               <li><button onClick={() => handleNavClick('privacy-policy')} className="hover:text-indigo-400 transition-colors text-left">Privacy Policy</button></li>
               <li><button onClick={() => handleNavClick('terms-conditions')} className="hover:text-indigo-400 transition-colors text-left">Term & Conditions</button></li>
               <li><button onClick={() => handleNavClick('disclaimer')} className="hover:text-indigo-400 transition-colors text-left">Disclaimer</button></li>
-              <li><button onClick={() => handleNavClick('refund-policy')} className="hover:text-indigo-400 transition-colors text-left">Refund Policy</button></li>
             </ul>
           </div>
         </div>
@@ -99,7 +85,7 @@ const Footer: React.FC<FooterProps> = ({ setCurrentPage, isLoggedIn }) => {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-          <p>&copy; 2025 ADSPREDIA MICRO-TASKING</p>
+          <p>&copy; 2025 ADSPREDIA NETWORK</p>
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>

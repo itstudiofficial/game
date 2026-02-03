@@ -7,9 +7,6 @@ import AdminPanel from './pages/AdminPanel';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
-const Tasks = lazy(() => import('./pages/Tasks'));
-const MathSolver = lazy(() => import('./pages/MathSolver'));
-const CreateTask = lazy(() => import('./pages/CreateTask'));
 const Wallet = lazy(() => import('./pages/Wallet'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Login = lazy(() => import('./pages/Login'));
@@ -17,7 +14,6 @@ const SpinWheel = lazy(() => import('./pages/SpinWheel'));
 const Referrals = lazy(() => import('./pages/Referrals'));
 const Features = lazy(() => import('./pages/Features'));
 const Contact = lazy(() => import('./pages/Contact'));
-const MyCampaigns = lazy(() => import('./pages/MyCampaigns'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
@@ -46,7 +42,8 @@ const App: React.FC = () => {
       }
 
       try {
-        storage.getTasks().then(initialTasks => setTasks(initialTasks));
+        const initialTasks = await storage.getTasks();
+        setTasks(initialTasks);
         
         if (user.isLoggedIn) {
           const cloudUser = await storage.syncUserFromCloud(user.id);
@@ -58,7 +55,8 @@ const App: React.FC = () => {
               return;
             }
             setUser(cloudUser);
-            storage.getUserTransactions(user.id).then(userTxs => setTransactions(userTxs));
+            const userTxs = await storage.getUserTransactions(user.id);
+            setTransactions(userTxs);
           }
         }
         
@@ -91,15 +89,13 @@ const App: React.FC = () => {
 
   const refreshUserBalance = useCallback(async (userId?: string) => {
     const idToSync = userId || user.id;
-    if (user.isLoggedIn || userId) {
-      const cloudUser = await storage.syncUserFromCloud(idToSync);
-      if (cloudUser) {
-        setUser(cloudUser);
-        const userTxs = await storage.getUserTransactions(idToSync);
-        setTransactions(userTxs);
-      }
+    const cloudUser = await storage.syncUserFromCloud(idToSync);
+    if (cloudUser) {
+      setUser(cloudUser);
+      const userTxs = await storage.getUserTransactions(idToSync);
+      setTransactions(userTxs);
     }
-  }, [user.id, user.isLoggedIn]);
+  }, [user.id]);
 
   const handleLogin = async (userData: any) => {
     const newSessionId = Math.random().toString(36).substr(2, 9);
@@ -116,27 +112,6 @@ const App: React.FC = () => {
     await storage.setUser(updatedUser);
     setCurrentPage(updatedUser.isAdmin ? 'admin-overview' : 'dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleTaskComplete = async (taskId: string, p1?: string, p2?: string, ts?: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
-    const tx: Transaction = {
-      id: `TXN-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now()}`,
-      userId: user.id,
-      taskId: taskId, 
-      amount: task.reward,
-      type: 'earn',
-      method: `${task.title} | ${task.type}`,
-      proofImage: p1,
-      proofImage2: p2,
-      status: 'pending',
-      date: ts || new Date().toLocaleString()
-    };
-    await storage.addTransaction(tx);
-    const updatedUser = { ...user, completedTasks: [...(user.completedTasks || []), taskId] };
-    setUser(updatedUser);
-    await storage.setUser(updatedUser);
   };
 
   const handleWalletAction = async (type: 'deposit' | 'withdraw', amt: number, meth: string, acc?: string, proof?: string) => {
@@ -183,22 +158,11 @@ const App: React.FC = () => {
           {currentPage === 'home' && <Home onStart={navigateTo} isLoggedIn={user.isLoggedIn} />}
           {currentPage === 'features' && <Features />}
           {currentPage === 'contact' && <Contact />}
-          {currentPage === 'tasks' && <Tasks user={user} tasks={tasks} transactions={transactions} onComplete={handleTaskComplete} />}
-          {currentPage === 'math-solver' && user.isLoggedIn && <MathSolver user={user} onSolve={(reward, isLast) => refreshUserBalance()} transactions={transactions} />}
-          {currentPage === 'create' && <CreateTask tasks={tasks} user={user} onDeleteTask={async (tid) => { await storage.deleteTaskFromCloud(tid); }} onUpdateTask={async (tid, data) => { await storage.updateTaskInCloud(tid, data); }} onCreate={async (data) => {
-            const newTask: Task = { id: `TASK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`, ...data, creatorId: user.id, completedCount: 0, status: 'pending', createdAt: new Date().toLocaleString() };
-            const updatedUser = { ...user, depositBalance: user.depositBalance - (data.reward * data.totalWorkers), createdTasks: [...(user.createdTasks || []), newTask.id] };
-            setUser(updatedUser);
-            await storage.setUser(updatedUser);
-            storage.setTasks([...tasks, newTask]);
-            navigateTo('my-campaigns');
-          }} userDepositBalance={user.depositBalance} navigateTo={navigateTo} />}
           {currentPage === 'wallet' && <Wallet coins={user.coins} depositBalance={user.depositBalance} onAction={handleWalletAction} transactions={transactions} onRefresh={() => refreshUserBalance()} />}
           {currentPage === 'dashboard' && user.isLoggedIn && <Dashboard user={user} tasks={tasks} transactions={transactions} onDeleteTask={() => {}} onUpdateTask={() => {}} />}
           {currentPage === 'login' && <Login onLogin={handleLogin} />}
           {currentPage === 'spin' && user.isLoggedIn && <SpinWheel userCoins={user.coins} onSpin={(w, c) => { setUser({...user, coins: user.coins + w - c}); }} transactions={transactions} />}
           {currentPage === 'referrals' && user.isLoggedIn && <Referrals user={user} onClaim={() => refreshUserBalance()} />}
-          {currentPage === 'my-campaigns' && user.isLoggedIn && <MyCampaigns user={user} tasks={tasks} transactions={transactions} onDeleteTask={async (tid) => { await storage.deleteTaskFromCloud(tid); }} onUpdateTask={async (tid, data) => { await storage.updateTaskInCloud(tid, data); }} onNavigate={navigateTo} />}
           {currentPage === 'profile' && user.isLoggedIn && <ProfileSettings user={user} />}
           {currentPage === 'privacy-policy' && <PrivacyPolicy />}
           {currentPage === 'terms-conditions' && <TermsConditions />}
